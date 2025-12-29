@@ -399,6 +399,18 @@
             <div class="settings-subtitle">KPSUR AGENT 시스템 구성 관리</div>
         </div>
 
+        <!-- First Setup Banner (shown only when redirected from initial setup) -->
+        <div id="firstSetupBanner" style="display: none; background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 2px solid #3B82F6; border-radius: 12px; padding: 24px; margin-bottom: 24px; text-align: center;">
+            <div style="font-size: 24px; margin-bottom: 12px;">👋 환영합니다!</div>
+            <div style="font-size: 16px; font-weight: 600; color: #1E40AF; margin-bottom: 8px;">
+                KPSUR AGENT를 사용하기 위해 먼저 API 키를 설정해주세요
+            </div>
+            <div style="font-size: 14px; color: #1E40AF; line-height: 1.6;">
+                Google Gemini API 키는 무료로 발급받을 수 있으며,<br>
+                아래 가이드를 따라 설정하시면 바로 사용하실 수 있습니다.
+            </div>
+        </div>
+
         <!-- Section 1: API Key Management -->
         <div class="settings-card">
             <div class="section-title">
@@ -530,9 +542,26 @@
 
         // Initialize page
         async function initSettingsPage() {
+            // Check if this is first setup
+            checkFirstSetup();
+
             displayApiKeyStatus();
             displayEnvironmentInfo();
             setupEventListeners();
+        }
+
+        // Check if redirected from first setup
+        function checkFirstSetup() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isFirstSetup = urlParams.get('firstSetup') === 'true';
+
+            if (isFirstSetup) {
+                document.getElementById('firstSetupBanner').style.display = 'block';
+                // Auto-focus on API key input
+                setTimeout(() => {
+                    document.getElementById('apiKeyInput').focus();
+                }, 500);
+            }
         }
 
         // Display current API key status
@@ -599,6 +628,14 @@
                 displayApiKeyStatus();
                 document.getElementById('apiKeyInput').value = '';
                 showToast('✅ API 키가 저장되었습니다', 'success');
+
+                // If this was first setup, redirect to dashboard after 1.5 seconds
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('firstSetup') === 'true') {
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 1500);
+                }
             } else {
                 showToast('❌ 저장에 실패했습니다', 'error');
             }

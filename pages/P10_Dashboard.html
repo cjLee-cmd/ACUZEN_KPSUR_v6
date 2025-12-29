@@ -711,9 +711,14 @@
     <!-- JavaScript -->
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
-    <script>
+    <script type="module">
+        import { CONFIG, Storage } from '../js/config.js';
+
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', () => {
+            // API 키 확인 - 없으면 Settings로 리다이렉트
+            checkApiKeyAndRedirect();
+
             // 세션 데이터 확인
             const session = loadSessionData();
             if (!session) {
@@ -746,6 +751,17 @@
             // 통계 데이터 로드 (실제로는 API 호출)
             loadDashboardStats();
         });
+
+        function checkApiKeyAndRedirect() {
+            // API 키가 설정되어 있는지 확인
+            const apiKey = Storage.get(CONFIG.STORAGE_KEYS.GOOGLE_API_KEY);
+
+            if (!apiKey) {
+                // API 키가 없으면 Settings 페이지로 리다이렉트
+                console.log('API key not found. Redirecting to Settings...');
+                window.location.href = 'P91_Settings.html?firstSetup=true';
+            }
+        }
 
         function createNewReport() {
             // 새 보고서 생성 페이지로 이동
