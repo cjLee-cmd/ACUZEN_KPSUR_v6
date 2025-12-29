@@ -5,6 +5,7 @@
 
 import { CONFIG, Storage } from './config.js';
 import supabaseClient from './supabase-client.js';
+import env from './env.js';
 
 class AuthManager {
     constructor() {
@@ -13,29 +14,33 @@ class AuthManager {
     }
 
     /**
-     * 로그인 (하드코딩된 테스트 계정 + Supabase Auth)
+     * 로그인 (테스트 계정 + Supabase Auth)
+     * 테스트 계정은 개발 모드에서만 활성화됨
      */
     async login(email, password, rememberMe = false) {
-        // 테스트 계정 (개발 단계용)
-        const testAccounts = {
-            'author@kpsur.test': {
-                password: 'test1234',
-                id: '6f19f4a9-48ec-4a43-a032-b8f79e71d2d3',
-                name: 'Test Author',
-                role: 'Author'
-            },
-            'main@main.com': {
-                password: '1111',
-                id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-                name: 'Master Admin',
-                role: 'Master'
-            }
-        };
+        // 테스트 계정 (개발 모드에서만 활성화)
+        const testAccountsEnabled = env.getConfig().features.testAccounts;
 
-        // 테스트 계정 확인
-        const testAccount = testAccounts[email];
+        if (testAccountsEnabled) {
+            const testAccounts = {
+                'author@kpsur.test': {
+                    password: 'test1234',
+                    id: '6f19f4a9-48ec-4a43-a032-b8f79e71d2d3',
+                    name: 'Test Author',
+                    role: 'Author'
+                },
+                'main@main.com': {
+                    password: '1111',
+                    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+                    name: 'Master Admin',
+                    role: 'Master'
+                }
+            };
 
-        if (testAccount && testAccount.password === password) {
+            // 테스트 계정 확인
+            const testAccount = testAccounts[email];
+
+            if (testAccount && testAccount.password === password) {
             // 테스트 계정 로그인 성공
             const sessionData = {
                 user: {
@@ -60,6 +65,7 @@ class AuthManager {
                 user: sessionData.user,
                 session: sessionData
             };
+            }
         }
 
         // Supabase Auth 시도
