@@ -253,10 +253,15 @@ pages/
 - [ ] 버그 수정
 - [ ] 테스트 결과 문서화
 
-### Phase 5: 배포 (TODO)
-- [ ] GitHub Pages 배포
-- [ ] 테스트 계정 제거
-- [ ] 프로덕션 설정
+### Phase 5: 배포 (진행 중)
+- [x] 배포 가이드 문서 작성 (DEPLOYMENT.md) ✅
+- [x] 보안 검증 스크립트 작성 (security-check.sh) ✅
+- [x] .gitignore 파일 생성 ✅
+- [x] 환경별 설정 모듈 (env.js) ✅
+- [x] 테스트 계정 환경별 제어 (프로덕션에서 자동 비활성화) ✅
+- [x] console.log 프로덕션 모드 비활성화 ✅
+- [ ] GitHub Pages 브랜치 (gh-pages) 생성 및 배포
+- [ ] Supabase 프로덕션 설정 (Allowed Origins, RLS)
 
 ---
 
