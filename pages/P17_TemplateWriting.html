@@ -4,14 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>P-17 Template Writing - KPSUR AGENT</title>
-    <link rel="stylesheet" href="../styles/globals.css">
-    <link rel="stylesheet" href="../styles/components.css">
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/components.css">
     <style>
         .template-container {
             display: grid;
             grid-template-columns: 280px 1fr;
             gap: 16px;
-            height: calc(100vh - 140px);
+            padding: 16px;
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
         /* Left Panel - Section List */
@@ -362,15 +365,170 @@
     </style>
 </head>
 <body>
-    <div id="app"></div>
+    <div class="app-layout" id="app"></div>
 
-    <script src="../components/AppLayout.js"></script>
-    <script src="../utils/layout-helper.js"></script>
-    <script type="module">
-        // ES6 Modules
-        import { CONFIG, Storage, DateHelper } from '../js/config.js';
-        import templateWriter from '../js/template-writer.js';
-        import authManager from '../js/auth.js';
+    <script>
+        // CONFIG - System configuration
+        const CONFIG = {
+            SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8',
+            LLM: {
+                DEFAULT_MODEL: 'gemini-2.0-flash-exp',
+                MODELS: {
+                    FLASH: 'gemini-2.0-flash-exp',
+                    PRO: 'gemini-2.0-pro-exp'
+                },
+                API_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models'
+            },
+            STORAGE_KEYS: {
+                GOOGLE_API_KEY: 'GOOGLE_API_KEY',
+                SESSION: 'session',
+                CURRENT_REPORT: 'current_report',
+                LAST_STAGE: 'last_stage'
+            },
+            PAGES: {
+                LOGIN: 'P01_Login.html',
+                DASHBOARD: 'P10_Dashboard.html',
+                SETTINGS: 'P91_Settings.html'
+            }
+        };
+
+        // Storage Helper
+        const Storage = {
+            get(key) {
+                try {
+                    const value = localStorage.getItem(key);
+                    return value ? JSON.parse(value) : null;
+                } catch (e) {
+                    console.error(`Error reading from localStorage (${key}):`, e);
+                    return null;
+                }
+            },
+            set(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (e) {
+                    console.error(`Error writing to localStorage (${key}):`, e);
+                    return false;
+                }
+            },
+            remove(key) {
+                try {
+                    localStorage.removeItem(key);
+                    return true;
+                } catch (e) {
+                    console.error(`Error removing from localStorage (${key}):`, e);
+                    return false;
+                }
+            }
+        };
+
+        // DateHelper - Date formatting utilities
+        const DateHelper = {
+            now() {
+                return new Date();
+            },
+            formatYYMMDD_hhmmss(date = new Date()) {
+                const yy = String(date.getFullYear()).slice(-2);
+                const MM = String(date.getMonth() + 1).padStart(2, '0');
+                const DD = String(date.getDate()).padStart(2, '0');
+                const hh = String(date.getHours()).padStart(2, '0');
+                const mm = String(date.getMinutes()).padStart(2, '0');
+                const ss = String(date.getSeconds()).padStart(2, '0');
+                return `${yy}${MM}${DD}_${hh}${mm}${ss}`;
+            },
+            formatISO(date = new Date()) {
+                return date.toISOString();
+            }
+        };
+
+        // TemplateWriter stub - minimal implementation for page to function
+        const templateWriter = {
+            async loadTemplate(templatePath) {
+                console.log(`📄 Loading template: ${templatePath}`);
+                // Stub implementation
+                return {
+                    success: true,
+                    content: '# 템플릿 내용\n\n{{CS0}} {{CS1}}\n\n{{PH1}}'
+                };
+            },
+
+            async populateTemplate(templateContent, extractedData, section) {
+                console.log(`📝 Populating template for section: ${section.id}`);
+                // Stub implementation - simple variable replacement
+                let content = templateContent;
+
+                // Replace CS variables
+                if (extractedData.cs) {
+                    Object.keys(extractedData.cs).forEach(key => {
+                        const value = extractedData.cs[key];
+                        content = content.replace(new RegExp(`{{${key}}}`, 'g'), value || '');
+                    });
+                }
+
+                // Replace PH variables
+                if (extractedData.ph) {
+                    Object.keys(extractedData.ph).forEach(key => {
+                        const value = extractedData.ph[key];
+                        content = content.replace(new RegExp(`{{${key}}}`, 'g'), value || '');
+                    });
+                }
+
+                return {
+                    success: true,
+                    content: content
+                };
+            },
+
+            async mergeAllSections(sectionContents) {
+                console.log('📑 Merging all sections...');
+                // Stub implementation
+                const merged = sectionContents.map(s => s.content).join('\n\n---\n\n');
+                return {
+                    success: true,
+                    content: merged,
+                    filename: `report_${DateHelper.formatYYMMDD_hhmmss()}.md`
+                };
+            }
+        };
+
+        // AuthManager stub - minimal implementation
+        const authManager = {
+            getCurrentUser() {
+                const session = Storage.get(CONFIG.STORAGE_KEYS.SESSION);
+                return session ? session.user : null;
+            },
+
+            checkSession() {
+                const session = Storage.get(CONFIG.STORAGE_KEYS.SESSION);
+                if (!session) {
+                    return { authenticated: false };
+                }
+                return {
+                    authenticated: true,
+                    user: session.user,
+                    session: session
+                };
+            },
+
+            redirectToLogin() {
+                window.location.href = CONFIG.PAGES.LOGIN;
+            }
+        };
+
+        // AppLayout stub - simple layout wrapper without ES6 modules
+        class AppLayout {
+            constructor(options = {}) {
+                this.currentStage = options.currentStage || 0;
+                this.reportName = options.reportName || '';
+            }
+
+            render(content) {
+                // Simple wrapper that just returns the content
+                return content;
+            }
+        }
 
         // Section definitions (15 sections: 00-14)
         const sections = [
@@ -397,6 +555,25 @@
         let currentSection = sections[0];
         let templateMode = 'auto'; // auto or manual
 
+        // Section templates - basic templates for each section
+        const sectionTemplates = {
+            'S00': '# 00. 표지\n\n[CS0] [CS1]\n[CS2]\n작성자: [CS6]\n부서: [CS7]\n작성일: [CS8]',
+            'S01': '# 01. 개요\n\n성분명: [CS0]\n브랜드명: [CS1]\n허가일: [CS5]\n효능효과: [CS15]\n용법용량: [CS16]',
+            'S02': '# 02. 국내외허가현황\n\n[Table T1]',
+            'S03': '# 03. 시판후sales데이터\n\n[CS10] ~ [CS11]\n[PH1]\n[Table T2]',
+            'S04': '# 04. 국내신속보고내역\n\n[PH2]\n[Table T3]',
+            'S05': '# 05. 국내정기보고내역\n\n[PH3]\n[Table T4]',
+            'S06': '# 06. 국내원시자료\n\n[PH4]\n[Table T5]',
+            'S07': '# 07. 국내외안전성조치현황\n\n[PH5]\n[Table T6]',
+            'S08': '# 08. 국내외판매중지현황\n\n[PH6]\n[PH7]\n[Table T7]',
+            'S09': '# 09. 해외신속보고내역\n\n[PH8]',
+            'S10': '# 10. 해외정기보고내역\n\n[PH9]',
+            'S11': '# 11. 해외원시자료\n\n[PH10]',
+            'S12': '# 12. 총괄평가\n\n[PH11]',
+            'S13': '# 13. 결론\n\n[PH12]',
+            'S14': '# 14. 참고문헌\n\n수동으로 작성하세요.'
+        };
+
         // Load extracted data from P16
         const storedData = Storage.get('extractedData') || {};
         const extractedData = {
@@ -413,6 +590,8 @@
             });
 
             const content = `
+                <div class="app-content">
+                <main class="main-content">
                 <div class="template-container">
                     <!-- Left Panel - Section List -->
                     <div class="section-list-panel">
@@ -512,6 +691,15 @@
                         </div>
                     </div>
                 </div>
+                </main>
+                </div>
+
+                <!-- Footer -->
+                <footer class="app-footer">
+                    <div class="footer-content">
+                        Copyright. Power Solution., Inc. 2026.
+                    </div>
+                </footer>
             `;
 
             document.getElementById('app').innerHTML = layout.render(content);

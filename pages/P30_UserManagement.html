@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>P-30 User Management - KPSUR AGENT</title>
-    <link rel="stylesheet" href="../styles/globals.css">
-    <link rel="stylesheet" href="../styles/components.css">
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/components.css">
     <style>
         .user-management-container {
             padding: 20px;
@@ -323,7 +324,7 @@
     </style>
 </head>
 <body>
-    <div id="app"></div>
+    <div class="app-layout" id="app"></div>
 
     <!-- Add/Edit User Modal -->
     <div id="userModal" class="user-modal">
@@ -375,9 +376,19 @@
         </div>
     </div>
 
-    <script src="../components/AppLayout.js"></script>
-    <script src="../utils/layout-helper.js"></script>
     <script>
+        // AppLayout stub class
+        class AppLayout {
+            constructor(options = {}) {
+                this.currentStage = options.currentStage || 0;
+                this.reportName = options.reportName || '';
+            }
+
+            render(content) {
+                return content;
+            }
+        }
+
         // Sample user data
         let users = [
             { id: 1, name: '홍길동', email: 'hong@kpsur.test', department: '약물안전관리부', role: 'master', status: 'active', lastLogin: '2025-01-15 09:23', reports: 15 },
@@ -400,6 +411,8 @@
             });
 
             const content = `
+                <div class="app-content">
+                <main class="main-content">
                 <div class="user-management-container">
                     <div class="page-header">
                         <h1 class="page-title">👥 사용자 관리</h1>
@@ -469,6 +482,15 @@
                         </table>
                     </div>
                 </div>
+                </main>
+                </div>
+
+                <!-- Footer -->
+                <footer class="app-footer">
+                    <div class="footer-content">
+                        Copyright. Power Solution., Inc. 2026.
+                    </div>
+                </footer>
             `;
 
             document.getElementById('app').innerHTML = layout.render(content);

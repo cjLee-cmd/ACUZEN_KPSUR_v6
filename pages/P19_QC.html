@@ -4,15 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>P-19 QC Validation - KPSUR AGENT</title>
-    <link rel="stylesheet" href="../styles/globals.css">
-    <link rel="stylesheet" href="../styles/components.css">
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/components.css">
     <style>
         .qc-container {
             display: grid;
             grid-template-columns: 1fr;
             gap: 16px;
-            height: calc(100vh - 140px);
             padding: 16px;
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
         .qc-main-grid {
@@ -491,7 +493,7 @@
     </style>
 </head>
 <body>
-    <div id="app"></div>
+    <div class="app-layout" id="app"></div>
 
     <!-- Approval Modal -->
     <div id="approvalModal" class="approval-modal">
@@ -531,13 +533,88 @@
         </div>
     </div>
 
-    <script src="../components/AppLayout.js"></script>
-    <script src="../utils/layout-helper.js"></script>
-    <script type="module">
-        // ES6 Modules
-        import { CONFIG, Storage, DateHelper } from '../js/config.js';
-        import qcValidator from '../js/qc-validator.js';
-        import authManager from '../js/auth.js';
+    <script>
+        // CONFIG - System configuration
+        const CONFIG = {
+            SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMDE0MDIsImV4cCI6MjA2NDU3NzQwMn0.LQNQJP93IjNA0PIoYj5UEfcBLgFckAbz_qJHpjlWpL0',
+            APP_NAME: 'KPSUR AGENT',
+            VERSION: '1.0.0'
+        };
+
+        // Storage - localStorage wrapper
+        const Storage = {
+            get: (key) => {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : null;
+                } catch (e) {
+                    console.error('Storage.get error:', e);
+                    return null;
+                }
+            },
+            set: (key, value) => {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (e) {
+                    console.error('Storage.set error:', e);
+                    return false;
+                }
+            },
+            remove: (key) => {
+                try {
+                    localStorage.removeItem(key);
+                    return true;
+                } catch (e) {
+                    console.error('Storage.remove error:', e);
+                    return false;
+                }
+            }
+        };
+
+        // DateHelper - Date formatting utilities
+        const DateHelper = {
+            format: (date, format = 'YYYY-MM-DD') => {
+                const d = new Date(date);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+                return format
+                    .replace('YYYY', year)
+                    .replace('MM', month)
+                    .replace('DD', day)
+                    .replace('HH', hours)
+                    .replace('mm', minutes);
+            },
+            now: () => new Date().toISOString()
+        };
+
+        // AppLayout stub class
+        class AppLayout {
+            constructor(options = {}) {
+                this.currentStage = options.currentStage || 0;
+                this.reportName = options.reportName || '';
+            }
+
+            render(content) {
+                return content;
+            }
+        }
+
+        // qcValidator stub
+        const qcValidator = {
+            validate: async (data, source) => ({ success: true, issues: [] }),
+            getReport: () => ({})
+        };
+
+        // authManager stub
+        const authManager = {
+            isAuthenticated: () => true,
+            getUser: () => ({ name: '관리자', role: 'Admin' })
+        };
 
         // Load reviewed sections and source documents
         const reviewedSections = Storage.get('reviewedSections') || {};
@@ -617,6 +694,8 @@
             });
 
             const content = `
+                <div class="app-content">
+                <main class="main-content">
                 <div class="qc-container">
                     <div class="qc-main-grid">
                         <!-- Left Panel - Validation Checklist -->
@@ -711,6 +790,15 @@
                         </div>
                     </div>
                 </div>
+                </main>
+                </div>
+
+                <!-- Footer -->
+                <footer class="app-footer">
+                    <div class="footer-content">
+                        Copyright. Power Solution., Inc. 2026.
+                    </div>
+                </footer>
             `;
 
             document.getElementById('app').innerHTML = layout.render(content);
