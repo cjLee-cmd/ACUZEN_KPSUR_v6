@@ -533,7 +533,24 @@
 
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
-    <script>
+    <script type="module">
+        // ES6 Modules
+        import { CONFIG, Storage, DateHelper } from '../js/config.js';
+        import qcValidator from '../js/qc-validator.js';
+        import authManager from '../js/auth.js';
+
+        // Load reviewed sections and source documents
+        const reviewedSections = Storage.get('reviewedSections') || {};
+        const convertedMarkdowns = Storage.get('convertedMarkdowns') || [];
+        const extractedData = Storage.get('extractedData') || {};
+
+        // Combine all markdown as source documents
+        const sourceDocuments = convertedMarkdowns.map(md => md.markdown).join('\n\n---\n\n');
+
+        // Get draft report content
+        const draftReport = Storage.get('draftReport') || {};
+        const draftContent = draftReport.content || '';
+
         // Validation categories and items
         const validationCategories = [
             {
@@ -754,46 +771,44 @@
             document.getElementById('startQCBtn').disabled = true;
             document.getElementById('resetQCBtn').disabled = false;
 
-            showLLMLoading(`${model}를 사용하여 집중 검증을 수행하고 있습니다...<br><em>Think step by step... Take your time...</em>`);
+            showLLMLoading(`${model}를 사용하여 QC 검증을 수행하고 있습니다...`);
 
             issues = [];
-            let completedItems = 0;
-            const totalItems = getTotalValidationItems();
 
-            // Validate each category
-            for (const category of validationCategories) {
-                category.status = 'checking';
-                renderValidationCategories();
+            try {
+                // Run full QC validation using qcValidator
+                const qcResult = await qcValidator.runFullQC(
+                    draftContent,
+                    sourceDocuments,
+                    extractedData
+                );
 
-                for (const item of category.items) {
-                    item.status = 'checking';
-                    renderValidationCategories();
+                if (qcResult.success) {
+                    issues = qcResult.issues || [];
 
-                    // Simulate LLM validation with intensive prompts
-                    await new Promise(resolve => setTimeout(resolve, 1200));
+                    // Update validation categories based on issues
+                    validationCategories.forEach(category => {
+                        const categoryIssues = issues.filter(issue => {
+                            if (category.id === 'data') return issue.type.includes('data') || issue.type.includes('missing');
+                            if (category.id === 'conflict') return issue.type.includes('conflict') || issue.type.includes('inconsistency');
+                            if (category.id === 'structure') return issue.type.includes('table') || issue.type.includes('section');
+                            if (category.id === 'content') return issue.type.includes('narrative') || issue.type.includes('source');
+                            return false;
+                        });
 
-                    // Randomly generate issues for demonstration
-                    const hasIssue = Math.random() < 0.15; // 15% chance of issue
+                        category.status = categoryIssues.length > 0 ? 'failed' : 'passed';
+                        category.items.forEach(item => {
+                            item.status = 'passed'; // Simplified for now
+                        });
+                    });
 
-                    if (hasIssue) {
-                        item.status = 'failed';
-                        category.status = 'failed';
-
-                        const issue = generateIssue(category, item);
-                        issues.push(issue);
-                    } else {
-                        item.status = 'passed';
-                    }
-
-                    completedItems++;
-                    updateProgress(completedItems, totalItems);
-                    renderValidationCategories();
+                    console.log(`QC completed: ${issues.length} issues found`);
+                } else {
+                    throw new Error(qcResult.error || 'QC validation failed');
                 }
-
-                if (category.status !== 'failed') {
-                    category.status = 'passed';
-                }
-                renderValidationCategories();
+            } catch (error) {
+                console.error('QC validation error:', error);
+                showToast('QC 검증 중 오류가 발생했습니다: ' + error.message, 'error');
             }
 
             hideLLMLoading();
@@ -1058,7 +1073,15 @@
 
         // Proceed to output stage
         function proceedToOutput() {
-            window.location.href = 'P20_Output.html';
+            // Save QC results to localStorage
+            Storage.set('qcResults', {
+                issues: issues,
+                passed: qcValidator.isPassed(),
+                validatedAt: DateHelper.formatISO()
+            });
+
+            const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+            window.location.href = `P20_Output.html?reportId=${reportId}`;
         }
 
         // Initialize on load

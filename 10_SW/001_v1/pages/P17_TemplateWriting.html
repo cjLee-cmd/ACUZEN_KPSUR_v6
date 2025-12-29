@@ -366,7 +366,12 @@
 
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
-    <script>
+    <script type="module">
+        // ES6 Modules
+        import { CONFIG, Storage, DateHelper } from '../js/config.js';
+        import templateWriter from '../js/template-writer.js';
+        import authManager from '../js/auth.js';
+
         // Section definitions (15 sections: 00-14)
         const sections = [
             { id: 'S00', number: '00', name: '표지', type: 'CS', status: 'pending', csFields: ['CS0', 'CS1', 'CS2', 'CS6', 'CS7', 'CS8'] },
@@ -386,71 +391,18 @@
             { id: 'S14', number: '14', name: '참고문헌', type: 'Manual', status: 'pending', csFields: [] }
         ];
 
-        // Sample templates
-        const sectionTemplates = {
-            'S00': `# 의약품 재심사 안전성 정기보고서
-
-## 품목명
-[CS1_브랜드명]
-
-## 성분명
-[CS0_성분명]
-
-## 판매사
-[CS2_판매사]
-
-## 작성자
-[CS6_보고서작성자] ([CS7_보고서작성부서])
-
-## 작성일자
-[CS8_보고서작성일자]`,
-
-            'S01': `# 1. 개요
-
-## 1.1 품목 정보
-- 성분명: [CS0_성분명]
-- 브랜드명: [CS1_브랜드명]
-- 국내 허가일자: [CS5_국내허가일자]
-
-## 1.2 효능·효과
-[CS15_효능효과]
-
-## 1.3 용법·용량
-[CS16_용법용량]`,
-
-            'S03': `# 3. 시판 후 Sales 데이터
-
-## 3.1 보고 기간
-- 전체 보고기간: [CS10_전체보고기간_시작일] ~ [CS11_전체보고기간_종료일]
-
-## 3.2 판매량 현황
-[PH1_시판후sales데이터서술문]
-
-## 3.3 연도별 판매량
-[표2_연도별판매량]`
-        };
+        // Template paths (stored in ../03_Template/)
+        const TEMPLATE_BASE_PATH = '../../../03_Template/';
 
         let currentSection = sections[0];
         let templateMode = 'auto'; // auto or manual
 
-        // Mock extracted data from P-16
+        // Load extracted data from P16
+        const storedData = Storage.get('extractedData') || {};
         const extractedData = {
-            cs: {
-                'CS0': '토지리주맙',
-                'CS1': '악템라주',
-                'CS2': '한국로슈',
-                'CS6': '홍길동',
-                'CS7': '약물안전관리부',
-                'CS8': '2025-01-15',
-                'CS5': '2014-03-18',
-                'CS15': '류마티스 관절염의 치료',
-                'CS16': '성인: 8mg/kg을 4주마다 정맥주사',
-                'CS10': '2020-01-01',
-                'CS11': '2024-12-31'
-            },
-            ph: {
-                'PH1': '당해 보고기간 동안 총 12,543건의 판매가 이루어졌으며, 전년 대비 8.3% 증가하였습니다. 주요 판매처는 상급종합병원(67%)과 종합병원(28%)이었으며, 요양병원 및 의원급 의료기관의 판매 비중은 5%로 나타났습니다.'
-            }
+            cs: storedData.csData || {},
+            ph: storedData.phData || {},
+            table: storedData.tableData || {}
         };
 
         // Initialize the page
@@ -657,66 +609,66 @@
         async function populateSection() {
             const mode = document.getElementById('templateMode').value;
 
-            if (mode === 'auto') {
-                showLLMLoading('AI가 템플릿을 작성하고 있습니다...');
-                currentSection.status = 'processing';
-                updateStats();
-                renderSectionList();
-
-                // Simulate LLM processing
-                await new Promise(resolve => setTimeout(resolve, 2000));
-
-                hideLLMLoading();
-            }
-
-            // Replace CS data placeholders
-            let populatedContent = sectionTemplates[currentSection.id] || '';
-
-            if (currentSection.csFields) {
-                currentSection.csFields.forEach(field => {
-                    const value = extractedData.cs[field] || `[${field} - 데이터 없음]`;
-                    const regex = new RegExp(`\\[${field}_[^\\]]+\\]`, 'g');
-                    populatedContent = populatedContent.replace(regex, value);
-                });
-            }
-
-            // Replace PH data placeholders
-            if (currentSection.phFields) {
-                currentSection.phFields.forEach(field => {
-                    const value = extractedData.ph[field] || `[${field} - 서술문 없음]`;
-                    const regex = new RegExp(`\\[${field}_[^\\]]+\\]`, 'g');
-                    populatedContent = populatedContent.replace(regex, value);
-                });
-            }
-
-            // Replace table placeholders
-            if (currentSection.tableId) {
-                const tableHtml = `<table>
-                    <thead>
-                        <tr><th>연도</th><th>판매량 (개)</th><th>전년 대비</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>2020</td><td>10,234</td><td>-</td></tr>
-                        <tr><td>2021</td><td>11,567</td><td>+13.0%</td></tr>
-                        <tr><td>2022</td><td>11,892</td><td>+2.8%</td></tr>
-                        <tr><td>2023</td><td>12,115</td><td>+1.9%</td></tr>
-                        <tr><td>2024</td><td>12,543</td><td>+3.5%</td></tr>
-                    </tbody>
-                </table>`;
-
-                const regex = new RegExp(`\\[${currentSection.tableId}_[^\\]]+\\]`, 'g');
-                populatedContent = populatedContent.replace(regex, tableHtml);
-            }
-
-            // Convert markdown to HTML for preview
-            const previewHtml = convertMarkdownToHTML(populatedContent);
-            document.getElementById('previewPanel').innerHTML = previewHtml;
-
-            currentSection.status = 'completed';
-            currentSection.populatedContent = populatedContent;
+            showLLMLoading('템플릿을 로드하고 데이터를 삽입하고 있습니다...');
+            currentSection.status = 'processing';
             updateStats();
             renderSectionList();
-            showToast('섹션이 작성되었습니다', 'success');
+
+            try {
+                // Load template using templateWriter
+                const templatePath = `${TEMPLATE_BASE_PATH}Section_${currentSection.number}_${currentSection.name}.md`;
+                const templateResult = await templateWriter.loadTemplate(templatePath);
+
+                if (!templateResult.success) {
+                    // Fallback to simple template if file not found
+                    console.warn(`Template not found for ${currentSection.id}, using simple template`);
+                }
+
+                const template = templateResult.template || `# ${currentSection.number}. ${currentSection.name}\n\n[Content for ${currentSection.name}]`;
+
+                // Populate template with extracted data
+                const populateResult = await templateWriter.populateTemplate(
+                    template,
+                    extractedData.cs,
+                    extractedData.ph,
+                    extractedData.table
+                );
+
+                if (!populateResult.success) {
+                    throw new Error(populateResult.error || 'Template population failed');
+                }
+
+                const populatedContent = populateResult.markdown;
+
+                // Convert markdown to HTML for preview
+                const previewHtml = convertMarkdownToHTML(populatedContent);
+                document.getElementById('previewPanel').innerHTML = previewHtml;
+
+                currentSection.status = 'completed';
+                currentSection.populatedContent = populatedContent;
+
+                // Save section to localStorage
+                const sections = Storage.get('generatedSections') || {};
+                sections[currentSection.id] = {
+                    number: currentSection.number,
+                    name: currentSection.name,
+                    content: populatedContent,
+                    generatedAt: DateHelper.formatISO()
+                };
+                Storage.set('generatedSections', sections);
+
+                hideLLMLoading();
+                updateStats();
+                renderSectionList();
+                showToast('섹션이 작성되었습니다', 'success');
+            } catch (error) {
+                console.error('Section population error:', error);
+                currentSection.status = 'error';
+                hideLLMLoading();
+                updateStats();
+                renderSectionList();
+                showToast('섹션 작성 중 오류가 발생했습니다: ' + error.message, 'error');
+            }
         }
 
         // Simple markdown to HTML converter
@@ -807,14 +759,46 @@
         }
 
         // Proceed to review stage
-        function proceedToReview() {
+        async function proceedToReview() {
             const allCompleted = sections.every(s => s.status === 'completed');
             if (!allCompleted) {
                 showToast('모든 섹션을 완료해주세요', 'error');
                 return;
             }
 
-            window.location.href = 'P18_Review.html';
+            showLLMLoading('전체 보고서를 병합하고 있습니다...');
+
+            try {
+                // Merge all sections into complete report
+                const generatedSections = Storage.get('generatedSections') || {};
+                const sectionContents = sections.map(section => generatedSections[section.id]?.content || '');
+
+                const mergeResult = await templateWriter.mergeAllSections(sectionContents);
+
+                if (!mergeResult.success) {
+                    throw new Error(mergeResult.error || 'Section merge failed');
+                }
+
+                // Save complete draft report
+                Storage.set('draftReport', {
+                    content: mergeResult.fullReport,
+                    sections: generatedSections,
+                    mergedAt: DateHelper.formatISO()
+                });
+
+                hideLLMLoading();
+
+                const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+                showToast('보고서 병합이 완료되었습니다. 리뷰 단계로 이동합니다.', 'success');
+
+                setTimeout(() => {
+                    window.location.href = `P18_Review.html?reportId=${reportId}`;
+                }, 1000);
+            } catch (error) {
+                console.error('Report merge error:', error);
+                hideLLMLoading();
+                showToast('보고서 병합 중 오류가 발생했습니다: ' + error.message, 'error');
+            }
         }
 
         // Initialize on load

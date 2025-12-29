@@ -396,17 +396,19 @@
 
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
-    <script>
+    <script type="module">
+        // ES6 Modules
+        import { CONFIG, Storage, DateHelper } from '../js/config.js';
+        import outputGenerator from '../js/output-generator.js';
+        import authManager from '../js/auth.js';
+
+        // Load draft report and QC results
+        const draftReport = Storage.get('draftReport') || {};
+        const qcResults = Storage.get('qcResults') || {};
+        const reportContent = draftReport.content || '';
+
         let zoomLevel = 100;
-        let exportHistory = [
-            {
-                id: 1,
-                name: 'testPill_1_v1.0.docx',
-                format: 'Word',
-                timestamp: '2025-01-14 15:23:45',
-                size: '2.4 MB'
-            }
-        ];
+        let exportHistory = outputGenerator.getOutputHistory();
 
         // Initialize the page
         function init() {
@@ -741,30 +743,54 @@
         async function exportDocument() {
             const format = document.querySelector('input[name="exportFormat"]:checked').value;
             const fileName = document.getElementById('fileName').value;
-            const includeTableData = document.getElementById('includeTableData').checked;
-            const includeSourceDocs = document.getElementById('includeSourceDocs').checked;
-            const includeChangeLogs = document.getElementById('includeChangeLogs').checked;
+            const isDraft = document.getElementById('saveAsDraft')?.checked || false;
 
             showLLMLoading('최종 문서를 생성하고 있습니다...');
 
-            // Simulate export process
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            try {
+                // Validate report format
+                const validation = outputGenerator.validateReportFormat(reportContent);
+                if (!validation.valid) {
+                    hideLLMLoading();
+                    showToast('보고서 검증 실패: ' + validation.issues.join(', '), 'error');
+                    return;
+                }
 
-            hideLLMLoading();
+                // Add metadata
+                const metadata = {
+                    reportName: fileName,
+                    version: '1.0',
+                    date: DateHelper.formatISO(),
+                    author: authManager.getCurrentUser()?.name || 'Unknown',
+                    isDraft: isDraft
+                };
 
-            // Add to export history
-            const newExport = {
-                id: exportHistory.length + 1,
-                name: `${fileName}.${format === 'both' ? 'docx, pdf' : format}`,
-                format: format === 'docx' ? 'Word' : format === 'pdf' ? 'PDF' : 'Word + PDF',
-                timestamp: new Date().toLocaleString('ko-KR'),
-                size: '2.4 MB'
-            };
+                const contentWithMetadata = outputGenerator.addMetadata(reportContent, metadata);
 
-            exportHistory.unshift(newExport);
-            renderExportHistory();
+                // Export based on format
+                let result;
+                if (format === 'docx') {
+                    result = await outputGenerator.generateWordDocument(fileName, contentWithMetadata, isDraft);
+                } else if (format === 'html') {
+                    result = outputGenerator.downloadHTML(fileName, contentWithMetadata, isDraft);
+                } else if (format === 'pdf') {
+                    result = outputGenerator.printToPDF(fileName, contentWithMetadata, isDraft);
+                } else if (format === 'both') {
+                    result = await outputGenerator.generateWordDocument(fileName, contentWithMetadata, isDraft);
+                    outputGenerator.printToPDF(fileName, contentWithMetadata, isDraft);
+                }
 
-            showToast(`${newExport.name} 파일이 생성되었습니다`, 'success');
+                // Update export history
+                exportHistory = outputGenerator.getOutputHistory();
+                renderExportHistory();
+
+                hideLLMLoading();
+                showToast(`${result.filename || fileName} 파일이 생성되었습니다`, 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                hideLLMLoading();
+                showToast('문서 생성 중 오류가 발생했습니다: ' + error.message, 'error');
+            }
         }
 
         // Save as draft

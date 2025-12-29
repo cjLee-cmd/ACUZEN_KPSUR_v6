@@ -537,7 +537,16 @@
 
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
-    <script>
+    <script type="module">
+        // ES6 Modules
+        import { CONFIG, Storage, DateHelper } from '../js/config.js';
+        import reviewManager from '../js/review-manager.js';
+        import authManager from '../js/auth.js';
+
+        // Load draft report from P17
+        const draftReport = Storage.get('draftReport') || {};
+        const generatedSections = draftReport.sections || {};
+
         // Section data
         const sections = [
             { id: 'S00', number: '00', name: '표지', status: 'pending' },
@@ -557,17 +566,27 @@
             { id: 'S14', number: '14', name: '참고문헌', status: 'pending' }
         ];
 
-        // Sample content
-        const sectionContents = {
-            'S00': {
-                markdown: `# 의약품 재심사 안전성 정기보고서\n\n## 품목명\n악템라주\n\n## 성분명\n토지리주맙\n\n## 판매사\n한국로슈\n\n## 작성자\n홍길동 (약물안전관리부)\n\n## 작성일자\n2025-01-15`,
-                html: `<h1>의약품 재심사 안전성 정기보고서</h1><h2>품목명</h2><p>악템라주</p><h2>성분명</h2><p>토지리주맙</p><h2>판매사</h2><p>한국로슈</p><h2>작성자</h2><p>홍길동 (약물안전관리부)</p><h2>작성일자</h2><p>2025-01-15</p>`
-            },
-            'S01': {
-                markdown: `# 1. 개요\n\n## 1.1 품목 정보\n- 성분명: 토지리주맙\n- 브랜드명: 악템라주\n- 국내 허가일자: 2014-03-18\n\n## 1.2 효능·효과\n류마티스 관절염의 치료\n\n## 1.3 용법·용량\n성인: 8mg/kg을 4주마다 정맥주사`,
-                html: `<h1>1. 개요</h1><h2>1.1 품목 정보</h2><ul><li>성분명: 토지리주맙</li><li>브랜드명: 악템라주</li><li>국내 허가일자: 2014-03-18</li></ul><h2>1.2 효능·효과</h2><p>류마티스 관절염의 치료</p><h2>1.3 용법·용량</h2><p>성인: 8mg/kg을 4주마다 정맥주사</p>`
-            }
-        };
+        // Load section contents from generated sections
+        const sectionContents = {};
+        sections.forEach(section => {
+            const content = generatedSections[section.id]?.content || '';
+            sectionContents[section.id] = {
+                markdown: content,
+                html: convertMarkdownToHTML(content)
+            };
+        });
+
+        function convertMarkdownToHTML(markdown) {
+            let html = markdown;
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/\n\n/g, '</p><p>');
+            html = `<p>${html}</p>`;
+            return html;
+        }
 
         let currentSection = sections[0];
         let viewMode = 'split'; // split or single
@@ -919,7 +938,7 @@
         }
 
         // Proceed to QC
-        function proceedToQC() {
+        async function proceedToQC() {
             const allReviewed = sections.every(s => s.status === 'reviewed');
 
             if (!allReviewed) {
@@ -929,7 +948,32 @@
                 }
             }
 
-            window.location.href = 'P19_QC.html';
+            // End review session and save changes
+            if (reviewManager.getCurrentSession()) {
+                const result = await reviewManager.endReviewSession();
+                if (result.success) {
+                    console.log('Review session ended successfully');
+                }
+            }
+
+            // Save reviewed sections to localStorage
+            const reviewedSections = {};
+            sections.forEach(section => {
+                const content = sectionContents[section.id];
+                if (content) {
+                    reviewedSections[section.id] = {
+                        ...content,
+                        status: section.status,
+                        reviewedAt: DateHelper.formatISO()
+                    };
+                }
+            });
+
+            Storage.set('reviewedSections', reviewedSections);
+            Storage.set('reviewChangeHistory', changeHistory);
+
+            const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+            window.location.href = `P19_QC.html?reportId=${reportId}`;
         }
 
         // Update statistics

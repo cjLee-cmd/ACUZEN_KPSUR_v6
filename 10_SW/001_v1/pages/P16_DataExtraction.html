@@ -551,19 +551,25 @@
 
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
-    <script>
-        // Sample data for markdown files
-        const markdownFiles = [
-            { id: 1, rawId: 'RAW1', name: '최신첨부문서.md', category: 'required', status: 'pending' },
-            { id: 2, rawId: 'RAW2.1', name: '용법용량.md', category: 'required', status: 'pending' },
-            { id: 3, rawId: 'RAW2.2', name: '효능효과.md', category: 'required', status: 'pending' },
-            { id: 4, rawId: 'RAW2.3', name: '사용상의주의사항.md', category: 'required', status: 'pending' },
-            { id: 5, rawId: 'RAW3', name: '시판후sales데이터.md', category: 'required', status: 'pending' },
-            { id: 6, rawId: 'RAW4', name: '허가현황.md', category: 'required', status: 'pending' },
-            { id: 7, rawId: 'RAW12', name: '국내신속보고LineListing.md', category: 'lineListing', status: 'pending' },
-            { id: 8, rawId: 'RAW14', name: '원시자료LineListing.md', category: 'lineListing', status: 'pending' },
-            { id: 9, rawId: 'RAW15', name: '정기보고LineListing.md', category: 'lineListing', status: 'pending' }
-        ];
+    <script type="module">
+        // ES6 Modules
+        import { CONFIG, Storage, DateHelper } from '../js/config.js';
+        import dataExtractor from '../js/data-extractor.js';
+        import authManager from '../js/auth.js';
+
+        // Load converted markdown files from localStorage
+        const convertedMarkdowns = Storage.get('convertedMarkdowns') || [];
+        const markdownFiles = convertedMarkdowns.map((file, index) => {
+            const category = ['RAW12', 'RAW14', 'RAW15'].includes(file.rawId) ? 'lineListing' : 'required';
+            return {
+                id: index + 1,
+                rawId: file.rawId,
+                name: file.fileName.replace(/\.(pdf|xlsx|docx|txt)$/i, '.md'),
+                markdown: file.markdown,
+                category: category,
+                status: 'pending'
+            };
+        });
 
         // CS Data template (60+ variables)
         const csDataTemplate = [
@@ -856,42 +862,104 @@
             const model = document.getElementById('llmModel').value;
             showLLMLoading(`${model}를 사용하여 데이터를 추출하고 있습니다...`);
 
-            for (let i = 0; i < markdownFiles.length; i++) {
-                const file = markdownFiles[i];
+            const extractionResults = [];
+
+            for (const file of markdownFiles) {
                 file.status = 'extracting';
                 renderFileList();
 
-                // Simulate LLM extraction
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                try {
+                    // Extract data from markdown using dataExtractor
+                    const result = await dataExtractor.extractFromMarkdown(
+                        file.markdown,
+                        file.rawId
+                    );
 
-                // Simulate data extraction with some conflicts
-                if (i === 0) {
-                    csData[0].value = '코로나19백신';
-                    csData[0].source = file.name;
-                }
-                if (i === 1) {
-                    csData[1].value = '코미나티주';
-                    csData[1].source = file.name;
-                }
-                if (i === 2) {
-                    // Simulate conflict
-                    csData[15].hasConflict = true;
-                    csData[15].conflictOptions = [
-                        { value: '16세 이상에서 코로나19 예방', source: '효능효과20210305.md', date: '2021-03-05' },
-                        { value: '12세 이상에서 코로나19 예방', source: '효능효과20210716.md', date: '2021-07-16' }
-                    ];
+                    if (result.success) {
+                        extractionResults.push({
+                            rawId: file.rawId,
+                            fileName: file.name,
+                            csData: result.csData || {},
+                            phData: result.phData || {},
+                            tableData: result.tableData || {},
+                            extractedAt: result.extractedAt
+                        });
+
+                        file.status = 'completed';
+                    } else {
+                        file.status = 'error';
+                        console.error(`Extraction failed for ${file.name}:`, result.error);
+                    }
+                } catch (error) {
+                    console.error(`Extraction error for ${file.name}:`, error);
+                    file.status = 'error';
                 }
 
-                file.status = 'completed';
                 renderFileList();
                 updateStats();
             }
+
+            // Merge all extracted data
+            const mergedData = dataExtractor.mergeExtractedData(extractionResults);
+
+            // Update CS Data
+            Object.keys(mergedData.csData || {}).forEach(key => {
+                const csItem = csData.find(d => d.id === key);
+                if (csItem && mergedData.csData[key]) {
+                    csItem.value = mergedData.csData[key].value;
+                    csItem.source = mergedData.csData[key].source;
+                }
+            });
+
+            // Update PH Data
+            Object.keys(mergedData.phData || {}).forEach(key => {
+                const phItem = phData.find(d => d.id === key);
+                if (phItem && mergedData.phData[key]) {
+                    phItem.value = mergedData.phData[key].value;
+                    phItem.source = mergedData.phData[key].source;
+                }
+            });
+
+            // Update Table Data
+            Object.keys(mergedData.tableData || {}).forEach(key => {
+                const tableItem = tableData.find(d => d.id === key);
+                if (tableItem && mergedData.tableData[key]) {
+                    tableItem.hasData = true;
+                    tableItem.rows = mergedData.tableData[key].rows || [];
+                }
+            });
+
+            // Handle conflicts
+            const conflicts = dataExtractor.getConflictData();
+            if (conflicts && conflicts.length > 0) {
+                conflicts.forEach(conflict => {
+                    const csItem = csData.find(d => d.id === conflict.field);
+                    if (csItem) {
+                        csItem.hasConflict = true;
+                        csItem.conflictOptions = conflict.options;
+                    }
+                });
+            }
+
+            // Save extracted data to localStorage
+            Storage.set('extractedData', {
+                csData: mergedData.csData,
+                phData: mergedData.phData,
+                tableData: mergedData.tableData,
+                extractedAt: DateHelper.formatISO()
+            });
 
             hideLLMLoading();
             renderCSData();
             renderPHData();
             renderTableData();
-            showToast('데이터 추출이 완료되었습니다. 충돌 데이터를 확인해주세요.', 'success');
+
+            const conflictCount = conflicts ? conflicts.length : 0;
+            if (conflictCount > 0) {
+                showToast(`데이터 추출이 완료되었습니다. ${conflictCount}개의 충돌 데이터를 확인해주세요.`, 'warning');
+            } else {
+                showToast('데이터 추출이 완료되었습니다.', 'success');
+            }
         }
 
         // Update stats
@@ -1005,7 +1073,16 @@
                 return;
             }
 
-            window.location.href = 'P17_TemplateWriting.html';
+            // Ensure extracted data is saved
+            Storage.set('extractedData', {
+                csData: Object.fromEntries(csData.map(d => [d.id, { value: d.value, source: d.source }])),
+                phData: Object.fromEntries(phData.map(d => [d.id, { value: d.value, source: d.source }])),
+                tableData: Object.fromEntries(tableData.map(d => [d.id, { hasData: d.hasData, rows: d.rows }])),
+                extractedAt: DateHelper.formatISO()
+            });
+
+            const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+            window.location.href = `P17_TemplateWriting.html?reportId=${reportId}`;
         }
 
         // Initialize on load

@@ -716,19 +716,25 @@
     <!-- JavaScript -->
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
-    <script>
-        // 샘플 파일 데이터
-        const files = [
-            { id: 1, name: 'RAW1_최신첨부문서.pdf', rawId: 'RAW1', status: 'pending', markdown: null },
-            { id: 2, name: 'RAW2.1_용법용량.pdf', rawId: 'RAW2.1', status: 'pending', markdown: null },
-            { id: 3, name: 'RAW2.2_효능효과.pdf', rawId: 'RAW2.2', status: 'pending', markdown: null },
-            { id: 4, name: 'RAW2.3_사용상의주의사항.pdf', rawId: 'RAW2.3', status: 'pending', markdown: null },
-            { id: 5, name: 'RAW3_시판후sales데이터.xlsx', rawId: 'RAW3', status: 'pending', markdown: null },
-            { id: 6, name: 'RAW4_허가현황.docx', rawId: 'RAW4', status: 'pending', markdown: null },
-            { id: 7, name: 'RAW12_국내신속보고LineListing.xlsx', rawId: 'RAW12', status: 'pending', markdown: null },
-            { id: 8, name: 'RAW14_원시자료LineListing.xlsx', rawId: 'RAW14', status: 'pending', markdown: null },
-            { id: 9, name: 'RAW15_정기보고LineListing.xlsx', rawId: 'RAW15', status: 'pending', markdown: null }
-        ];
+    <script type="module">
+        // ES6 Modules
+        import { CONFIG, Storage, DateHelper } from '../js/config.js';
+        import markdownConverter from '../js/markdown-converter.js';
+        import fileHandler from '../js/file-handler.js';
+        import authManager from '../js/auth.js';
+
+        // 업로드된 파일 데이터 로드
+        const uploadedFilesData = Storage.get('uploadedFiles') || [];
+        const files = uploadedFilesData.map((fileData, index) => ({
+            id: index + 1,
+            name: fileData.fileName,
+            rawId: fileData.rawId,
+            url: fileData.url,
+            path: fileData.path,
+            status: 'pending',
+            markdown: null,
+            convertedAt: null
+        }));
 
         let selectedFile = null;
         let logs = [];
@@ -898,48 +904,37 @@
                 updateStats();
                 addLog(`${file.name} 변환 중...`, 'info');
 
-                // LLM 호출 시뮬레이션
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                try {
+                    // Supabase Storage에서 파일 가져오기
+                    const response = await fetch(file.url);
+                    if (!response.ok) {
+                        throw new Error(`파일을 가져올 수 없습니다: ${response.statusText}`);
+                    }
 
-                // 샘플 마크다운 생성
-                file.markdown = `
-                    <h2>${file.rawId} - ${file.name.split('_')[1]}</h2>
-                    <p>이 문서는 LLM을 통해 마크다운으로 변환되었습니다.</p>
-                    <p><strong>원본 내용을 정확히 보존</strong>하며 형식만 변환합니다.</p>
+                    const blob = await response.blob();
+                    const fileObj = new File([blob], file.name, { type: blob.type });
 
-                    <h3>변환 규칙</h3>
-                    <ul>
-                        <li>표는 마크다운 테이블 형식으로 변환</li>
-                        <li>제목은 계층 구조에 맞게 # 기호로 표현</li>
-                        <li>목록은 - 또는 1. 형식으로 표현</li>
-                        <li>강조는 **굵게** 또는 *기울임*으로 표현</li>
-                    </ul>
+                    // 마크다운 변환
+                    const result = await markdownConverter.convertFile(fileObj, file.rawId);
 
-                    <h3>예시 테이블</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>항목</th>
-                                <th>내용</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>성분명</td>
-                                <td>토지나메란</td>
-                            </tr>
-                            <tr>
-                                <td>제품명</td>
-                                <td>코미나티주</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                `;
+                    if (result.success) {
+                        file.markdown = result.markdown;
+                        file.convertedAt = result.convertedAt;
+                        file.status = 'completed';
 
-                file.status = 'completed';
+                        addLog(`${file.name} 변환 완료 (${result.duration}ms)`, 'success');
+                    } else {
+                        file.status = 'error';
+                        addLog(`${file.name} 변환 실패: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Conversion error:', error);
+                    file.status = 'error';
+                    addLog(`${file.name} 변환 실패: ${error.message}`, 'error');
+                }
+
                 renderFileList();
                 updateStats();
-                addLog(`${file.name} 변환 완료`, 'success');
 
                 // 선택된 파일이면 미리보기 업데이트
                 if (selectedFile?.id === file.id) {
@@ -955,9 +950,28 @@
 
         // 다음 단계로
         document.getElementById('nextBtn').addEventListener('click', () => {
+            // 변환 결과 localStorage에 저장
+            const convertedMarkdowns = files.map(file => ({
+                fileName: file.name,
+                rawId: file.rawId,
+                markdown: file.markdown,
+                convertedAt: file.convertedAt,
+                status: file.status
+            }));
+
+            Storage.set('convertedMarkdowns', convertedMarkdowns);
+
+            // 변환 요약 저장
+            const conversionSummary = markdownConverter.getConversionHistory();
+            Storage.set('conversionSummary', conversionSummary);
+
+            const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+
+            addLog('변환 결과를 저장했습니다. 데이터 추출 단계로 이동합니다.');
             showToast('데이터 추출 단계로 이동합니다.', 'success');
+
             setTimeout(() => {
-                navigateTo('P16_DataExtraction.html?reportId=1');
+                navigateTo(`P16_DataExtraction.html?reportId=${reportId}`);
             }, 1000);
         });
     </script>
