@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대시보드 - KPSUR AGENT | ACUZEN AI</title>
+    <link rel="stylesheet" href="../styles/globals.css">
+    <link rel="stylesheet" href="../styles/layout.css">
+    <style>
+        /* 페이지별 커스텀 스타일 */
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .welcome-section {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .welcome-subtitle {
+            font-size: 13px;
+            color: #6B7280;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 115, 155, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #25739B;
+            border: 2px solid #25739B;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(37, 115, 155, 0.05);
+        }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon {
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon.primary {
+            background: rgba(37, 115, 155, 0.1);
+        }
+
+        .stat-icon.success {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .stat-icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .stat-icon.info {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #25739B;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6B7280;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .stat-trend {
+            font-size: 11px;
+            color: #10B981;
+            margin-top: 0;
+        }
+
+        .stat-trend.down {
+            color: #EF4444;
+        }
+
+        /* 콘텐츠 섹션 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-lg);
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: var(--spacing-xl);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .card-action {
+            font-size: 12px;
+            color: #25739B;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .card-action:hover {
+            text-decoration: underline;
+        }
+
+        /* 테이블 */
+        .reports-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .reports-table th {
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6B7280;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-bottom: 1px solid #E5E7EB;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .reports-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid #F3F4F6;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .reports-table tr:hover {
+            background: rgba(37, 115, 155, 0.02);
+        }
+
+        .report-name {
+            font-weight: 600;
+            color: #25739B;
+            cursor: pointer;
+        }
+
+        .report-name:hover {
+            text-decoration: underline;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-badge.draft {
+            background: rgba(156, 163, 175, 0.1);
+            color: #6B7280;
+        }
+
+        .status-badge.in-progress {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3B82F6;
+        }
+
+        .status-badge.review {
+            background: rgba(245, 158, 11, 0.1);
+            color: #F59E0B;
+        }
+
+        .status-badge.qc {
+            background: rgba(168, 85, 247, 0.1);
+            color: #A855F7;
+        }
+
+        .status-badge.completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10B981;
+        }
+
+        .stage-indicator {
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+
+        /* 활동 내역 */
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .activity-item {
+            display: flex;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .activity-item:hover {
+            background: rgba(37, 115, 155, 0.02);
+        }
+
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .activity-icon.create {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .activity-icon.update {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .activity-icon.review {
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .activity-icon.complete {
+            background: rgba(168, 85, 247, 0.1);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-size: 13px;
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .activity-time {
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: #9CA3AF;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .empty-text {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        /* 반응형 */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-md);
+            }
+
+            .action-buttons {
+                width: 100%;
+            }
+
+            .btn-primary, .btn-secondary {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item active">대시보드</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content with Sidebar -->
+        <div class="app-content">
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="page-container">
+                    <!-- Dashboard Header -->
+                    <div class="dashboard-header">
+                        <div class="welcome-section">
+                            <h1 class="welcome-title">안녕하세요, <span id="userName">사용자</span>님</h1>
+                            <p class="welcome-subtitle">오늘도 안전한 의약품 관리를 위해 노력해주셔서 감사합니다.</p>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button class="btn-primary" onclick="createNewReport()">
+                                <span>➕</span>
+                                <span>새 보고서 생성</span>
+                            </button>
+                            <button class="btn-secondary" onclick="navigateTo('P11_ReportList.html')">
+                                <span>📋</span>
+                                <span>전체 보고서</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 통계 카드 -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon primary">📊</div>
+                            </div>
+                            <div class="stat-value" id="totalReports">12</div>
+                            <div class="stat-label">총 보고서</div>
+                            <div class="stat-trend">↑ 지난달 대비 +3</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon info">🔄</div>
+                            </div>
+                            <div class="stat-value" id="inProgressReports">5</div>
+                            <div class="stat-label">진행 중</div>
+                            <div class="stat-trend">3개 리뷰 대기</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon warning">⏰</div>
+                            </div>
+                            <div class="stat-value" id="qcReports">2</div>
+                            <div class="stat-label">QC 검증 대기</div>
+                            <div class="stat-trend">긴급 처리 필요</div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div class="stat-icon success">✅</div>
+                            </div>
+                            <div class="stat-value" id="completedReports">5</div>
+                            <div class="stat-label">완료</div>
+                            <div class="stat-trend">이번 달 완료</div>
+                        </div>
+                    </div>
+
+                    <!-- 콘텐츠 그리드 -->
+                    <div class="content-grid">
+                        <!-- 최근 보고서 -->
+                        <div class="content-card">
+                            <div class="card-header">
+                                <h2 class="card-title">최근 보고서</h2>
+                                <a class="card-action" onclick="navigateTo('P11_ReportList.html')">전체 보기 →</a>
+                            </div>
+
+                            <table class="reports-table">
+                                <thead>
+                                    <tr>
+                                        <th>보고서명</th>
+                                        <th>성분명</th>
+                                        <th>단계</th>
+                                        <th>상태</th>
+                                        <th>작성자</th>
+                                        <th>수정일</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportsTableBody">
+                                    <!-- 샘플 데이터 -->
+                                    <tr>
+                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">코로나19백신_PSUR_2024Q4</span></td>
+                                        <td>토지나메란</td>
+                                        <td><span class="stage-indicator">Stage 7 - 리뷰</span></td>
+                                        <td><span class="status-badge review">리뷰중</span></td>
+                                        <td>김철수</td>
+                                        <td>2025-12-28</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">고혈압약_PSUR_2024Q4</span></td>
+                                        <td>암로디핀</td>
+                                        <td><span class="stage-indicator">Stage 8 - QC 검증</span></td>
+                                        <td><span class="status-badge qc">QC대기</span></td>
+                                        <td>이영희</td>
+                                        <td>2025-12-27</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">당뇨병약_PSUR_2024Q4</span></td>
+                                        <td>메트포르민</td>
+                                        <td><span class="stage-indicator">Stage 5 - 데이터 추출</span></td>
+                                        <td><span class="status-badge in-progress">진행중</span></td>
+                                        <td>박민수</td>
+                                        <td>2025-12-26</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">항생제_PSUR_2024Q3</span></td>
+                                        <td>아목시실린</td>
+                                        <td><span class="stage-indicator">Stage 9 - 최종 출력</span></td>
+                                        <td><span class="status-badge completed">완료</span></td>
+                                        <td>최지영</td>
+                                        <td>2025-12-20</td>
+                                    </tr>
+                                    <tr>
+                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">진통제_PSUR_2024Q4</span></td>
+                                        <td>이부프로펜</td>
+                                        <td><span class="stage-indicator">Stage 2 - 보고서 상태</span></td>
+                                        <td><span class="status-badge draft">임시저장</span></td>
+                                        <td>정수빈</td>
+                                        <td>2025-12-25</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 최근 활동 -->
+                        <div class="content-card">
+                            <div class="card-header">
+                                <h2 class="card-title">최근 활동</h2>
+                            </div>
+
+                            <div class="activity-list">
+                                <div class="activity-item">
+                                    <div class="activity-icon create">➕</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">새 보고서 생성됨</div>
+                                        <div class="activity-time">진통제_PSUR_2024Q4 · 2시간 전</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon review">✏️</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">리뷰 완료</div>
+                                        <div class="activity-time">코로나19백신_PSUR_2024Q4 · 5시간 전</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon update">🔄</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">데이터 추출 진행중</div>
+                                        <div class="activity-time">당뇨병약_PSUR_2024Q4 · 1일 전</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon complete">✅</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">보고서 완료</div>
+                                        <div class="activity-time">항생제_PSUR_2024Q3 · 3일 전</div>
+                                    </div>
+                                </div>
+
+                                <div class="activity-item">
+                                    <div class="activity-icon update">📤</div>
+                                    <div class="activity-content">
+                                        <div class="activity-title">파일 업로드 완료</div>
+                                        <div class="activity-time">고혈압약_PSUR_2024Q4 · 5일 전</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Workflow Sidebar (Right) -->
+            <aside class="workflow-sidebar">
+                <div class="workflow-header">
+                    <h3>진행 상황</h3>
+                    <div class="workflow-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-text">대시보드</div>
+                    </div>
+                </div>
+
+                <div class="workflow-stages">
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">🔐</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 1</div>
+                            <div class="stage-label">로그인</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📋</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 2</div>
+                            <div class="stage-label">보고서 상태</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 3</div>
+                            <div class="stage-label">파일 업로드</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">🔄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 4</div>
+                            <div class="stage-label">MD 변환</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">⚙️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 5</div>
+                            <div class="stage-label">데이터 추출</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 6</div>
+                            <div class="stage-label">템플릿 작성</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✏️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 7</div>
+                            <div class="stage-label">리뷰</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✅</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 8</div>
+                            <div class="stage-label">QC 검증</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 9</div>
+                            <div class="stage-label">최종 출력</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+                </div>
+
+                <div class="workflow-footer">
+                    <div class="medical-badge">의료용 AI 소프트웨어</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                Copyright. Power Solution., Inc. 2026.
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../components/AppLayout.js"></script>
+    <script src="../utils/layout-helper.js"></script>
+    <script>
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            // 세션 데이터 확인
+            const session = loadSessionData();
+            if (!session) {
+                // 테스트용 세션 생성
+                const testSession = {
+                    userName: '김작성자',
+                    userRole: 'Author',
+                    email: 'author@kpsur.test'
+                };
+                saveSessionData(testSession);
+
+                document.getElementById('userName').textContent = testSession.userName;
+                document.querySelector('.user-name').textContent = testSession.userName;
+                document.querySelector('.user-role').textContent = testSession.userRole;
+                document.querySelector('.user-avatar').textContent = testSession.userName.charAt(0);
+            } else {
+                document.getElementById('userName').textContent = session.userName;
+                document.querySelector('.user-name').textContent = session.userName;
+                document.querySelector('.user-role').textContent = session.userRole;
+                document.querySelector('.user-avatar').textContent = session.userName.charAt(0);
+            }
+
+            // 사용자 메뉴 설정
+            setupUserMenu();
+
+            // 배포 모드 확인
+            const deploymentMode = localStorage.getItem('deploymentMode') || 'test';
+            updateDeploymentMode(deploymentMode);
+
+            // 통계 데이터 로드 (실제로는 API 호출)
+            loadDashboardStats();
+        });
+
+        function createNewReport() {
+            // 새 보고서 생성 페이지로 이동
+            navigateTo('P13_NewReport.html');
+        }
+
+        function loadDashboardStats() {
+            // 실제로는 API 호출하여 통계 데이터 가져오기
+            // 여기서는 샘플 데이터 사용
+
+            // 통계 업데이트는 이미 HTML에 하드코딩되어 있음
+            // 실제 구현 시 API 결과로 업데이트
+        }
+
+        // 테스트용: 통계 카드 클릭 시 필터링된 목록으로 이동
+        document.querySelectorAll('.stat-card').forEach((card, index) => {
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', () => {
+                const filters = ['all', 'in-progress', 'qc', 'completed'];
+                navigateTo(`P11_ReportList.html?filter=${filters[index]}`);
+            });
+        });
+    </script>
+</body>
+</html>

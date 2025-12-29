@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPSUR AGENT | ACUZEN AI</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #07161D 0%, #122E4E 50%, #25739B 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .loader {
+            text-align: center;
+            color: white;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #369EE1 0%, #ffffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .message {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="loader">
+        <div class="spinner"></div>
+        <div class="logo">KPSUR AGENT</div>
+        <div class="message">시스템을 시작하는 중...</div>
+    </div>
+
+    <script type="module">
+        import { CONFIG, Storage } from './js/config.js';
+        import authManager from './js/auth.js';
+
+        // 세션 확인 및 자동 리다이렉트
+        async function init() {
+            try {
+                const session = authManager.checkSession();
+
+                if (session.authenticated) {
+                    // 로그인된 상태 → 대시보드로 이동
+                    console.log('✅ Session valid, redirecting to dashboard');
+                    window.location.href = `pages/${CONFIG.PAGES.DASHBOARD}`;
+                } else {
+                    // 로그인 안 됨 → 로그인 페이지로 이동
+                    console.log('⚠️ No session, redirecting to login');
+                    window.location.href = `pages/${CONFIG.PAGES.LOGIN}`;
+                }
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+                // 에러 발생 시 로그인 페이지로
+                window.location.href = `pages/${CONFIG.PAGES.LOGIN}`;
+            }
+        }
+
+        // 페이지 로드 시 초기화
+        init();
+    </script>
+</body>
+</html>
