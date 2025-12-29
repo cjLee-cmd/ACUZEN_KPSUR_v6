@@ -497,11 +497,14 @@
 
             try {
                 // localStorage에서 API 키 가져오기
-                const apiKey = localStorage.getItem('GOOGLE_API_KEY');
+                const apiKeyRaw = localStorage.getItem('GOOGLE_API_KEY');
 
-                if (!apiKey) {
+                if (!apiKeyRaw) {
                     throw new Error('Gemini API 키가 설정되지 않았습니다. 시스템 설정에서 API 키를 등록해주세요.');
                 }
+
+                // JSON.parse를 사용하여 따옴표 제거
+                const apiKey = JSON.parse(apiKeyRaw);
 
                 // 간단한 연결 테스트
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`;
