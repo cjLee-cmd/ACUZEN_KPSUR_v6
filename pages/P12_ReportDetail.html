@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>보고서 상세 - KPSUR AGENT | ACUZEN AI</title>
-    <link rel="stylesheet" href="../styles/globals.css">
-    <link rel="stylesheet" href="../styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
     <style>
         .page-container {
             max-width: 1400px;
@@ -976,7 +976,14 @@
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        // Wait for both DOM and globals to load
+        function initializePage() {
+            // Check if globals are loaded
+            if (!window.__GLOBALS_LOADED__) {
+                setTimeout(initializePage, 50);
+                return;
+            }
+
             const session = loadSessionData();
             if (session) {
                 document.querySelector('.user-name').textContent = session.userName;
@@ -985,7 +992,14 @@
             }
 
             setupUserMenu();
-        });
+        }
+
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
 
         function switchTab(tabName) {
             // 모든 탭 버튼과 콘텐츠 비활성화
@@ -1033,5 +1047,6 @@
             // 실제로는 API 호출하여 댓글 저장하고 목록 새로고침
         }
     </script>
+    <script type="module" src="../utils/globals.js"></script>
 </body>
 </html>

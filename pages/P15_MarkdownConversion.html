@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>마크다운 변환 - KPSUR AGENT | ACUZEN AI</title>
-    <link rel="stylesheet" href="../styles/globals.css">
-    <link rel="stylesheet" href="../styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
     <style>
         .page-container {
             max-width: 1600px;
@@ -739,7 +739,14 @@
         let selectedFile = null;
         let logs = [];
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Wait for both DOM and globals to load
+        function initializePage() {
+            // Check if globals are loaded
+            if (!window.__GLOBALS_LOADED__) {
+                setTimeout(initializePage, 50);
+                return;
+            }
+
             const session = loadSessionData();
             if (session) {
                 document.querySelector('.user-name').textContent = session.userName;
@@ -752,7 +759,14 @@
             updateStats();
 
             addLog('시스템 준비 완료. 변환을 시작할 수 있습니다.');
-        });
+        }
+
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
 
         function renderFileList() {
             const fileList = document.getElementById('fileList');
@@ -975,5 +989,6 @@
             }, 1000);
         });
     </script>
+    <script type="module" src="../utils/globals.js"></script>
 </body>
 </html>

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>새 보고서 생성 - KPSUR AGENT | ACUZEN AI</title>
-    <link rel="stylesheet" href="../styles/globals.css">
-    <link rel="stylesheet" href="../styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
     <style>
         .page-container {
             max-width: 1000px;
@@ -772,8 +772,7 @@
     </div>
 
     <!-- JavaScript -->
-    <script src="../components/AppLayout.js"></script>
-    <script src="../utils/layout-helper.js"></script>
+    <script type="module" src="../utils/globals.js"></script>
     <script>
         // 약품 데이터베이스 (샘플)
         const drugDatabase = [
@@ -814,7 +813,14 @@
 
         let selectedDrug = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Wait for both DOM and globals to load
+        function initializePage() {
+            // Check if globals are loaded
+            if (!window.__GLOBALS_LOADED__) {
+                setTimeout(initializePage, 50);
+                return;
+            }
+
             const session = loadSessionData();
             if (session) {
                 document.querySelector('.user-name').textContent = session.userName;
@@ -828,7 +834,14 @@
             setupUserMenu();
             setupDrugSearch();
             setupForm();
-        });
+        }
+
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
 
         function setupForm() {
             const form = document.getElementById('newReportForm');

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>파일 업로드 - KPSUR AGENT | ACUZEN AI</title>
-    <link rel="stylesheet" href="../styles/globals.css">
-    <link rel="stylesheet" href="../styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
     <style>
         .page-container {
             max-width: 1400px;
@@ -773,7 +773,14 @@
         let currentEditingFile = null;
         let selectedRawId = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Wait for both DOM and globals to load
+        function initializePage() {
+            // Check if globals are loaded
+            if (!window.__GLOBALS_LOADED__) {
+                setTimeout(initializePage, 50);
+                return;
+            }
+
             const session = loadSessionData();
             if (session) {
                 document.querySelector('.user-name').textContent = session.userName;
@@ -784,7 +791,14 @@
             setupUserMenu();
             setupDropzone();
             renderRawIdGuide();
-        });
+        }
+
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
 
         function setupDropzone() {
             const dropzone = document.getElementById('dropzone');
@@ -1102,5 +1116,6 @@
             }
         });
     </script>
+    <script type="module" src="../utils/globals.js"></script>
 </body>
 </html>
