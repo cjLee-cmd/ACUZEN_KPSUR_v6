@@ -430,7 +430,8 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8';
 
         // Supabase 클라이언트 초기화
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // === 상태 관리 ===
         let currentTest = 0;
@@ -546,7 +547,7 @@
                 }
 
                 // 간단한 쿼리 테스트
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('system_settings')
                     .select('count')
                     .limit(1);
@@ -574,7 +575,7 @@
 
             try {
                 // Storage 버킷 목록 조회
-                const { data, error } = await supabase.storage.listBuckets();
+                const { data, error } = await supabaseClient.storage.listBuckets();
 
                 if (error) {
                     throw new Error(error.message);
