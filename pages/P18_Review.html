@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-18 Review - KPSUR AGENT</title>
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/components.css">
+    <style>
+        .review-container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 16px;
+            padding: 16px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Left Panel - Section Navigation */
+        .section-nav-panel {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .section-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .section-nav-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #07161D;
+        }
+
+        .review-progress {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .section-nav-item {
+            padding: 10px;
+            margin-bottom: 6px;
+            background: #f8fafc;
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .section-nav-item:hover {
+            background: #f1f5f9;
+        }
+
+        .section-nav-item.active {
+            background: #EBF5FF;
+            border-left-color: #25739B;
+        }
+
+        .section-nav-item.edited {
+            background: #FEF3C7;
+            border-left-color: #F59E0B;
+        }
+
+        .section-nav-item.reviewed {
+            background: #ECFDF5;
+            border-left-color: #10B981;
+        }
+
+        .section-nav-number {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .section-nav-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #07161D;
+            margin-bottom: 4px;
+        }
+
+        .section-nav-status {
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .status-badge.pending {
+            background: #F1F5F9;
+            color: #64748b;
+        }
+
+        .status-badge.edited {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-badge.reviewed {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        /* Main Panel - Review Editor */
+        .review-panel {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .review-header {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .review-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #07161D;
+            margin: 0 0 8px 0;
+        }
+
+        .review-info {
+            background: #EBF5FF;
+            border-left: 4px solid #25739B;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+        }
+
+        .review-info-text {
+            font-size: 11px;
+            color: #122E4E;
+            line-height: 1.4;
+        }
+
+        .review-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .review-controls-left {
+            display: flex;
+            gap: 8px;
+        }
+
+        .review-controls-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        .view-mode-toggle {
+            display: flex;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .view-mode-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-mode-btn.active {
+            background: #25739B;
+            color: white;
+        }
+
+        .review-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .review-content.single-view {
+            grid-template-columns: 1fr;
+        }
+
+        .review-column {
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+        }
+
+        .column-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .icon-btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:hover {
+            border-color: #25739B;
+            color: #25739B;
+        }
+
+        .markdown-viewer {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .document-editor {
+            flex: 1;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            overflow-y: auto;
+            line-height: 1.8;
+        }
+
+        .document-editor[contenteditable="true"] {
+            outline: none;
+            cursor: text;
+        }
+
+        .document-editor[contenteditable="true"]:focus {
+            border-color: #25739B;
+            box-shadow: 0 0 0 3px rgba(37, 115, 155, 0.1);
+        }
+
+        .document-editor h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #07161D;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .document-editor h2 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #25739B;
+            margin: 20px 0 12px 0;
+        }
+
+        .document-editor h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #122E4E;
+            margin: 16px 0 8px 0;
+        }
+
+        .document-editor p {
+            font-size: 13px;
+            color: #334155;
+            margin-bottom: 12px;
+        }
+
+        .document-editor ul, .document-editor ol {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .document-editor li {
+            font-size: 13px;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+
+        .document-editor table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 12px;
+        }
+
+        .document-editor th {
+            background: #25739B;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .document-editor td {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .document-editor tr:hover {
+            background: #f8fafc;
+        }
+
+        .change-indicator {
+            background: #FEF3C7;
+            border-left: 3px solid #F59E0B;
+            padding: 2px 4px;
+            margin: 2px 0;
+        }
+
+        /* Action Footer */
+        .review-footer {
+            padding: 16px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-info {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .change-count {
+            background: #FEF3C7;
+            color: #92400E;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        /* Change History Panel */
+        .change-history-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .change-history-panel.show {
+            display: block;
+        }
+
+        .change-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .change-history-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #07161D;
+        }
+
+        .change-item {
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 3px solid #F59E0B;
+        }
+
+        .change-meta {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .change-before {
+            background: #FEE2E2;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 4px;
+            text-decoration: line-through;
+        }
+
+        .change-after {
+            background: #D1FAE5;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* Export Modal */
+        .export-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .export-modal.show {
+            display: flex;
+        }
+
+        .export-modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            padding: 24px;
+        }
+
+        .export-modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #07161D;
+            margin-bottom: 16px;
+        }
+
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .export-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout" id="app"></div>
+
+    <!-- Change History Panel -->
+    <div id="changeHistoryPanel" class="change-history-panel">
+        <div class="change-history-header">
+            <div class="change-history-title">📝 변경 이력</div>
+            <button class="icon-btn" onclick="closeChangeHistory()">✕</button>
+        </div>
+        <div id="changeHistoryList">
+            <!-- Change items will be populated here -->
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="export-modal">
+        <div class="export-modal-content">
+            <h3 class="export-modal-title">📄 문서 내보내기</h3>
+            <div class="export-options">
+                <label class="export-option">
+                    <input type="checkbox" id="exportMerge" checked>
+                    <span>모든 섹션 병합</span>
+                </label>
+                <label class="export-option">
+                    <input type="checkbox" id="exportDraft" checked>
+                    <span>파일명에 '_Draft' 추가</span>
+                </label>
+                <label class="export-option">
+                    <input type="radio" name="exportFormat" value="docx" checked>
+                    <span>Word 문서 (.docx)</span>
+                </label>
+                <label class="export-option">
+                    <input type="radio" name="exportFormat" value="pdf">
+                    <span>PDF 문서 (.pdf)</span>
+                </label>
+            </div>
+            <div class="export-modal-footer">
+                <button class="btn btn-secondary" onclick="closeExportModal()">취소</button>
+                <button class="btn btn-primary" onclick="confirmExport()">내보내기</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG - System configuration
+        const CONFIG = {
+            SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMDE0MDIsImV4cCI6MjA2NDU3NzQwMn0.LQNQJP93IjNA0PIoYj5UEfcBLgFckAbz_qJHpjlWpL0',
+            APP_NAME: 'KPSUR AGENT',
+            VERSION: '1.0.0'
+        };
+
+        // Storage - localStorage wrapper
+        const Storage = {
+            get: (key) => {
+                try {
+                    const item = localStorage.getItem(key);
+                    return item ? JSON.parse(item) : null;
+                } catch (e) {
+                    console.error('Storage.get error:', e);
+                    return null;
+                }
+            },
+            set: (key, value) => {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (e) {
+                    console.error('Storage.set error:', e);
+                    return false;
+                }
+            },
+            remove: (key) => {
+                try {
+                    localStorage.removeItem(key);
+                    return true;
+                } catch (e) {
+                    console.error('Storage.remove error:', e);
+                    return false;
+                }
+            }
+        };
+
+        // DateHelper - Date formatting utilities
+        const DateHelper = {
+            format: (date, format = 'YYYY-MM-DD') => {
+                const d = new Date(date);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+                return format
+                    .replace('YYYY', year)
+                    .replace('MM', month)
+                    .replace('DD', day)
+                    .replace('HH', hours)
+                    .replace('mm', minutes);
+            },
+            now: () => new Date().toISOString()
+        };
+
+        // AppLayout stub class
+        class AppLayout {
+            constructor(options = {}) {
+                this.currentStage = options.currentStage || 0;
+                this.reportName = options.reportName || '';
+            }
+
+            render(content) {
+                return content;
+            }
+        }
+
+        // reviewManager stub
+        const reviewManager = {
+            save: async () => ({ success: true }),
+            load: async () => ({})
+        };
+
+        // authManager stub
+        const authManager = {
+            isAuthenticated: () => true,
+            getUser: () => ({ name: '관리자', role: 'Admin' })
+        };
+
+        // Load draft report from P17
+        const draftReport = Storage.get('draftReport') || {};
+        const generatedSections = draftReport.sections || {};
+
+        // Section data
+        const sections = [
+            { id: 'S00', number: '00', name: '표지', status: 'pending' },
+            { id: 'S01', number: '01', name: '개요', status: 'pending' },
+            { id: 'S02', number: '02', name: '국내외허가현황', status: 'pending' },
+            { id: 'S03', number: '03', name: '시판후sales데이터', status: 'pending' },
+            { id: 'S04', number: '04', name: '국내신속보고내역', status: 'pending' },
+            { id: 'S05', number: '05', name: '국내정기보고내역', status: 'pending' },
+            { id: 'S06', number: '06', name: '국내원시자료', status: 'pending' },
+            { id: 'S07', number: '07', name: '국내외안전성조치현황', status: 'pending' },
+            { id: 'S08', number: '08', name: '국내외판매중지현황', status: 'pending' },
+            { id: 'S09', number: '09', name: '해외신속보고내역', status: 'pending' },
+            { id: 'S10', number: '10', name: '해외정기보고내역', status: 'pending' },
+            { id: 'S11', number: '11', name: '해외원시자료', status: 'pending' },
+            { id: 'S12', number: '12', name: '총괄평가', status: 'pending' },
+            { id: 'S13', number: '13', name: '결론', status: 'pending' },
+            { id: 'S14', number: '14', name: '참고문헌', status: 'pending' }
+        ];
+
+        // Load section contents from generated sections
+        const sectionContents = {};
+        sections.forEach(section => {
+            const content = generatedSections[section.id]?.content || '';
+            sectionContents[section.id] = {
+                markdown: content,
+                html: convertMarkdownToHTML(content)
+            };
+        });
+
+        function convertMarkdownToHTML(markdown) {
+            let html = markdown;
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/\n\n/g, '</p><p>');
+            html = `<p>${html}</p>`;
+            return html;
+        }
+
+        let currentSection = sections[0];
+        let viewMode = 'split'; // split or single
+        let changeHistory = [];
+        let originalContent = '';
+
+        // Initialize the page
+        function init() {
+            const layout = new AppLayout({
+                currentStage: 7,
+                reportName: 'testPill_1'
+            });
+
+            const content = `
+                <div class="app-content">
+                <main class="main-content">
+                <div class="review-container">
+                    <!-- Left Panel - Section Navigation -->
+                    <div class="section-nav-panel">
+                        <div class="section-nav-header">
+                            <div class="section-nav-title">📑 섹션</div>
+                            <div class="review-progress">
+                                <span id="reviewedCount">0</span>/${sections.length}
+                            </div>
+                        </div>
+                        <div id="sectionNavList"></div>
+                    </div>
+
+                    <!-- Main Panel - Review Editor -->
+                    <div class="review-panel">
+                        <div class="review-header">
+                            <h2 class="review-title">✏️ 리뷰 및 편집 (Stage 7)</h2>
+
+                            <div class="review-info">
+                                <div class="review-info-text">
+                                    <strong>좌측:</strong> 템플릿 작성 결과 (마크다운) - 참고용<br>
+                                    <strong>우측:</strong> 편집 가능한 문서 - 직접 수정 가능<br>
+                                    <strong>변경사항:</strong> 모든 수정 내역이 데이터베이스에 자동 저장됩니다
+                                </div>
+                            </div>
+
+                            <div class="review-controls">
+                                <div class="review-controls-left">
+                                    <div class="view-mode-toggle">
+                                        <button class="view-mode-btn active" onclick="setViewMode('split')">분할 보기</button>
+                                        <button class="view-mode-btn" onclick="setViewMode('single')">편집만</button>
+                                    </div>
+                                    <button class="btn btn-secondary" onclick="showChangeHistory()">
+                                        📝 변경 이력 (<span id="changeCount">0</span>)
+                                    </button>
+                                </div>
+                                <div class="review-controls-right">
+                                    <button class="btn btn-secondary" onclick="resetSection()">
+                                        🔄 원본으로 복원
+                                    </button>
+                                    <button class="btn btn-primary" onclick="saveSection()">
+                                        💾 저장
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="review-content" id="reviewContent">
+                            <!-- Left Column - Markdown Source -->
+                            <div class="review-column" id="markdownColumn">
+                                <div class="column-header">
+                                    📋 마크다운 원본
+                                    <div class="column-actions">
+                                        <button class="icon-btn" onclick="copyMarkdown()">📋 복사</button>
+                                    </div>
+                                </div>
+                                <div class="markdown-viewer" id="markdownViewer"></div>
+                            </div>
+
+                            <!-- Right Column - Document Editor -->
+                            <div class="review-column">
+                                <div class="column-header">
+                                    ✏️ 편집 가능한 문서
+                                    <div class="column-actions">
+                                        <button class="icon-btn" onclick="toggleEdit()">
+                                            <span id="editToggleIcon">🔓</span> <span id="editToggleText">편집 중</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="document-editor" contenteditable="true" id="documentEditor" oninput="trackChange()"></div>
+                            </div>
+                        </div>
+
+                        <div class="review-footer">
+                            <div class="footer-info">
+                                현재 섹션: <strong id="currentSectionName">-</strong>
+                                <span class="change-count" id="sectionChangeCount">변경사항 없음</span>
+                            </div>
+                            <div class="footer-actions">
+                                <button class="btn btn-secondary" onclick="previousSection()">← 이전</button>
+                                <button class="btn btn-primary" onclick="saveAndNext()">저장 및 다음 →</button>
+                                <button class="btn btn-secondary" onclick="mergeAll()">🔗 모두 병합</button>
+                                <button class="btn btn-success" onclick="showExportModal()">📤 내보내기</button>
+                                <button class="btn btn-success" onclick="proceedToQC()">QC 단계로 →</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </main>
+                </div>
+
+                <!-- Footer -->
+                <footer class="app-footer">
+                    <div class="footer-content">
+                        Copyright. Power Solution., Inc. 2026.
+                    </div>
+                </footer>
+            `;
+
+            document.getElementById('app').innerHTML = layout.render(content);
+
+            renderSectionNav();
+            selectSection(sections[0]);
+            updateStats();
+        }
+
+        // Render section navigation
+        function renderSectionNav() {
+            const navHtml = sections.map(section => `
+                <div class="section-nav-item ${currentSection.id === section.id ? 'active' : ''} ${section.status}"
+                     onclick="selectSection(sections.find(s => s.id === '${section.id}'))">
+                    <div class="section-nav-number">${section.number}</div>
+                    <div class="section-nav-name">${section.name}</div>
+                    <div class="section-nav-status">
+                        <span class="status-badge ${section.status}">
+                            ${section.status === 'reviewed' ? '✓' : section.status === 'edited' ? '✏️' : '○'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('sectionNavList').innerHTML = navHtml;
+        }
+
+        // Select section
+        function selectSection(section) {
+            // Save current section if there are changes
+            if (currentSection.hasChanges) {
+                if (!confirm('현재 섹션의 변경사항을 저장하지 않았습니다. 계속하시겠습니까?')) {
+                    return;
+                }
+            }
+
+            currentSection = section;
+            loadSectionContent();
+            renderSectionNav();
+            updateStats();
+        }
+
+        // Load section content
+        function loadSectionContent() {
+            const content = sectionContents[currentSection.id] || {
+                markdown: `# ${currentSection.number}. ${currentSection.name}\n\n내용이 준비 중입니다...`,
+                html: `<h1>${currentSection.number}. ${currentSection.name}</h1><p>내용이 준비 중입니다...</p>`
+            };
+
+            document.getElementById('markdownViewer').textContent = content.markdown;
+            document.getElementById('documentEditor').innerHTML = content.html;
+            document.getElementById('currentSectionName').textContent = `${currentSection.number}. ${currentSection.name}`;
+            document.getElementById('sectionChangeCount').textContent = '변경사항 없음';
+            document.getElementById('sectionChangeCount').style.display = 'none';
+
+            originalContent = content.html;
+            currentSection.hasChanges = false;
+        }
+
+        // Track changes
+        function trackChange() {
+            const currentContent = document.getElementById('documentEditor').innerHTML;
+            if (currentContent !== originalContent) {
+                currentSection.hasChanges = true;
+                currentSection.status = 'edited';
+                document.getElementById('sectionChangeCount').textContent = '수정됨';
+                document.getElementById('sectionChangeCount').style.display = 'inline-block';
+                renderSectionNav();
+            }
+        }
+
+        // Save section
+        function saveSection() {
+            const editedContent = document.getElementById('documentEditor').innerHTML;
+
+            if (!currentSection.hasChanges) {
+                showToast('변경사항이 없습니다', 'info');
+                return;
+            }
+
+            // Record change in history
+            const change = {
+                id: changeHistory.length + 1,
+                timestamp: new Date().toISOString(),
+                section: `${currentSection.number}. ${currentSection.name}`,
+                editor: '홍길동',
+                before: originalContent,
+                after: editedContent
+            };
+
+            changeHistory.push(change);
+
+            // Update section status
+            currentSection.status = 'reviewed';
+            currentSection.hasChanges = false;
+            originalContent = editedContent;
+
+            document.getElementById('sectionChangeCount').textContent = '저장됨';
+            document.getElementById('sectionChangeCount').style.display = 'none';
+
+            renderSectionNav();
+            updateStats();
+            showToast('섹션이 저장되었습니다', 'success');
+
+            // In real implementation, this would save to Supabase Review Changes Table
+            console.log('Saving change to database:', change);
+        }
+
+        // Reset section to original
+        function resetSection() {
+            if (!confirm('현재 섹션을 원본으로 복원하시겠습니까? 변경사항이 모두 손실됩니다.')) {
+                return;
+            }
+
+            loadSectionContent();
+            currentSection.status = 'pending';
+            currentSection.hasChanges = false;
+            renderSectionNav();
+            showToast('원본으로 복원되었습니다', 'info');
+        }
+
+        // View mode toggle
+        function setViewMode(mode) {
+            viewMode = mode;
+
+            const reviewContent = document.getElementById('reviewContent');
+            const markdownColumn = document.getElementById('markdownColumn');
+
+            document.querySelectorAll('.view-mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (mode === 'single') {
+                reviewContent.classList.add('single-view');
+                markdownColumn.style.display = 'none';
+            } else {
+                reviewContent.classList.remove('single-view');
+                markdownColumn.style.display = 'flex';
+            }
+        }
+
+        // Toggle edit mode
+        function toggleEdit() {
+            const editor = document.getElementById('documentEditor');
+            const isEditable = editor.contentEditable === 'true';
+
+            editor.contentEditable = !isEditable;
+            document.getElementById('editToggleIcon').textContent = isEditable ? '🔒' : '🔓';
+            document.getElementById('editToggleText').textContent = isEditable ? '편집 잠금' : '편집 중';
+
+            if (isEditable) {
+                editor.style.cursor = 'default';
+            } else {
+                editor.style.cursor = 'text';
+            }
+        }
+
+        // Navigation
+        function previousSection() {
+            const currentIndex = sections.findIndex(s => s.id === currentSection.id);
+            if (currentIndex > 0) {
+                selectSection(sections[currentIndex - 1]);
+            }
+        }
+
+        function saveAndNext() {
+            saveSection();
+
+            const currentIndex = sections.findIndex(s => s.id === currentSection.id);
+            if (currentIndex < sections.length - 1) {
+                selectSection(sections[currentIndex + 1]);
+            }
+        }
+
+        // Copy markdown
+        function copyMarkdown() {
+            const markdown = document.getElementById('markdownViewer').textContent;
+            navigator.clipboard.writeText(markdown).then(() => {
+                showToast('마크다운이 복사되었습니다', 'success');
+            });
+        }
+
+        // Change history
+        function showChangeHistory() {
+            renderChangeHistory();
+            document.getElementById('changeHistoryPanel').classList.add('show');
+        }
+
+        function closeChangeHistory() {
+            document.getElementById('changeHistoryPanel').classList.remove('show');
+        }
+
+        function renderChangeHistory() {
+            if (changeHistory.length === 0) {
+                document.getElementById('changeHistoryList').innerHTML = `
+                    <p style="color: #94a3b8; font-size: 13px; text-align: center; margin-top: 40px;">
+                        변경 이력이 없습니다
+                    </p>
+                `;
+                return;
+            }
+
+            const historyHtml = changeHistory.reverse().map(change => `
+                <div class="change-item">
+                    <div class="change-meta">
+                        ${new Date(change.timestamp).toLocaleString('ko-KR')} | ${change.editor} | ${change.section}
+                    </div>
+                    <div class="change-before">이전: ${change.before.substring(0, 100)}...</div>
+                    <div class="change-after">이후: ${change.after.substring(0, 100)}...</div>
+                </div>
+            `).join('');
+
+            document.getElementById('changeHistoryList').innerHTML = historyHtml;
+        }
+
+        // Merge all sections
+        function mergeAll() {
+            showLLMLoading('모든 섹션을 병합하고 있습니다...');
+
+            setTimeout(() => {
+                hideLLMLoading();
+                showToast('모든 섹션이 병합되었습니다', 'success');
+            }, 2000);
+        }
+
+        // Export modal
+        function showExportModal() {
+            document.getElementById('exportModal').classList.add('show');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('show');
+        }
+
+        function confirmExport() {
+            const merge = document.getElementById('exportMerge').checked;
+            const draft = document.getElementById('exportDraft').checked;
+            const format = document.querySelector('input[name="exportFormat"]:checked').value;
+
+            const fileName = `testPill_1${draft ? '_Draft' : ''}.${format}`;
+
+            showLLMLoading(`문서를 ${format.toUpperCase()} 형식으로 내보내는 중...`);
+
+            setTimeout(() => {
+                hideLLMLoading();
+                closeExportModal();
+                showToast(`${fileName} 파일이 생성되었습니다`, 'success');
+            }, 2000);
+        }
+
+        // Proceed to QC
+        async function proceedToQC() {
+            const allReviewed = sections.every(s => s.status === 'reviewed');
+
+            if (!allReviewed) {
+                const pendingCount = sections.filter(s => s.status !== 'reviewed').length;
+                if (!confirm(`${pendingCount}개 섹션이 아직 검토되지 않았습니다. QC 단계로 진행하시겠습니까?`)) {
+                    return;
+                }
+            }
+
+            // End review session and save changes
+            if (reviewManager.getCurrentSession()) {
+                const result = await reviewManager.endReviewSession();
+                if (result.success) {
+                    console.log('Review session ended successfully');
+                }
+            }
+
+            // Save reviewed sections to localStorage
+            const reviewedSections = {};
+            sections.forEach(section => {
+                const content = sectionContents[section.id];
+                if (content) {
+                    reviewedSections[section.id] = {
+                        ...content,
+                        status: section.status,
+                        reviewedAt: DateHelper.formatISO()
+                    };
+                }
+            });
+
+            Storage.set('reviewedSections', reviewedSections);
+            Storage.set('reviewChangeHistory', changeHistory);
+
+            const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+            window.location.href = `P19_QC.html?reportId=${reportId}`;
+        }
+
+        // Update statistics
+        function updateStats() {
+            const reviewedCount = sections.filter(s => s.status === 'reviewed').length;
+            document.getElementById('reviewedCount').textContent = reviewedCount;
+            document.getElementById('changeCount').textContent = changeHistory.length;
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

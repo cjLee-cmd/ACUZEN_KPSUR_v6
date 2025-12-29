@@ -36,9 +36,11 @@ env/
 .env
 .env.local
 .env.*.local
+.env.production
 *.pem
 *.key
 credentials.json
+secrets.json
 secrets/
 
 # ===========================================
@@ -67,6 +69,8 @@ coverage.xml
 *.cover
 *.py,cover
 .hypothesis/
+coverage/
+.nyc_output/
 
 # ===========================================
 # Type Checking
@@ -81,6 +85,15 @@ dmypy.json
 .streamlit/secrets.toml
 
 # ===========================================
+# Node.js
+# ===========================================
+node_modules/
+package-lock.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===========================================
 # OS Files
 # ===========================================
 .DS_Store
@@ -88,6 +101,7 @@ Thumbs.db
 *.tmp
 *.temp
 *.log
+.cache/
 
 # ===========================================
 # Project Specific
@@ -103,3 +117,7 @@ temp/
 # Generated reports (stored in Supabase Storage)
 generated_reports/
 exports/
+
+# Local data (development only)
+data/*.json
+!data/.gitkeep
