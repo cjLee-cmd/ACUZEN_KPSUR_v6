@@ -69,7 +69,9 @@ const CONFIG = {
         TEMPLATE_WRITING: 'P17_TemplateWriting.html',
         REVIEW: 'P18_Review.html',
         QC: 'P19_QC.html',
-        OUTPUT: 'P20_Output.html'
+        OUTPUT: 'P20_Output.html',
+        SYSTEM_TEST: 'P90_SystemTest.html',
+        SETTINGS: 'P91_Settings.html'
     }
 };
 

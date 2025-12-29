@@ -120,14 +120,35 @@ npx serve
 
 ### 3️⃣ API 키 설정
 
-첫 로그인 후 다음 설정 필요:
+각 사용자는 자신의 Gemini API 키를 설정해야 합니다.
 
-1. **로그인**: `main@main.com` / `1111`
-2. **개발자 도구 (F12)** 열기
-3. **Console** 탭에서 실행:
+#### ⚙️ 방법 1: Settings UI (권장)
+
+1. 애플리케이션 로그인 (`main@main.com` / `1111`)
+2. 우측 사이드바에서 **⚙️ 시스템 설정** 클릭
+3. [Google AI Studio](https://ai.google.dev/)에서 무료 API 키 발급:
+   - "Get API Key" 클릭
+   - 프로젝트 선택/생성
+   - 키 복사
+4. Settings 페이지에서:
+   - API 키 입력
+   - "연결 테스트" 클릭 (성공 확인)
+   - "저장" 클릭
+
+**무료 할당량**: 분당 15회, 일일 1,500회 요청
+
+#### 💻 방법 2: 브라우저 콘솔 (개발자용)
 
 ```javascript
-localStorage.setItem("GOOGLE_API_KEY", "YOUR_GEMINI_API_KEY");
+localStorage.setItem("GOOGLE_API_KEY", JSON.stringify("YOUR_GEMINI_API_KEY"));
+```
+
+#### 🛠️ 방법 3: .env Loader (로컬 개발 전용)
+
+```bash
+# 로컬 서버 실행 후
+# http://localhost:8000/dev-tools/load-env.html 접속
+# .env 파일 내용 붙여넣기
 ```
 
 ---

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 설정 - KPSUR AGENT | ACUZEN AI</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            background: #F3F4F6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .settings-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .settings-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: #25739B;
+            margin-bottom: 8px;
+        }
+
+        .settings-subtitle {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #F9FAFB;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status-label {
+            font-size: 14px;
+            color: #6B7280;
+            font-weight: 500;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #6EE7B7;
+        }
+
+        .badge-error {
+            background: #FEF2F2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+
+        .masked-key {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 8px;
+        }
+
+        .api-key-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s ease;
+        }
+
+        .api-key-input:focus {
+            outline: none;
+            border-color: #25739B;
+            box-shadow: 0 0 0 4px rgba(37, 115, 155, 0.1);
+        }
+
+        .toggle-visibility-btn {
+            padding: 12px 16px;
+            background: #F3F4F6;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .toggle-visibility-btn:hover {
+            background: #E5E7EB;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 115, 155, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #25739B;
+            border: 2px solid #25739B;
+        }
+
+        .btn-secondary:hover {
+            background: #F3F4F6;
+        }
+
+        .btn-danger {
+            background: white;
+            color: #DC2626;
+            border: 2px solid #DC2626;
+        }
+
+        .btn-danger:hover {
+            background: #FEF2F2;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .guide-steps {
+            counter-reset: step;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .guide-steps li {
+            counter-increment: step;
+            padding: 12px 0;
+            padding-left: 40px;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #374151;
+        }
+
+        .guide-steps li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .guide-link {
+            color: #25739B;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .guide-link:hover {
+            text-decoration: underline;
+        }
+
+        .security-notice {
+            background: #FEF3C7;
+            border: 2px solid #FDE047;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .security-notice-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #92400E;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .security-notice ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #92400E;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .info-item {
+            padding: 12px;
+            background: #F9FAFB;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #6B7280;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-success {
+            background: #ECFDF5;
+            color: #065F46;
+            border: 1px solid #6EE7B7;
+        }
+
+        .toast-error {
+            background: #FEF2F2;
+            color: #991B1B;
+            border: 1px solid #FCA5A5;
+        }
+
+        .toast-warning {
+            background: #FEF3C7;
+            color: #92400E;
+            border: 1px solid #FDE047;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #E5E7EB;
+            border-top-color: #25739B;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: #6B7280;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #25739B;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="settings-container">
+        <a href="../index.html" class="back-link">
+            ← 대시보드로 돌아가기
+        </a>
+
+        <div class="settings-header">
+            <div class="settings-title">⚙️ 시스템 설정</div>
+            <div class="settings-subtitle">KPSUR AGENT 시스템 구성 관리</div>
+        </div>
+
+        <!-- Section 1: API Key Management -->
+        <div class="settings-card">
+            <div class="section-title">
+                <span>🔑</span>
+                <span>API 키 관리</span>
+            </div>
+
+            <div class="status-row">
+                <div>
+                    <div class="status-label">현재 상태</div>
+                    <span class="badge" id="statusBadge">❌ 미설정</span>
+                </div>
+                <div>
+                    <div class="status-label">저장된 키</div>
+                    <span class="masked-key" id="maskedKey">-</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label" for="apiKeyInput">Gemini API 키</label>
+                <div class="input-with-button">
+                    <input
+                        type="password"
+                        id="apiKeyInput"
+                        class="api-key-input"
+                        placeholder="AIza로 시작하는 API 키를 입력하세요"
+                    >
+                    <button class="toggle-visibility-btn" id="toggleBtn" title="키 표시/숨기기">👁️</button>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="btnSave">
+                    <span>💾</span>
+                    <span>저장</span>
+                </button>
+                <button class="btn btn-secondary" id="btnTest">
+                    <span>🔌</span>
+                    <span>연결 테스트</span>
+                </button>
+                <button class="btn btn-danger" id="btnClear">
+                    <span>🗑️</span>
+                    <span>삭제</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Section 2: API Key Issuance Guide -->
+        <div class="settings-card">
+            <div class="section-title">
+                <span>📋</span>
+                <span>API 키 발급 가이드</span>
+            </div>
+
+            <ol class="guide-steps">
+                <li>
+                    <a href="https://ai.google.dev/" target="_blank" class="guide-link">Google AI Studio</a> 웹사이트에 접속하세요
+                </li>
+                <li>
+                    우측 상단의 <strong>"Get API Key"</strong> 버튼을 클릭하세요
+                </li>
+                <li>
+                    프로젝트를 선택하거나 새로 생성하세요
+                </li>
+                <li>
+                    생성된 API 키를 복사하여 위 입력란에 붙여넣으세요
+                </li>
+                <li>
+                    "연결 테스트" 버튼으로 키가 정상 작동하는지 확인하세요
+                </li>
+                <li>
+                    테스트 성공 후 "저장" 버튼을 클릭하세요
+                </li>
+            </ol>
+
+            <div style="margin-top: 16px; padding: 12px; background: #EFF6FF; border-radius: 8px; font-size: 13px; color: #1E40AF;">
+                💡 <strong>무료 할당량:</strong> 분당 15회, 일일 1,500회 요청 가능
+            </div>
+        </div>
+
+        <!-- Section 3: Security Notice -->
+        <div class="settings-card security-notice">
+            <div class="security-notice-title">
+                <span>⚠️</span>
+                <span>보안 주의사항</span>
+            </div>
+            <ul>
+                <li>API 키는 브라우저의 localStorage에만 저장되며, 서버로 전송되지 않습니다</li>
+                <li>공용 컴퓨터에서 사용 후에는 반드시 로그아웃하고 "삭제" 버튼을 눌러주세요</li>
+                <li>API 키를 다른 사람과 공유하지 마세요</li>
+                <li>스크린샷이나 화면 공유 시 API 키가 노출되지 않도록 주의하세요</li>
+                <li>사용량은 <a href="https://console.cloud.google.com/" target="_blank" class="guide-link">Google Cloud Console</a>에서 모니터링할 수 있습니다</li>
+            </ul>
+        </div>
+
+        <!-- Section 4: System Info -->
+        <div class="settings-card">
+            <div class="section-title">
+                <span>ℹ️</span>
+                <span>시스템 정보</span>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">환경 모드</div>
+                    <div class="info-value" id="envMode">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">호스트</div>
+                    <div class="info-value" id="hostname">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loadingText">처리 중...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import settingsManager from '../js/settings-manager.js';
+
+        // Initialize page
+        async function initSettingsPage() {
+            displayApiKeyStatus();
+            displayEnvironmentInfo();
+            setupEventListeners();
+        }
+
+        // Display current API key status
+        function displayApiKeyStatus() {
+            const status = settingsManager.getApiKeyStatus();
+            const badgeEl = document.getElementById('statusBadge');
+            const maskedEl = document.getElementById('maskedKey');
+
+            if (status.configured) {
+                badgeEl.textContent = '✅ 설정됨';
+                badgeEl.className = 'badge badge-success';
+                maskedEl.textContent = status.masked;
+            } else {
+                badgeEl.textContent = '❌ 미설정';
+                badgeEl.className = 'badge badge-error';
+                maskedEl.textContent = '-';
+            }
+        }
+
+        // Display environment information
+        function displayEnvironmentInfo() {
+            const env = settingsManager.getEnvironmentInfo();
+            document.getElementById('envMode').textContent = env.mode;
+            document.getElementById('hostname').textContent = env.hostname;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('btnSave').addEventListener('click', saveApiKey);
+            document.getElementById('btnTest').addEventListener('click', testConnection);
+            document.getElementById('btnClear').addEventListener('click', clearApiKey);
+            document.getElementById('toggleBtn').addEventListener('click', toggleVisibility);
+        }
+
+        // Save API key with pre-validation
+        async function saveApiKey() {
+            const input = document.getElementById('apiKeyInput').value.trim();
+
+            if (!input) {
+                showToast('API 키를 입력해주세요', 'warning');
+                return;
+            }
+
+            // Format validation
+            const formatCheck = settingsManager.validateApiKeyFormat(input);
+            if (!formatCheck.valid) {
+                showToast('❌ ' + formatCheck.error, 'error');
+                return;
+            }
+
+            // Test connection before saving
+            showLoading('연결 테스트 중...');
+            const testResult = await settingsManager.testApiKey(input);
+            hideLoading();
+
+            if (!testResult.success) {
+                showToast('❌ ' + testResult.message, 'error');
+                return;
+            }
+
+            // Save to localStorage
+            const saved = settingsManager.saveApiKey(input);
+            if (saved) {
+                displayApiKeyStatus();
+                document.getElementById('apiKeyInput').value = '';
+                showToast('✅ API 키가 저장되었습니다', 'success');
+            } else {
+                showToast('❌ 저장에 실패했습니다', 'error');
+            }
+        }
+
+        // Test API connection
+        async function testConnection() {
+            const input = document.getElementById('apiKeyInput').value.trim();
+
+            if (!input) {
+                showToast('API 키를 입력해주세요', 'warning');
+                return;
+            }
+
+            showLoading('연결 테스트 중...');
+            const result = await settingsManager.testApiKey(input);
+            hideLoading();
+
+            if (result.success) {
+                showToast(result.message, 'success');
+            } else {
+                showToast('❌ ' + result.message, 'error');
+            }
+        }
+
+        // Clear API key
+        function clearApiKey() {
+            if (!confirm('API 키를 삭제하시겠습니까?\n\n삭제 후 시스템 기능을 사용하려면 다시 설정해야 합니다.')) {
+                return;
+            }
+
+            const cleared = settingsManager.clearApiKey();
+            if (cleared) {
+                displayApiKeyStatus();
+                document.getElementById('apiKeyInput').value = '';
+                showToast('✅ API 키가 삭제되었습니다', 'success');
+            } else {
+                showToast('❌ 삭제에 실패했습니다', 'error');
+            }
+        }
+
+        // Toggle password visibility
+        function toggleVisibility() {
+            const input = document.getElementById('apiKeyInput');
+            const btn = document.getElementById('toggleBtn');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+                btn.title = '키 숨기기';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+                btn.title = '키 표시';
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast toast-${type}`;
+            toast.style.display = 'block';
+
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 5000);
+        }
+
+        // Show loading overlay
+        function showLoading(text = '처리 중...') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        // Hide loading overlay
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', initSettingsPage);
+    </script>
+</body>
+</html>

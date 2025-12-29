@@ -215,16 +215,37 @@ Redirect URLs: https://<username>.github.io/<repository-name>/pages/P10_Dashboar
 
 ### 2. API 키 설정 가이드 (사용자용)
 
-배포 후 사용자는 다음 단계를 따라 API 키를 설정해야 합니다:
+배포 후 **각 사용자는 자신의 Gemini API 키를 설정**해야 합니다.
 
-1. **로그인**: `main@main.com` / `1111` (또는 Supabase 계정)
-2. **개발자 도구 열기**: F12 (Chrome) 또는 Cmd+Option+I (Safari)
-3. **Console 탭 이동**
-4. **API 키 저장**:
-   ```javascript
-   localStorage.setItem("GOOGLE_API_KEY", "YOUR_GEMINI_API_KEY_HERE");
-   ```
-5. **페이지 새로고침**
+#### ⚙️ 방법 1: Settings UI (권장)
+
+1. **Google AI Studio에서 API 키 발급**
+   - [Google AI Studio](https://ai.google.dev/) 접속
+   - "Get API Key" 클릭
+   - 프로젝트 선택 또는 생성
+   - API 키 복사
+
+2. **KPSUR AGENT에서 설정**
+   - 애플리케이션 로그인 (`main@main.com` / `1111`)
+   - 우측 사이드바에서 **⚙️ 시스템 설정** 클릭
+   - API 키 입력
+   - **"연결 테스트"** 클릭하여 키 유효성 확인
+   - **"저장"** 클릭
+
+**무료 할당량**: 분당 15회, 일일 1,500회 요청
+
+#### 💻 방법 2: 브라우저 콘솔 (고급 사용자)
+
+```javascript
+localStorage.setItem("GOOGLE_API_KEY", JSON.stringify("YOUR_GEMINI_API_KEY_HERE"));
+```
+
+#### 🔒 보안 주의사항
+
+- API 키는 브라우저 localStorage에만 저장됩니다
+- 공용 컴퓨터 사용 후 반드시 로그아웃하고 "삭제" 버튼을 클릭하세요
+- API 키를 다른 사람과 공유하지 마세요
+- 사용량은 [Google Cloud Console](https://console.cloud.google.com/)에서 모니터링하세요
 
 ---
 
