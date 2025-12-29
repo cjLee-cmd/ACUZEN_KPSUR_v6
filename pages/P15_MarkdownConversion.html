@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마크다운 변환 - KPSUR AGENT | ACUZEN AI</title>
+    <link rel="stylesheet" href="../styles/globals.css">
+    <link rel="stylesheet" href="../styles/layout.css">
+    <style>
+        .page-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .page-description {
+            font-size: 14px;
+            color: #6B7280;
+            line-height: 1.6;
+        }
+
+        /* 경고 배너 */
+        .warning-banner {
+            background: #FEF2F2;
+            border: 2px solid #FCA5A5;
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            display: flex;
+            align-items: start;
+            gap: var(--spacing-md);
+        }
+
+        .warning-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .warning-content {
+            flex: 1;
+        }
+
+        .warning-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #DC2626;
+            margin-bottom: 4px;
+        }
+
+        .warning-text {
+            font-size: 12px;
+            color: #991B1B;
+            line-height: 1.5;
+        }
+
+        /* 컨텐츠 그리드 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        /* 파일 목록 */
+        .file-list-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+        }
+
+        .section-header {
+            padding: var(--spacing-lg);
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .conversion-stats {
+            display: flex;
+            gap: var(--spacing-lg);
+            font-size: 12px;
+            color: #6B7280;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .file-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-md);
+        }
+
+        .file-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .file-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .group-header {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9CA3AF;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-sm);
+            padding: 0 var(--spacing-sm);
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .file-item:hover {
+            background: rgba(37, 115, 155, 0.05);
+        }
+
+        .file-item.active {
+            background: rgba(37, 115, 155, 0.1);
+            border-left: 3px solid #25739B;
+        }
+
+        .file-item.converting {
+            background: rgba(37, 115, 155, 0.05);
+        }
+
+        .file-item-icon {
+            font-size: 20px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .file-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-item-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-bottom: 2px;
+        }
+
+        .file-item-raw {
+            font-size: 10px;
+            color: #25739B;
+            font-weight: 600;
+        }
+
+        .file-status {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .file-status.pending {
+            color: #D1D5DB;
+        }
+
+        .file-status.converting {
+            animation: spin 1s linear infinite;
+        }
+
+        .file-status.completed {
+            color: #10B981;
+        }
+
+        .file-status.error {
+            color: #EF4444;
+        }
+
+        /* 미리보기 섹션 */
+        .preview-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            max-height: 600px;
+        }
+
+        .preview-tabs {
+            display: flex;
+            border-bottom: 2px solid #E5E7EB;
+            padding: 0 var(--spacing-lg);
+        }
+
+        .preview-tab {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6B7280;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .preview-tab:hover {
+            color: #25739B;
+        }
+
+        .preview-tab.active {
+            color: #25739B;
+        }
+
+        .preview-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+        }
+
+        .preview-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-lg);
+        }
+
+        .preview-pane {
+            display: none;
+        }
+
+        .preview-pane.active {
+            display: block;
+        }
+
+        .preview-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9CA3AF;
+        }
+
+        .preview-empty-icon {
+            font-size: 48px;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .preview-empty-text {
+            font-size: 14px;
+        }
+
+        .markdown-preview {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #374151;
+        }
+
+        .markdown-preview h1,
+        .markdown-preview h2,
+        .markdown-preview h3 {
+            margin-top: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            color: #25739B;
+        }
+
+        .markdown-preview p {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .markdown-preview pre {
+            background: #F9FAFB;
+            padding: var(--spacing-md);
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .markdown-preview table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .markdown-preview th,
+        .markdown-preview td {
+            border: 1px solid #E5E7EB;
+            padding: var(--spacing-sm);
+            text-align: left;
+        }
+
+        .markdown-preview th {
+            background: #F9FAFB;
+            font-weight: 600;
+        }
+
+        /* 변환 로그 */
+        .log-section {
+            background: white;
+            border-radius: 12px;
+            padding: var(--spacing-lg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            max-height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        .log-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .log-clear {
+            font-size: 11px;
+            color: #6B7280;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .log-clear:hover {
+            background: #F3F4F6;
+        }
+
+        .log-list {
+            flex: 1;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 11px;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .log-time {
+            color: #9CA3AF;
+            flex-shrink: 0;
+        }
+
+        .log-message {
+            color: #374151;
+        }
+
+        .log-message.success {
+            color: #10B981;
+        }
+
+        .log-message.error {
+            color: #EF4444;
+        }
+
+        .log-message.warning {
+            color: #F59E0B;
+        }
+
+        /* 액션 버튼 */
+        .action-section {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+
+        .btn {
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 115, 155, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid #E5E7EB;
+            color: #6B7280;
+        }
+
+        .btn-convert {
+            flex: 1;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .file-list-section,
+            .preview-section {
+                max-height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item" onclick="navigateTo('P10_Dashboard.html')" style="cursor: pointer;">대시보드</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">보고서</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">마크다운 변환</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content with Sidebar -->
+        <div class="app-content">
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="page-container">
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <h1 class="page-title">마크다운 변환 (Stage 4)</h1>
+                        <p class="page-description">
+                            업로드된 소스 문서(PDF, Excel, Word)를 LLM을 사용하여 마크다운 형식으로 변환합니다.
+                            변환 시 원본 내용을 정확히 보존하며, 내용을 추가하거나 수정하지 않습니다.
+                        </p>
+                    </div>
+
+                    <!-- Warning Banner -->
+                    <div class="warning-banner">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-content">
+                            <div class="warning-title">중요: 원본 보존 원칙</div>
+                            <div class="warning-text">
+                                마크다운 변환 시 절대로 내용을 추가하거나 변형해서는 안 됩니다.
+                                원본 문서의 모든 내용을 그대로 보존하여야 하며, 형식만 마크다운으로 변환합니다.
+                                표, 목록, 제목 등의 구조를 마크다운 문법에 맞게 변환하되 내용은 변경하지 않습니다.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Grid -->
+                    <div class="content-grid">
+                        <!-- File List -->
+                        <div class="file-list-section">
+                            <div class="section-header">
+                                <h2 class="section-title">변환 대상 파일</h2>
+                                <div class="conversion-stats">
+                                    <div class="stat-item">
+                                        <span>총</span>
+                                        <span class="stat-value" id="totalFiles">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>완료</span>
+                                        <span class="stat-value" id="completedFiles">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>대기</span>
+                                        <span class="stat-value" id="pendingFiles">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="file-list" id="fileList">
+                                <!-- JavaScript로 채워집니다 -->
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="preview-section">
+                            <div class="preview-tabs">
+                                <button class="preview-tab active" onclick="switchPreviewTab('original')">원본</button>
+                                <button class="preview-tab" onclick="switchPreviewTab('markdown')">마크다운</button>
+                            </div>
+
+                            <div class="preview-content">
+                                <div id="preview-original" class="preview-pane active">
+                                    <div class="preview-empty">
+                                        <div class="preview-empty-icon">📄</div>
+                                        <div class="preview-empty-text">파일을 선택하면 원본을 미리볼 수 있습니다</div>
+                                    </div>
+                                </div>
+
+                                <div id="preview-markdown" class="preview-pane">
+                                    <div class="preview-empty">
+                                        <div class="preview-empty-icon">📝</div>
+                                        <div class="preview-empty-text">변환이 완료되면 마크다운을 미리볼 수 있습니다</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conversion Log -->
+                    <div class="log-section">
+                        <div class="log-header">
+                            <div class="log-title">변환 로그</div>
+                            <div class="log-clear" onclick="clearLog()">지우기</div>
+                        </div>
+                        <div class="log-list" id="logList">
+                            <!-- JavaScript로 채워집니다 -->
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="action-section">
+                        <button class="btn btn-secondary" onclick="navigateTo('P14_FileUpload.html')">
+                            <span>← 이전</span>
+                        </button>
+                        <button class="btn btn-primary btn-convert" id="convertBtn">
+                            <span>✨</span>
+                            <span>전체 변환 시작</span>
+                        </button>
+                        <button class="btn btn-primary" id="nextBtn" disabled>
+                            <span>다음 단계로</span>
+                            <span>→</span>
+                        </button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Workflow Sidebar (Right) -->
+            <aside class="workflow-sidebar">
+                <div class="workflow-header">
+                    <h3>진행 상황</h3>
+                    <div class="workflow-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 37.5%"></div>
+                        </div>
+                        <div class="progress-text">4 / 9 단계</div>
+                    </div>
+                </div>
+
+                <div class="workflow-stages">
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">🔐</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 1</div>
+                            <div class="stage-label">로그인</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">📋</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 2</div>
+                            <div class="stage-label">보고서 상태</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 3</div>
+                            <div class="stage-label">파일 업로드</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage current">
+                        <div class="stage-icon">🔄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 4</div>
+                            <div class="stage-label">MD 변환</div>
+                        </div>
+                        <div class="stage-status">◉</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">⚙️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 5</div>
+                            <div class="stage-label">데이터 추출</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 6</div>
+                            <div class="stage-label">템플릿 작성</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✏️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 7</div>
+                            <div class="stage-label">리뷰</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✅</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 8</div>
+                            <div class="stage-label">QC 검증</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 9</div>
+                            <div class="stage-label">최종 출력</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+                </div>
+
+                <div class="workflow-footer">
+                    <div class="medical-badge">의료용 AI 소프트웨어</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                Copyright. Power Solution., Inc. 2026.
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../components/AppLayout.js"></script>
+    <script src="../utils/layout-helper.js"></script>
+    <script type="module">
+        // ES6 Modules
+        import { CONFIG, Storage, DateHelper } from '../js/config.js';
+        import markdownConverter from '../js/markdown-converter.js';
+        import fileHandler from '../js/file-handler.js';
+        import authManager from '../js/auth.js';
+
+        // 업로드된 파일 데이터 로드
+        const uploadedFilesData = Storage.get('uploadedFiles') || [];
+        const files = uploadedFilesData.map((fileData, index) => ({
+            id: index + 1,
+            name: fileData.fileName,
+            rawId: fileData.rawId,
+            url: fileData.url,
+            path: fileData.path,
+            status: 'pending',
+            markdown: null,
+            convertedAt: null
+        }));
+
+        let selectedFile = null;
+        let logs = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const session = loadSessionData();
+            if (session) {
+                document.querySelector('.user-name').textContent = session.userName;
+                document.querySelector('.user-role').textContent = session.userRole;
+                document.querySelector('.user-avatar').textContent = session.userName.charAt(0);
+            }
+
+            setupUserMenu();
+            renderFileList();
+            updateStats();
+
+            addLog('시스템 준비 완료. 변환을 시작할 수 있습니다.');
+        });
+
+        function renderFileList() {
+            const fileList = document.getElementById('fileList');
+
+            // Group by RAW ID prefix
+            const groups = {
+                'required': files.filter(f => ['RAW1', 'RAW2.1', 'RAW2.2', 'RAW2.3', 'RAW3', 'RAW4'].includes(f.rawId)),
+                'lineListing': files.filter(f => ['RAW12', 'RAW14', 'RAW15'].includes(f.rawId))
+            };
+
+            fileList.innerHTML = `
+                <div class="file-group">
+                    <div class="group-header">필수 문서</div>
+                    ${groups.required.map(file => renderFileItem(file)).join('')}
+                </div>
+                <div class="file-group">
+                    <div class="group-header">Line Listing</div>
+                    ${groups.lineListing.map(file => renderFileItem(file)).join('')}
+                </div>
+            `;
+        }
+
+        function renderFileItem(file) {
+            const statusIcons = {
+                'pending': '○',
+                'converting': '⟳',
+                'completed': '✓',
+                'error': '✗'
+            };
+
+            return `
+                <div class="file-item ${file.status} ${selectedFile?.id === file.id ? 'active' : ''}"
+                     onclick="selectFile(${file.id})">
+                    <div class="file-item-icon">${getFileIcon(file.name)}</div>
+                    <div class="file-item-info">
+                        <div class="file-item-name">${file.name}</div>
+                        <div class="file-item-raw">${file.rawId}</div>
+                    </div>
+                    <div class="file-status ${file.status}">
+                        ${statusIcons[file.status]}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'pdf': '📄',
+                'xlsx': '📊',
+                'xls': '📊',
+                'docx': '📝'
+            };
+            return icons[ext] || '📄';
+        }
+
+        function selectFile(fileId) {
+            selectedFile = files.find(f => f.id === fileId);
+            renderFileList();
+
+            // Update preview
+            if (selectedFile) {
+                document.getElementById('preview-original').innerHTML = `
+                    <div style="padding: 20px; background: #F9FAFB; border-radius: 8px;">
+                        <h3 style="margin-bottom: 16px; color: #374151;">${selectedFile.name}</h3>
+                        <p style="color: #6B7280; font-size: 13px;">
+                            원본 파일 미리보기는 실제 구현 시 PDF/Excel/Word 뷰어를 통해 표시됩니다.
+                        </p>
+                    </div>
+                `;
+
+                if (selectedFile.status === 'completed' && selectedFile.markdown) {
+                    document.getElementById('preview-markdown').innerHTML = `
+                        <div class="markdown-preview">
+                            ${selectedFile.markdown}
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('preview-markdown').innerHTML = `
+                        <div class="preview-empty">
+                            <div class="preview-empty-icon">⏳</div>
+                            <div class="preview-empty-text">변환이 완료되지 않았습니다</div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        function switchPreviewTab(tab) {
+            document.querySelectorAll('.preview-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.preview-pane').forEach(p => p.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`preview-${tab}`).classList.add('active');
+        }
+
+        function updateStats() {
+            document.getElementById('totalFiles').textContent = files.length;
+            document.getElementById('completedFiles').textContent = files.filter(f => f.status === 'completed').length;
+            document.getElementById('pendingFiles').textContent = files.filter(f => f.status === 'pending').length;
+
+            // 모든 파일이 변환 완료되면 다음 버튼 활성화
+            const allCompleted = files.every(f => f.status === 'completed');
+            document.getElementById('nextBtn').disabled = !allCompleted;
+        }
+
+        function addLog(message, type = 'info') {
+            const now = new Date();
+            const time = now.toTimeString().slice(0, 8);
+
+            logs.push({ time, message, type });
+
+            const logList = document.getElementById('logList');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-time">[${time}]</span>
+                <span class="log-message ${type}">${message}</span>
+            `;
+
+            logList.appendChild(entry);
+            logList.scrollTop = logList.scrollHeight;
+        }
+
+        function clearLog() {
+            logs = [];
+            document.getElementById('logList').innerHTML = '';
+            addLog('로그가 초기화되었습니다.');
+        }
+
+        // 전체 변환 시작
+        document.getElementById('convertBtn').addEventListener('click', async () => {
+            const pendingFiles = files.filter(f => f.status === 'pending');
+
+            if (pendingFiles.length === 0) {
+                showToast('모든 파일이 이미 변환되었습니다.', 'info');
+                return;
+            }
+
+            document.getElementById('convertBtn').disabled = true;
+            addLog(`${pendingFiles.length}개 파일 변환을 시작합니다.`, 'info');
+
+            showLLMLoading('AI가 문서를 마크다운으로 변환하고 있습니다...');
+
+            // 순차적으로 변환
+            for (const file of pendingFiles) {
+                file.status = 'converting';
+                renderFileList();
+                updateStats();
+                addLog(`${file.name} 변환 중...`, 'info');
+
+                try {
+                    // Supabase Storage에서 파일 가져오기
+                    const response = await fetch(file.url);
+                    if (!response.ok) {
+                        throw new Error(`파일을 가져올 수 없습니다: ${response.statusText}`);
+                    }
+
+                    const blob = await response.blob();
+                    const fileObj = new File([blob], file.name, { type: blob.type });
+
+                    // 마크다운 변환
+                    const result = await markdownConverter.convertFile(fileObj, file.rawId);
+
+                    if (result.success) {
+                        file.markdown = result.markdown;
+                        file.convertedAt = result.convertedAt;
+                        file.status = 'completed';
+
+                        addLog(`${file.name} 변환 완료 (${result.duration}ms)`, 'success');
+                    } else {
+                        file.status = 'error';
+                        addLog(`${file.name} 변환 실패: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Conversion error:', error);
+                    file.status = 'error';
+                    addLog(`${file.name} 변환 실패: ${error.message}`, 'error');
+                }
+
+                renderFileList();
+                updateStats();
+
+                // 선택된 파일이면 미리보기 업데이트
+                if (selectedFile?.id === file.id) {
+                    selectFile(file.id);
+                }
+            }
+
+            hideLLMLoading();
+            document.getElementById('convertBtn').disabled = false;
+            addLog('모든 파일 변환이 완료되었습니다.', 'success');
+            showToast('마크다운 변환이 완료되었습니다.', 'success');
+        });
+
+        // 다음 단계로
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            // 변환 결과 localStorage에 저장
+            const convertedMarkdowns = files.map(file => ({
+                fileName: file.name,
+                rawId: file.rawId,
+                markdown: file.markdown,
+                convertedAt: file.convertedAt,
+                status: file.status
+            }));
+
+            Storage.set('convertedMarkdowns', convertedMarkdowns);
+
+            // 변환 요약 저장
+            const conversionSummary = markdownConverter.getConversionHistory();
+            Storage.set('conversionSummary', conversionSummary);
+
+            const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+
+            addLog('변환 결과를 저장했습니다. 데이터 추출 단계로 이동합니다.');
+            showToast('데이터 추출 단계로 이동합니다.', 'success');
+
+            setTimeout(() => {
+                navigateTo(`P16_DataExtraction.html?reportId=${reportId}`);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

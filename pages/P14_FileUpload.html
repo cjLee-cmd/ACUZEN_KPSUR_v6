@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 업로드 - KPSUR AGENT | ACUZEN AI</title>
+    <link rel="stylesheet" href="../styles/globals.css">
+    <link rel="stylesheet" href="../styles/layout.css">
+    <style>
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .page-description {
+            font-size: 14px;
+            color: #6B7280;
+            line-height: 1.6;
+        }
+
+        /* 두 컬럼 레이아웃 */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: var(--spacing-lg);
+        }
+
+        /* 파일 업로드 영역 */
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: var(--spacing-xl);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        .dropzone {
+            border: 3px dashed #D1D5DB;
+            border-radius: 12px;
+            padding: 60px 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #F9FAFB;
+        }
+
+        .dropzone:hover {
+            border-color: #25739B;
+            background: rgba(37, 115, 155, 0.02);
+        }
+
+        .dropzone.drag-over {
+            border-color: #25739B;
+            background: rgba(37, 115, 155, 0.05);
+        }
+
+        .dropzone-icon {
+            font-size: 48px;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .dropzone-text {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .dropzone-hint {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+
+        .dropzone-formats {
+            font-size: 11px;
+            color: #6B7280;
+            margin-top: var(--spacing-sm);
+        }
+
+        /* 업로드된 파일 목록 */
+        .uploaded-files {
+            margin-top: var(--spacing-xl);
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .file-item:hover {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .file-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .file-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-meta {
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+
+        .file-raw-id {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(37, 115, 155, 0.1);
+            color: #25739B;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-raw-id:hover {
+            background: rgba(37, 115, 155, 0.2);
+        }
+
+        .file-raw-id.unassigned {
+            background: rgba(245, 158, 11, 0.1);
+            color: #F59E0B;
+        }
+
+        .file-remove {
+            padding: 4px 8px;
+            border: none;
+            background: transparent;
+            color: #EF4444;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .file-remove:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+        }
+
+        /* RAW ID 가이드 */
+        .raw-id-guide {
+            background: white;
+            border-radius: 12px;
+            padding: var(--spacing-xl);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: var(--spacing-lg);
+        }
+
+        .guide-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .guide-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .guide-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .required-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(239, 68, 68, 0.1);
+            color: #EF4444;
+        }
+
+        .optional-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(156, 163, 175, 0.1);
+            color: #6B7280;
+        }
+
+        .raw-id-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .raw-id-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm);
+            background: #F9FAFB;
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        .raw-id-label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .raw-id-name {
+            color: #6B7280;
+        }
+
+        .raw-id-status {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #D1D5DB;
+            flex-shrink: 0;
+        }
+
+        .raw-id-status.uploaded {
+            background: #10B981;
+            border-color: #10B981;
+        }
+
+        /* LLM 분류 버튼 */
+        .classify-section {
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-xl);
+            border-top: 2px solid #E5E7EB;
+        }
+
+        .classify-info {
+            background: #FFF7ED;
+            border: 2px solid #FED7AA;
+            border-radius: 8px;
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .classify-info-text {
+            font-size: 12px;
+            color: #C2410C;
+            line-height: 1.5;
+        }
+
+        .btn-classify {
+            width: 100%;
+            padding: var(--spacing-md);
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-classify:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 115, 155, 0.3);
+        }
+
+        .btn-classify:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 액션 버튼 */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+
+        .btn {
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid #E5E7EB;
+            color: #6B7280;
+        }
+
+        /* RAW ID 선택 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(7, 22, 29, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: var(--spacing-xl);
+            border-bottom: 2px solid #E5E7EB;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .modal-body {
+            padding: var(--spacing-xl);
+        }
+
+        .raw-id-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+        }
+
+        .raw-id-option {
+            padding: var(--spacing-md);
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .raw-id-option:hover {
+            border-color: #25739B;
+            background: rgba(37, 115, 155, 0.02);
+        }
+
+        .raw-id-option.selected {
+            border-color: #25739B;
+            background: rgba(37, 115, 155, 0.1);
+        }
+
+        .raw-id-option-code {
+            font-size: 12px;
+            font-weight: 700;
+            color: #25739B;
+            margin-bottom: 4px;
+        }
+
+        .raw-id-option-name {
+            font-size: 11px;
+            color: #6B7280;
+        }
+
+        .modal-footer {
+            padding: var(--spacing-lg);
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .raw-id-guide {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .raw-id-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item" onclick="navigateTo('P10_Dashboard.html')" style="cursor: pointer;">대시보드</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">보고서</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">파일 업로드</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content with Sidebar -->
+        <div class="app-content">
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="page-container">
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <h1 class="page-title">파일 업로드 (Stage 3)</h1>
+                        <p class="page-description">
+                            보고서 작성에 필요한 소스 문서를 업로드합니다. 각 파일은 RAW ID로 분류되며,
+                            LLM이 자동으로 문서 종류를 파악하여 태그를 부여합니다.
+                        </p>
+                    </div>
+
+                    <!-- Content Grid -->
+                    <div class="content-grid">
+                        <!-- Left: Upload Section -->
+                        <div>
+                            <div class="upload-section">
+                                <h2 class="section-title">파일 업로드</h2>
+
+                                <!-- Dropzone -->
+                                <div class="dropzone" id="dropzone">
+                                    <div class="dropzone-icon">📁</div>
+                                    <div class="dropzone-text">파일을 드래그하여 놓거나 클릭하여 선택하세요</div>
+                                    <div class="dropzone-hint">여러 파일을 한 번에 업로드할 수 있습니다</div>
+                                    <div class="dropzone-formats">지원 형식: PDF, Excel (.xlsx, .xls), Word (.docx), Text (.txt, .md)</div>
+                                </div>
+
+                                <input type="file" id="fileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.txt,.md" style="display: none;">
+
+                                <!-- Uploaded Files -->
+                                <div class="uploaded-files">
+                                    <h3 class="section-title">업로드된 파일 (<span id="fileCount">0</span>)</h3>
+                                    <div class="file-list" id="fileList">
+                                        <!-- 파일 목록이 여기에 표시됩니다 -->
+                                    </div>
+                                </div>
+
+                                <!-- LLM Classification -->
+                                <div class="classify-section">
+                                    <div class="classify-info">
+                                        <p class="classify-info-text">
+                                            <strong>🤖 AI 자동 분류:</strong> 업로드된 파일을 LLM이 분석하여
+                                            RAW ID를 자동으로 할당합니다. 필요시 수동으로 변경할 수 있습니다.
+                                        </p>
+                                    </div>
+                                    <button class="btn-classify" id="classifyBtn" disabled>
+                                        <span>✨</span>
+                                        <span>LLM으로 자동 분류하기</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="form-actions">
+                                <button class="btn btn-secondary" onclick="navigateTo('P13_NewReport.html')">
+                                    <span>← 이전</span>
+                                </button>
+                                <button class="btn btn-primary" id="nextBtn" disabled>
+                                    <span>다음 단계로</span>
+                                    <span>→</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Right: RAW ID Guide -->
+                        <div class="raw-id-guide">
+                            <h2 class="section-title">RAW ID 가이드</h2>
+
+                            <!-- Required Files -->
+                            <div class="guide-section">
+                                <div class="guide-header">
+                                    필수 파일
+                                    <span class="required-badge">REQUIRED</span>
+                                </div>
+                                <div class="raw-id-list" id="requiredList">
+                                    <!-- JavaScript로 채워집니다 -->
+                                </div>
+                            </div>
+
+                            <!-- Optional Files -->
+                            <div class="guide-section">
+                                <div class="guide-header">
+                                    선택 파일
+                                    <span class="optional-badge">OPTIONAL</span>
+                                </div>
+                                <div class="raw-id-list" id="optionalList">
+                                    <!-- JavaScript로 채워집니다 -->
+                                </div>
+                            </div>
+
+                            <!-- Progress -->
+                            <div class="guide-section">
+                                <div class="guide-header">업로드 진행률</div>
+                                <div style="margin-bottom: var(--spacing-sm);">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" id="uploadProgress" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div style="font-size: 11px; color: #6B7280; text-align: center;">
+                                    <span id="uploadedRequired">0</span> / <span id="totalRequired">9</span> 필수 파일
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Workflow Sidebar (Right) -->
+            <aside class="workflow-sidebar">
+                <div class="workflow-header">
+                    <h3>진행 상황</h3>
+                    <div class="workflow-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 25%"></div>
+                        </div>
+                        <div class="progress-text">3 / 9 단계</div>
+                    </div>
+                </div>
+
+                <div class="workflow-stages">
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">🔐</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 1</div>
+                            <div class="stage-label">로그인</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">📋</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 2</div>
+                            <div class="stage-label">보고서 상태</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage current">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 3</div>
+                            <div class="stage-label">파일 업로드</div>
+                        </div>
+                        <div class="stage-status">◉</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">🔄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 4</div>
+                            <div class="stage-label">MD 변환</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">⚙️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 5</div>
+                            <div class="stage-label">데이터 추출</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 6</div>
+                            <div class="stage-label">템플릿 작성</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✏️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 7</div>
+                            <div class="stage-label">리뷰</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✅</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 8</div>
+                            <div class="stage-label">QC 검증</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 9</div>
+                            <div class="stage-label">최종 출력</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+                </div>
+
+                <div class="workflow-footer">
+                    <div class="medical-badge">의료용 AI 소프트웨어</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                Copyright. Power Solution., Inc. 2026.
+            </div>
+        </footer>
+    </div>
+
+    <!-- RAW ID 선택 모달 -->
+    <div id="rawIdModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">RAW ID 선택</h2>
+            </div>
+
+            <div class="modal-body">
+                <div class="raw-id-grid" id="rawIdGrid">
+                    <!-- JavaScript로 채워집니다 -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRawIdModal()">취소</button>
+                <button class="btn btn-primary" onclick="confirmRawId()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../components/AppLayout.js"></script>
+    <script src="../utils/layout-helper.js"></script>
+    <script type="module">
+        // ES6 Modules
+        import { CONFIG, Storage, DateHelper } from '../js/config.js';
+        import fileHandler from '../js/file-handler.js';
+        import supabaseClient from '../js/supabase-client.js';
+        import authManager from '../js/auth.js';
+
+        // RAW ID 정의
+        const rawIdDefinitions = {
+            required: [
+                { id: 'RAW1', name: '최신첨부문서' },
+                { id: 'RAW2.1', name: '용법용량' },
+                { id: 'RAW2.2', name: '효능효과' },
+                { id: 'RAW2.3', name: '사용상의주의사항' },
+                { id: 'RAW3', name: '시판후sales데이터' },
+                { id: 'RAW4', name: '허가현황' },
+                { id: 'RAW12', name: '국내신속보고LineListing' },
+                { id: 'RAW14', name: '원시자료LineListing' },
+                { id: 'RAW15', name: '정기보고LineListing' }
+            ],
+            optional: [
+                { id: 'RAW2.6', name: '보고서작성지침사용상의주의사항' },
+                { id: 'RAW5.1', name: '안전성조치허가메일' },
+                { id: 'RAW6.1', name: '안전성조치허가메일_취합본' },
+                { id: 'RAW7.1', name: '안전성정보변경_복수항목' },
+                { id: 'RAW7.2', name: '안전성정보변경' },
+                { id: 'RAW7.3', name: '안전성정보변경_용법용량' },
+                { id: 'RAW7.4', name: '안전성정보변경_표현식복수항목' },
+                { id: 'RAW8', name: '임상노출데이터' },
+                { id: 'RAW9', name: '문헌자료' },
+                { id: 'RAW13', name: '국내신속보고LineListing' }
+            ]
+        };
+
+        let uploadedFiles = [];
+        let currentEditingFile = null;
+        let selectedRawId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const session = loadSessionData();
+            if (session) {
+                document.querySelector('.user-name').textContent = session.userName;
+                document.querySelector('.user-role').textContent = session.userRole;
+                document.querySelector('.user-avatar').textContent = session.userName.charAt(0);
+            }
+
+            setupUserMenu();
+            setupDropzone();
+            renderRawIdGuide();
+        });
+
+        function setupDropzone() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+
+            // Click to upload
+            dropzone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+
+            // Drag and drop
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('drag-over');
+            });
+
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('drag-over');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('drag-over');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const fileObj = {
+                    id: Date.now() + Math.random(),
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    rawId: null
+                };
+                uploadedFiles.push(fileObj);
+            });
+
+            renderFileList();
+            updateProgress();
+
+            // 파일이 있으면 분류 버튼 활성화
+            document.getElementById('classifyBtn').disabled = uploadedFiles.length === 0;
+        }
+
+        function renderFileList() {
+            const fileList = document.getElementById('fileList');
+            document.getElementById('fileCount').textContent = uploadedFiles.length;
+
+            if (uploadedFiles.length === 0) {
+                fileList.innerHTML = '<p style="text-align: center; color: #9CA3AF; padding: 20px;">업로드된 파일이 없습니다</p>';
+                return;
+            }
+
+            fileList.innerHTML = uploadedFiles.map(file => `
+                <div class="file-item">
+                    <div class="file-icon">${getFileIcon(file.name)}</div>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-meta">${formatFileSize(file.size)}</div>
+                    </div>
+                    <div class="file-raw-id ${file.rawId ? '' : 'unassigned'}" onclick="openRawIdSelector(${file.id})">
+                        ${file.rawId || '미분류'}
+                    </div>
+                    <button class="file-remove" onclick="removeFile(${file.id})">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        function renderRawIdGuide() {
+            // Required files
+            const requiredList = document.getElementById('requiredList');
+            requiredList.innerHTML = rawIdDefinitions.required.map(raw => {
+                const uploaded = uploadedFiles.some(f => f.rawId === raw.id);
+                return `
+                    <div class="raw-id-item">
+                        <div>
+                            <div class="raw-id-label">${raw.id}</div>
+                            <div class="raw-id-name">${raw.name}</div>
+                        </div>
+                        <div class="raw-id-status ${uploaded ? 'uploaded' : ''}"></div>
+                    </div>
+                `;
+            }).join('');
+
+            // Optional files
+            const optionalList = document.getElementById('optionalList');
+            optionalList.innerHTML = rawIdDefinitions.optional.map(raw => {
+                const uploaded = uploadedFiles.some(f => f.rawId === raw.id);
+                return `
+                    <div class="raw-id-item">
+                        <div>
+                            <div class="raw-id-label">${raw.id}</div>
+                            <div class="raw-id-name">${raw.name}</div>
+                        </div>
+                        <div class="raw-id-status ${uploaded ? 'uploaded' : ''}"></div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('totalRequired').textContent = rawIdDefinitions.required.length;
+        }
+
+        function updateProgress() {
+            const uploadedRequired = uploadedFiles.filter(f =>
+                rawIdDefinitions.required.some(r => r.id === f.rawId)
+            ).length;
+
+            document.getElementById('uploadedRequired').textContent = uploadedRequired;
+
+            const progress = (uploadedRequired / rawIdDefinitions.required.length) * 100;
+            document.getElementById('uploadProgress').style.width = `${progress}%`;
+
+            // 필수 파일이 모두 업로드되면 다음 버튼 활성화
+            document.getElementById('nextBtn').disabled = uploadedRequired < rawIdDefinitions.required.length;
+
+            renderRawIdGuide();
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'pdf': '📄',
+                'xlsx': '📊',
+                'xls': '📊',
+                'docx': '📝',
+                'txt': '📃',
+                'md': '📃'
+            };
+            return icons[ext] || '📄';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function removeFile(fileId) {
+            uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+            renderFileList();
+            updateProgress();
+            document.getElementById('classifyBtn').disabled = uploadedFiles.length === 0;
+        }
+
+        function openRawIdSelector(fileId) {
+            currentEditingFile = uploadedFiles.find(f => f.id === fileId);
+            if (!currentEditingFile) return;
+
+            selectedRawId = currentEditingFile.rawId;
+
+            // Render RAW ID grid
+            const grid = document.getElementById('rawIdGrid');
+            const allRawIds = [...rawIdDefinitions.required, ...rawIdDefinitions.optional];
+
+            grid.innerHTML = allRawIds.map(raw => `
+                <div class="raw-id-option ${selectedRawId === raw.id ? 'selected' : ''}" onclick="selectRawId('${raw.id}')">
+                    <div class="raw-id-option-code">${raw.id}</div>
+                    <div class="raw-id-option-name">${raw.name}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('rawIdModal').classList.add('show');
+        }
+
+        function selectRawId(rawId) {
+            selectedRawId = rawId;
+
+            // Update UI
+            document.querySelectorAll('.raw-id-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            event.target.closest('.raw-id-option').classList.add('selected');
+        }
+
+        function confirmRawId() {
+            if (currentEditingFile && selectedRawId) {
+                currentEditingFile.rawId = selectedRawId;
+                renderFileList();
+                updateProgress();
+                closeRawIdModal();
+                showToast(`${selectedRawId} 태그가 적용되었습니다.`, 'success');
+            }
+        }
+
+        function closeRawIdModal() {
+            document.getElementById('rawIdModal').classList.remove('show');
+            currentEditingFile = null;
+            selectedRawId = null;
+        }
+
+        // LLM 자동 분류
+        document.getElementById('classifyBtn').addEventListener('click', async () => {
+            showLLMLoading('AI가 파일을 분석하여 RAW ID를 자동으로 분류하고 있습니다...');
+
+            try {
+                let successCount = 0;
+                let failCount = 0;
+
+                // 각 파일에 대해 LLM 분류 실행
+                for (const fileData of uploadedFiles) {
+                    if (fileData.rawId) {
+                        // 이미 분류됨
+                        successCount++;
+                        continue;
+                    }
+
+                    // fileHandler를 사용한 자동 분류
+                    const classification = await fileHandler.classifyFile(fileData.file);
+
+                    if (classification.rawId && !classification.needsUserInput) {
+                        // 분류 성공
+                        fileData.rawId = classification.rawId;
+                        fileData.classified = true;
+                        successCount++;
+                    } else {
+                        // 분류 실패 또는 사용자 입력 필요
+                        fileData.classified = false;
+                        failCount++;
+                    }
+                }
+
+                renderFileList();
+                updateProgress();
+
+                hideLLMLoading();
+
+                if (failCount > 0) {
+                    showToast(`분류 완료: ${successCount}개 성공, ${failCount}개 수동 분류 필요`, 'warning');
+                } else {
+                    showToast(`모든 파일이 성공적으로 분류되었습니다. (${successCount}개)`, 'success');
+                }
+            } catch (error) {
+                console.error('Classification error:', error);
+                hideLLMLoading();
+                showToast('파일 분류 중 오류가 발생했습니다: ' + error.message, 'error');
+            }
+        });
+
+        // 다음 단계로
+        document.getElementById('nextBtn').addEventListener('click', async () => {
+            const missingRequired = rawIdDefinitions.required.filter(raw =>
+                !uploadedFiles.some(f => f.rawId === raw.id)
+            );
+
+            if (missingRequired.length > 0) {
+                showToast('필수 파일이 모두 업로드되지 않았습니다.', 'warning');
+                return;
+            }
+
+            showLLMLoading('파일 매칭 테이블을 생성하고 Supabase에 업로드하고 있습니다...');
+
+            try {
+                // 1. 파일 매칭 테이블 생성
+                const matchingTable = fileHandler.generateFileMatchingTable(
+                    uploadedFiles.map(f => ({
+                        file: f.file,
+                        fileName: f.name,
+                        rawId: f.rawId,
+                        classifiedAt: DateHelper.formatISO()
+                    }))
+                );
+
+                // 2. Supabase Storage에 파일 업로드
+                const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+                const uploadResults = [];
+
+                for (const fileData of uploadedFiles) {
+                    try {
+                        const result = await fileHandler.uploadToStorage(
+                            fileData.file,
+                            reportId,
+                            fileData.rawId
+                        );
+
+                        if (result.success) {
+                            uploadResults.push({
+                                fileName: fileData.name,
+                                rawId: fileData.rawId,
+                                url: result.url,
+                                path: result.path
+                            });
+                        }
+                    } catch (uploadError) {
+                        console.error('File upload error:', uploadError);
+                        showToast(`파일 업로드 실패: ${fileData.name}`, 'error');
+                    }
+                }
+
+                // 3. 업로드 정보를 localStorage에 저장
+                Storage.set('uploadedFiles', uploadResults);
+                Storage.set('fileMatchingTable', matchingTable);
+
+                hideLLMLoading();
+
+                if (uploadResults.length === uploadedFiles.length) {
+                    showToast(`모든 파일이 성공적으로 업로드되었습니다. (${uploadResults.length}개)`, 'success');
+                    setTimeout(() => {
+                        navigateTo(`P15_MarkdownConversion.html?reportId=${reportId}`);
+                    }, 1000);
+                } else {
+                    showToast(`일부 파일 업로드에 실패했습니다. (성공: ${uploadResults.length}/${uploadedFiles.length})`, 'warning');
+                }
+            } catch (error) {
+                console.error('Upload process error:', error);
+                hideLLMLoading();
+                showToast('파일 업로드 중 오류가 발생했습니다: ' + error.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

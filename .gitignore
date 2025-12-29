@@ -1,0 +1,48 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# API Keys
+*.key
+*.pem
+credentials.json
+secrets.json
+
+# Node modules (if using Node.js tools)
+node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+build/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Local data (development only)
+data/*.json
+!data/.gitkeep

@@ -1,0 +1,56 @@
+{
+  "project": {
+    "name": "KPSUR AGENT",
+    "url": "https://toelnxgizxwbdikskmxa.supabase.co",
+    "project_id": "toelnxgizxwbdikskmxa"
+  },
+  "auth": {
+    "site_url": "https://cjlee-cmd.github.io/ACUZEN_KPSUR_v6/",
+    "redirect_urls": [
+      "https://cjlee-cmd.github.io/ACUZEN_KPSUR_v6/pages/P01_Login.html",
+      "https://cjlee-cmd.github.io/ACUZEN_KPSUR_v6/pages/P05_SystemCheck.html",
+      "https://cjlee-cmd.github.io/ACUZEN_KPSUR_v6/pages/P10_Dashboard.html",
+      "http://localhost:8000/pages/P01_Login.html",
+      "http://localhost:8000/pages/P05_SystemCheck.html",
+      "http://localhost:8000/pages/P10_Dashboard.html"
+    ]
+  },
+  "storage": {
+    "buckets": [
+      {
+        "id": "report-files",
+        "name": "report-files",
+        "public": false,
+        "file_size_limit": 10485760,
+        "allowed_mime_types": [
+          "application/pdf",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "application/vnd.ms-excel",
+          "text/plain",
+          "text/markdown"
+        ]
+      }
+    ]
+  },
+  "database": {
+    "tables": {
+      "reports": {
+        "rls_enabled": true,
+        "policies": [
+          "Users can view own reports",
+          "Users can insert own reports",
+          "Users can update own reports",
+          "Users can delete own reports"
+        ]
+      },
+      "review_changes": {
+        "rls_enabled": true,
+        "policies": [
+          "Users can view own review changes",
+          "Users can insert own review changes"
+        ]
+      }
+    }
+  }
+}
