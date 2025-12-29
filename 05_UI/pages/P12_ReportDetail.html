@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보고서 상세 - KPSUR AGENT | ACUZEN AI</title>
+    <link rel="stylesheet" href="../styles/globals.css">
+    <link rel="stylesheet" href="../styles/layout.css">
+    <style>
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 헤더 */
+        .detail-header {
+            background: white;
+            border-radius: 12px;
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .report-title-section {
+            flex: 1;
+        }
+
+        .report-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .report-id {
+            font-size: 13px;
+            color: #9CA3AF;
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-action {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            border: 2px solid #E5E7EB;
+            color: #6B7280;
+        }
+
+        .btn-danger {
+            background: white;
+            border: 2px solid #EF4444;
+            color: #EF4444;
+        }
+
+        .btn-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-meta {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-lg);
+            padding-top: var(--spacing-lg);
+            border-top: 2px solid #E5E7EB;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .meta-label {
+            font-size: 11px;
+            color: #9CA3AF;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-value {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.review {
+            background: rgba(245, 158, 11, 0.1);
+            color: #F59E0B;
+        }
+
+        /* 탭 네비게이션 */
+        .tabs-container {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: var(--spacing-lg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .tabs-nav {
+            display: flex;
+            border-bottom: 2px solid #E5E7EB;
+            padding: 0 var(--spacing-lg);
+        }
+
+        .tab-btn {
+            padding: var(--spacing-lg) var(--spacing-xl);
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6B7280;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: #25739B;
+        }
+
+        .tab-btn.active {
+            color: #25739B;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+        }
+
+        .tab-content {
+            padding: var(--spacing-xl);
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 정보 그리드 */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-lg);
+        }
+
+        .info-section {
+            background: #F9FAFB;
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-sm);
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #6B7280;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 13px;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        /* 타임라인 */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #E5E7EB;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #25739B;
+            z-index: 1;
+        }
+
+        .timeline-item.completed::before {
+            background: #10B981;
+            border-color: #10B981;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .timeline-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .timeline-time {
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+
+        .timeline-desc {
+            font-size: 12px;
+            color: #6B7280;
+            line-height: 1.5;
+        }
+
+        /* 파일 목록 */
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .file-item:hover {
+            border-color: #25739B;
+            box-shadow: 0 2px 8px rgba(37, 115, 155, 0.1);
+        }
+
+        .file-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(37, 115, 155, 0.1);
+            border-radius: 8px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 2px;
+        }
+
+        .file-meta {
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+
+        .file-action-btn {
+            padding: 4px 8px;
+            border: none;
+            background: transparent;
+            color: #25739B;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .file-action-btn:hover {
+            background: rgba(37, 115, 155, 0.1);
+            border-radius: 4px;
+        }
+
+        /* 댓글 섹션 */
+        .comments-section {
+            margin-top: var(--spacing-xl);
+        }
+
+        .comment-input {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .comment-textarea {
+            flex: 1;
+            padding: var(--spacing-md);
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .comment-item {
+            display: flex;
+            gap: var(--spacing-md);
+            padding: var(--spacing-lg);
+            background: #F9FAFB;
+            border-radius: 8px;
+        }
+
+        .comment-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .comment-author {
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .comment-time {
+            font-size: 11px;
+            color: #9CA3AF;
+        }
+
+        .comment-text {
+            font-size: 13px;
+            color: #6B7280;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1024px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-meta {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+
+            .header-actions {
+                width: 100%;
+            }
+
+            .btn-action {
+                flex: 1;
+            }
+
+            .header-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs-nav {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item" onclick="navigateTo('P10_Dashboard.html')" style="cursor: pointer;">대시보드</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item" onclick="navigateTo('P11_ReportList.html')" style="cursor: pointer;">보고서 목록</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">보고서 상세</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content with Sidebar -->
+        <div class="app-content">
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="page-container">
+                    <!-- Detail Header -->
+                    <div class="detail-header">
+                        <div class="header-top">
+                            <div class="report-title-section">
+                                <h1 class="report-title">
+                                    코로나19백신_PSUR_2024Q4
+                                    <span class="status-badge review">리뷰중</span>
+                                </h1>
+                                <div class="report-id">보고서 ID: RPT-2024-001</div>
+                            </div>
+
+                            <div class="header-actions">
+                                <button class="btn-action btn-primary" onclick="continueReport()">
+                                    <span>▶️</span>
+                                    <span>계속 진행</span>
+                                </button>
+                                <button class="btn-action btn-secondary" onclick="exportReport()">
+                                    <span>📥</span>
+                                    <span>내보내기</span>
+                                </button>
+                                <button class="btn-action btn-danger" onclick="deleteReport()">
+                                    <span>🗑️</span>
+                                    <span>삭제</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="header-meta">
+                            <div class="meta-item">
+                                <div class="meta-label">성분명</div>
+                                <div class="meta-value">토지나메란</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">현재 단계</div>
+                                <div class="meta-value">Stage 7 - 리뷰</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">작성자</div>
+                                <div class="meta-value">김철수</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">최종 수정</div>
+                                <div class="meta-value">2025-12-28 14:32</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="tabs-container">
+                        <div class="tabs-nav">
+                            <button class="tab-btn active" onclick="switchTab('overview')">개요</button>
+                            <button class="tab-btn" onclick="switchTab('files')">파일 (12)</button>
+                            <button class="tab-btn" onclick="switchTab('data')">추출 데이터</button>
+                            <button class="tab-btn" onclick="switchTab('history')">작업 이력</button>
+                            <button class="tab-btn" onclick="switchTab('comments')">댓글 (3)</button>
+                        </div>
+
+                        <!-- 개요 탭 -->
+                        <div id="tab-overview" class="tab-content active">
+                            <div class="info-grid">
+                                <div class="info-section">
+                                    <h3 class="section-title">기본 정보</h3>
+                                    <div class="info-row">
+                                        <span class="info-label">보고서명</span>
+                                        <span class="info-value">코로나19백신_PSUR_2024Q4</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">성분명 (CS0)</span>
+                                        <span class="info-value">토지나메란</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">브랜드명 (CS1)</span>
+                                        <span class="info-value">코미나티주</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">회사명 (CS2)</span>
+                                        <span class="info-value">한국화이자제약</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">보고 주기 (CS24)</span>
+                                        <span class="info-value">2024-10-01 ~ 2024-12-31</span>
+                                    </div>
+                                </div>
+
+                                <div class="info-section">
+                                    <h3 class="section-title">진행 상태</h3>
+                                    <div class="info-row">
+                                        <span class="info-label">생성일</span>
+                                        <span class="info-value">2024-12-15</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">현재 단계</span>
+                                        <span class="info-value">Stage 7 - 리뷰</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">상태</span>
+                                        <span class="info-value">리뷰중</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">작성자</span>
+                                        <span class="info-value">김철수 (Author)</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">리뷰어</span>
+                                        <span class="info-value">이영희 (Reviewer)</span>
+                                    </div>
+                                </div>
+
+                                <div class="info-section">
+                                    <h3 class="section-title">허가 정보</h3>
+                                    <div class="info-row">
+                                        <span class="info-label">국내허가일자 (CS5)</span>
+                                        <span class="info-value">2021-03-05</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">최초허가일자 (CS6)</span>
+                                        <span class="info-value">2020-12-11</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">최초허가국 (CS7)</span>
+                                        <span class="info-value">영국</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">품목허가번호</span>
+                                        <span class="info-value">20210000001</span>
+                                    </div>
+                                </div>
+
+                                <div class="info-section">
+                                    <h3 class="section-title">안전성 정보</h3>
+                                    <div class="info-row">
+                                        <span class="info-label">신속보고 (표5)</span>
+                                        <span class="info-value">23건</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">정기보고 (표6)</span>
+                                        <span class="info-value">157건</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">원시자료 (표7)</span>
+                                        <span class="info-value">1,234건</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">중대한 이상사례</span>
+                                        <span class="info-value">89건</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 파일 탭 -->
+                        <div id="tab-files" class="tab-content">
+                            <div class="file-list">
+                                <div class="file-item">
+                                    <div class="file-icon">📄</div>
+                                    <div class="file-info">
+                                        <div class="file-name">RAW1_최신첨부문서.pdf</div>
+                                        <div class="file-meta">PDF · 2.4 MB · 2024-12-15 업로드</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="file-action-btn">다운로드</button>
+                                        <button class="file-action-btn">미리보기</button>
+                                    </div>
+                                </div>
+
+                                <div class="file-item">
+                                    <div class="file-icon">📊</div>
+                                    <div class="file-info">
+                                        <div class="file-name">RAW3_시판후sales데이터.xlsx</div>
+                                        <div class="file-meta">Excel · 456 KB · 2024-12-15 업로드</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="file-action-btn">다운로드</button>
+                                        <button class="file-action-btn">미리보기</button>
+                                    </div>
+                                </div>
+
+                                <div class="file-item">
+                                    <div class="file-icon">📝</div>
+                                    <div class="file-info">
+                                        <div class="file-name">RAW4_허가현황.docx</div>
+                                        <div class="file-meta">Word · 128 KB · 2024-12-15 업로드</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="file-action-btn">다운로드</button>
+                                        <button class="file-action-btn">미리보기</button>
+                                    </div>
+                                </div>
+
+                                <div class="file-item">
+                                    <div class="file-icon">📄</div>
+                                    <div class="file-info">
+                                        <div class="file-name">RAW12_신속보고LineListing.xlsx</div>
+                                        <div class="file-meta">Excel · 1.2 MB · 2024-12-15 업로드</div>
+                                    </div>
+                                    <div class="file-actions">
+                                        <button class="file-action-btn">다운로드</button>
+                                        <button class="file-action-btn">미리보기</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 추출 데이터 탭 -->
+                        <div id="tab-data" class="tab-content">
+                            <div class="info-section">
+                                <h3 class="section-title">CS 데이터 (Context-Specific)</h3>
+                                <div class="info-row">
+                                    <span class="info-label">CS0_성분명</span>
+                                    <span class="info-value">토지나메란</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">CS1_브랜드명</span>
+                                    <span class="info-value">코미나티주</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">CS2_회사명</span>
+                                    <span class="info-value">한국화이자제약</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">CS5_국내허가일자</span>
+                                    <span class="info-value">2021-03-05</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">CS15_효능효과</span>
+                                    <span class="info-value">16세 이상에서 코로나19 예방</span>
+                                </div>
+                            </div>
+
+                            <div class="info-section" style="margin-top: var(--spacing-lg);">
+                                <h3 class="section-title">PH 데이터 (Paragraph/Phrase)</h3>
+                                <div class="info-row">
+                                    <span class="info-label">PH11_총괄평가문</span>
+                                    <span class="info-value">본 보고기간 동안 새로운 안전성 우려사항은 확인되지 않았음...</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-label">PH12_결론</span>
+                                    <span class="info-value">본 의약품의 benefit-risk 프로파일은 긍정적으로 유지됨...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 작업 이력 탭 -->
+                        <div id="tab-history" class="tab-content">
+                            <div class="timeline">
+                                <div class="timeline-item completed">
+                                    <div class="timeline-header">
+                                        <div class="timeline-title">보고서 생성</div>
+                                        <div class="timeline-time">2024-12-15 10:30</div>
+                                    </div>
+                                    <div class="timeline-desc">김철수님이 새 보고서를 생성했습니다.</div>
+                                </div>
+
+                                <div class="timeline-item completed">
+                                    <div class="timeline-header">
+                                        <div class="timeline-title">파일 업로드 완료</div>
+                                        <div class="timeline-time">2024-12-15 11:45</div>
+                                    </div>
+                                    <div class="timeline-desc">12개 파일이 업로드되었습니다. (RAW1~RAW15)</div>
+                                </div>
+
+                                <div class="timeline-item completed">
+                                    <div class="timeline-header">
+                                        <div class="timeline-title">마크다운 변환 완료</div>
+                                        <div class="timeline-time">2024-12-16 09:20</div>
+                                    </div>
+                                    <div class="timeline-desc">LLM을 사용하여 모든 소스 문서를 마크다운으로 변환했습니다.</div>
+                                </div>
+
+                                <div class="timeline-item completed">
+                                    <div class="timeline-header">
+                                        <div class="timeline-title">데이터 추출 완료</div>
+                                        <div class="timeline-time">2024-12-18 14:15</div>
+                                    </div>
+                                    <div class="timeline-desc">CS 데이터 60개, PH 데이터 9개, 표 데이터 7개가 추출되었습니다.</div>
+                                </div>
+
+                                <div class="timeline-item completed">
+                                    <div class="timeline-header">
+                                        <div class="timeline-title">템플릿 작성 완료</div>
+                                        <div class="timeline-time">2024-12-20 16:40</div>
+                                    </div>
+                                    <div class="timeline-desc">추출된 데이터를 템플릿에 삽입하여 초안을 완성했습니다.</div>
+                                </div>
+
+                                <div class="timeline-item">
+                                    <div class="timeline-header">
+                                        <div class="timeline-title">리뷰 진행중</div>
+                                        <div class="timeline-time">2024-12-28 14:32</div>
+                                    </div>
+                                    <div class="timeline-desc">이영희 리뷰어가 섹션별 검토를 진행하고 있습니다.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 댓글 탭 -->
+                        <div id="tab-comments" class="tab-content">
+                            <div class="comments-section">
+                                <div class="comment-input">
+                                    <textarea class="comment-textarea" placeholder="댓글을 입력하세요..."></textarea>
+                                    <button class="btn-action btn-primary" onclick="addComment()">
+                                        <span>등록</span>
+                                    </button>
+                                </div>
+
+                                <div class="comment-list">
+                                    <div class="comment-item">
+                                        <div class="comment-avatar">이</div>
+                                        <div class="comment-content">
+                                            <div class="comment-header">
+                                                <span class="comment-author">이영희 (Reviewer)</span>
+                                                <span class="comment-time">2시간 전</span>
+                                            </div>
+                                            <div class="comment-text">
+                                                섹션 3의 효능효과 부분에서 연령 기준이 변경된 것으로 보입니다.
+                                                최신 허가사항을 확인하여 업데이트 부탁드립니다.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="comment-item">
+                                        <div class="comment-avatar">김</div>
+                                        <div class="comment-content">
+                                            <div class="comment-header">
+                                                <span class="comment-author">김철수 (Author)</span>
+                                                <span class="comment-time">1시간 전</span>
+                                            </div>
+                                            <div class="comment-text">
+                                                확인했습니다. RAW2.2 파일의 최신 버전(2024-07-16)을 기준으로
+                                                "12세 이상"으로 수정하겠습니다.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="comment-item">
+                                        <div class="comment-avatar">이</div>
+                                        <div class="comment-content">
+                                            <div class="comment-header">
+                                                <span class="comment-author">이영희 (Reviewer)</span>
+                                                <span class="comment-time">30분 전</span>
+                                            </div>
+                                            <div class="comment-text">
+                                                감사합니다. 수정사항 확인 후 QC 단계로 진행하겠습니다.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Workflow Sidebar (Right) -->
+            <aside class="workflow-sidebar">
+                <div class="workflow-header">
+                    <h3>진행 상황</h3>
+                    <div class="workflow-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%"></div>
+                        </div>
+                        <div class="progress-text">7 / 9 단계</div>
+                    </div>
+                </div>
+
+                <div class="workflow-stages">
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">🔐</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 1</div>
+                            <div class="stage-label">로그인</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">📋</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 2</div>
+                            <div class="stage-label">보고서 상태</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 3</div>
+                            <div class="stage-label">파일 업로드</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">🔄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 4</div>
+                            <div class="stage-label">MD 변환</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">⚙️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 5</div>
+                            <div class="stage-label">데이터 추출</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">📄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 6</div>
+                            <div class="stage-label">템플릿 작성</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage current">
+                        <div class="stage-icon">✏️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 7</div>
+                            <div class="stage-label">리뷰</div>
+                        </div>
+                        <div class="stage-status">◉</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✅</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 8</div>
+                            <div class="stage-label">QC 검증</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 9</div>
+                            <div class="stage-label">최종 출력</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+                </div>
+
+                <div class="workflow-footer">
+                    <div class="medical-badge">의료용 AI 소프트웨어</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                Copyright. Power Solution., Inc. 2026.
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../components/AppLayout.js"></script>
+    <script src="../utils/layout-helper.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const session = loadSessionData();
+            if (session) {
+                document.querySelector('.user-name').textContent = session.userName;
+                document.querySelector('.user-role').textContent = session.userRole;
+                document.querySelector('.user-avatar').textContent = session.userName.charAt(0);
+            }
+
+            setupUserMenu();
+        });
+
+        function switchTab(tabName) {
+            // 모든 탭 버튼과 콘텐츠 비활성화
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // 선택한 탭 활성화
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function continueReport() {
+            // Stage 7 (리뷰) 페이지로 이동
+            navigateTo('P18_Review.html?id=1');
+        }
+
+        function exportReport() {
+            showToast('보고서를 내보내는 중...', 'info');
+            setTimeout(() => {
+                showToast('보고서가 성공적으로 내보내졌습니다.', 'success');
+            }, 1500);
+        }
+
+        function deleteReport() {
+            if (confirm('이 보고서를 삭제하시겠습니까? 삭제된 보고서는 복구할 수 없습니다.')) {
+                showToast('보고서가 삭제되었습니다.', 'success');
+                setTimeout(() => {
+                    navigateTo('P11_ReportList.html');
+                }, 1000);
+            }
+        }
+
+        function addComment() {
+            const textarea = document.querySelector('.comment-textarea');
+            const text = textarea.value.trim();
+
+            if (!text) {
+                showToast('댓글 내용을 입력해주세요.', 'warning');
+                return;
+            }
+
+            showToast('댓글이 등록되었습니다.', 'success');
+            textarea.value = '';
+
+            // 실제로는 API 호출하여 댓글 저장하고 목록 새로고침
+        }
+    </script>
+</body>
+</html>
