@@ -7,6 +7,100 @@
     <link rel="stylesheet" href="../css/styles/globals.css">
     <link rel="stylesheet" href="../css/styles/layout.css">
     <style>
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --border-light: #F3F4F6;
+            --section-bg: #F9FAFB;
+            --input-bg: white;
+            --timeline-line: #E5E7EB;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-shadow: none;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --border-light: #334155;
+            --section-bg: #334155;
+            --input-bg: #334155;
+            --timeline-line: #475569;
+        }
+
+        /* 다크모드 컴포넌트 스타일 */
+        [data-theme="dark"] .detail-header,
+        [data-theme="dark"] .tabs-container {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .info-section,
+        [data-theme="dark"] .comment-item {
+            background: var(--section-bg);
+        }
+
+        [data-theme="dark"] .file-item {
+            background: var(--section-bg);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .file-item:hover {
+            border-color: #60a5fa;
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            background: var(--section-bg);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .btn-danger {
+            background: var(--section-bg);
+        }
+
+        [data-theme="dark"] .tab-btn {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .tab-btn:hover,
+        [data-theme="dark"] .tab-btn.active {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .tabs-nav {
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .comment-textarea {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .timeline::before {
+            background: var(--timeline-line);
+        }
+
+        [data-theme="dark"] .timeline-item::before {
+            background: var(--card-bg);
+            border-color: #60a5fa;
+        }
+
+        [data-theme="dark"] .timeline-item.completed::before {
+            background: #10B981;
+            border-color: #10B981;
+        }
+
         .page-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -14,11 +108,11 @@
 
         /* 헤더 */
         .detail-header {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: var(--spacing-xl);
             margin-bottom: var(--spacing-lg);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
         }
 
         .header-top {
@@ -35,7 +129,7 @@
         .report-title {
             font-size: 24px;
             font-weight: 700;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: var(--spacing-sm);
             display: flex;
             align-items: center;
@@ -44,7 +138,7 @@
 
         .report-id {
             font-size: 13px;
-            color: #9CA3AF;
+            color: var(--text-muted);
             font-weight: 500;
         }
 
@@ -72,9 +166,9 @@
         }
 
         .btn-secondary {
-            background: white;
-            border: 2px solid #E5E7EB;
-            color: #6B7280;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
         }
 
         .btn-danger {
@@ -93,7 +187,7 @@
             grid-template-columns: repeat(4, 1fr);
             gap: var(--spacing-lg);
             padding-top: var(--spacing-lg);
-            border-top: 2px solid #E5E7EB;
+            border-top: 2px solid var(--border-color);
         }
 
         .meta-item {
@@ -104,7 +198,7 @@
 
         .meta-label {
             font-size: 11px;
-            color: #9CA3AF;
+            color: var(--text-muted);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -112,7 +206,7 @@
 
         .meta-value {
             font-size: 14px;
-            color: #374151;
+            color: var(--text-primary);
             font-weight: 600;
         }
 
@@ -131,15 +225,15 @@
 
         /* 탭 네비게이션 */
         .tabs-container {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             margin-bottom: var(--spacing-lg);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
         }
 
         .tabs-nav {
             display: flex;
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
             padding: 0 var(--spacing-lg);
         }
 
@@ -149,7 +243,7 @@
             background: transparent;
             font-size: 14px;
             font-weight: 600;
-            color: #6B7280;
+            color: var(--text-secondary);
             cursor: pointer;
             position: relative;
             transition: all 0.2s ease;
@@ -190,7 +284,7 @@
         }
 
         .info-section {
-            background: #F9FAFB;
+            background: var(--section-bg);
             border-radius: 8px;
             padding: var(--spacing-lg);
         }
@@ -198,17 +292,17 @@
         .section-title {
             font-size: 14px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: var(--spacing-md);
             padding-bottom: var(--spacing-sm);
-            border-bottom: 1px solid #E5E7EB;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
             padding: var(--spacing-sm) 0;
-            border-bottom: 1px solid #E5E7EB;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .info-row:last-child {
@@ -217,13 +311,13 @@
 
         .info-label {
             font-size: 12px;
-            color: #6B7280;
+            color: var(--text-secondary);
             font-weight: 500;
         }
 
         .info-value {
             font-size: 13px;
-            color: #374151;
+            color: var(--text-primary);
             font-weight: 600;
         }
 
@@ -240,7 +334,7 @@
             top: 0;
             bottom: 0;
             width: 2px;
-            background: #E5E7EB;
+            background: var(--timeline-line);
         }
 
         .timeline-item {
@@ -256,7 +350,7 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: white;
+            background: var(--card-bg);
             border: 3px solid #25739B;
             z-index: 1;
         }
@@ -276,17 +370,17 @@
         .timeline-title {
             font-size: 14px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .timeline-time {
             font-size: 11px;
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         .timeline-desc {
             font-size: 12px;
-            color: #6B7280;
+            color: var(--text-secondary);
             line-height: 1.5;
         }
 
@@ -302,8 +396,8 @@
             align-items: center;
             gap: var(--spacing-md);
             padding: var(--spacing-md);
-            background: white;
-            border: 1px solid #E5E7EB;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             transition: all 0.2s ease;
         }
@@ -331,13 +425,13 @@
         .file-name {
             font-size: 13px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: 2px;
         }
 
         .file-meta {
             font-size: 11px;
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         .file-actions {
@@ -374,11 +468,13 @@
         .comment-textarea {
             flex: 1;
             padding: var(--spacing-md);
-            border: 2px solid #E5E7EB;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             font-size: 13px;
             resize: vertical;
             min-height: 80px;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
 
         .comment-list {
@@ -391,7 +487,7 @@
             display: flex;
             gap: var(--spacing-md);
             padding: var(--spacing-lg);
-            background: #F9FAFB;
+            background: var(--section-bg);
             border-radius: 8px;
         }
 
@@ -423,17 +519,17 @@
         .comment-author {
             font-size: 13px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .comment-time {
             font-size: 11px;
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         .comment-text {
             font-size: 13px;
-            color: #6B7280;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
 
@@ -494,6 +590,10 @@
             </div>
 
             <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
                 <div class="user-menu">
                     <div class="user-avatar">사</div>
                     <div class="user-info">
@@ -971,6 +1071,24 @@
             </div>
         </footer>
     </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        // 다크모드 초기화 (페이지 로드 즉시)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
 
     <!-- JavaScript -->
     <script src="../components/AppLayout.js"></script>

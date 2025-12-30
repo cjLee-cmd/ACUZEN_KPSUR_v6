@@ -8,6 +8,99 @@
     <link rel="stylesheet" href="../css/styles/layout.css">
     <link rel="stylesheet" href="../css/styles/components.css">
     <style>
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: #07161D;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --section-bg: #f8fafc;
+            --input-bg: white;
+            --info-bg: #EBF5FF;
+            --info-text: #122E4E;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-shadow: none;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --section-bg: #334155;
+            --input-bg: #334155;
+            --info-bg: rgba(37, 115, 155, 0.2);
+            --info-text: #94a3b8;
+        }
+
+        /* 다크모드 패널 스타일 */
+        [data-theme="dark"] .section-list-panel,
+        [data-theme="dark"] .template-panel,
+        [data-theme="dark"] .progress-stats {
+            background: transparent !important;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .section-item {
+            background: #334155;
+        }
+
+        [data-theme="dark"] .section-item:hover {
+            background: #475569;
+        }
+
+        [data-theme="dark"] .section-item.active {
+            background: rgba(37, 115, 155, 0.3);
+        }
+
+        [data-theme="dark"] .section-item.completed {
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        [data-theme="dark"] .section-status.pending {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .section-status.processing {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .section-status.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        [data-theme="dark"] .data-placeholder {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .data-filled {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        [data-theme="dark"] .data-mapping-item {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .data-mapping-item.filled {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10B981;
+        }
+
+        [data-theme="dark"] .data-mapping-item.missing {
+            background: rgba(251, 191, 36, 0.2);
+            border-color: #fbbf24;
+        }
+
         .template-container {
             display: grid;
             grid-template-columns: 280px 1fr;
@@ -19,9 +112,9 @@
 
         /* Left Panel - Section List */
         .section-list-panel {
-            background: white;
+            background: var(--card-bg);
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             padding: 16px;
             overflow-y: auto;
         }
@@ -36,18 +129,18 @@
         .section-list-title {
             font-size: 14px;
             font-weight: 600;
-            color: #07161D;
+            color: var(--text-primary);
         }
 
         .section-progress {
             font-size: 11px;
-            color: #64748b;
+            color: var(--text-secondary);
         }
 
         .section-item {
             padding: 10px;
             margin-bottom: 6px;
-            background: #f8fafc;
+            background: var(--section-bg);
             border-radius: 6px;
             border-left: 3px solid transparent;
             cursor: pointer;
@@ -59,7 +152,7 @@
         }
 
         .section-item.active {
-            background: #EBF5FF;
+            background: var(--info-bg);
             border-left-color: #25739B;
         }
 
@@ -71,14 +164,14 @@
         .section-number {
             font-size: 11px;
             font-weight: 600;
-            color: #64748b;
+            color: var(--text-secondary);
             margin-bottom: 4px;
         }
 
         .section-name {
             font-size: 13px;
             font-weight: 500;
-            color: #07161D;
+            color: var(--text-primary);
             margin-bottom: 6px;
         }
 
@@ -90,7 +183,7 @@
         }
 
         .section-type {
-            color: #64748b;
+            color: var(--text-secondary);
         }
 
         .section-status {
@@ -116,9 +209,9 @@
 
         /* Main Panel - Template Editor */
         .template-panel {
-            background: white;
+            background: var(--card-bg);
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -126,19 +219,19 @@
 
         .template-header {
             padding: 16px;
-            border-bottom: 1px solid #e2e8f0;
-            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--section-bg);
         }
 
         .template-title {
             font-size: 16px;
             font-weight: 600;
-            color: #07161D;
+            color: var(--text-primary);
             margin: 0 0 8px 0;
         }
 
         .template-info {
-            background: #EBF5FF;
+            background: var(--info-bg);
             border-left: 4px solid #25739B;
             padding: 12px;
             margin-bottom: 12px;
@@ -147,14 +240,14 @@
 
         .template-info-title {
             font-weight: 600;
-            color: #122E4E;
+            color: var(--info-text);
             font-size: 13px;
             margin-bottom: 4px;
         }
 
         .template-info-text {
             font-size: 11px;
-            color: #122E4E;
+            color: var(--info-text);
             line-height: 1.4;
         }
 
@@ -166,11 +259,11 @@
 
         .template-mode-select {
             padding: 6px 10px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 12px;
-            color: #07161D;
-            background: white;
+            color: var(--text-primary);
+            background: var(--input-bg);
         }
 
         .template-content {
@@ -190,10 +283,10 @@
         .column-header {
             font-size: 13px;
             font-weight: 600;
-            color: #64748b;
+            color: var(--text-secondary);
             margin-bottom: 8px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .template-editor {
@@ -202,9 +295,10 @@
             font-size: 13px;
             line-height: 1.6;
             padding: 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
-            background: #f8fafc;
+            background: var(--section-bg);
+            color: var(--text-primary);
             overflow-y: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
@@ -228,9 +322,9 @@
         .preview-panel {
             flex: 1;
             padding: 16px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
-            background: white;
+            background: var(--card-bg);
             overflow-y: auto;
             line-height: 1.8;
         }
@@ -238,7 +332,7 @@
         .preview-panel h1 {
             font-size: 18px;
             font-weight: 600;
-            color: #07161D;
+            color: var(--text-primary);
             margin-bottom: 12px;
         }
 
@@ -251,7 +345,7 @@
 
         .preview-panel p {
             font-size: 13px;
-            color: #334155;
+            color: var(--text-secondary);
             margin-bottom: 8px;
         }
 
@@ -272,11 +366,12 @@
 
         .preview-panel td {
             padding: 8px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
         }
 
         .data-mapping-panel {
-            background: #f8fafc;
+            background: var(--section-bg);
             padding: 12px;
             border-radius: 6px;
             margin-bottom: 12px;
@@ -285,7 +380,7 @@
         .data-mapping-title {
             font-size: 12px;
             font-weight: 600;
-            color: #64748b;
+            color: var(--text-secondary);
             margin-bottom: 8px;
         }
 
@@ -298,9 +393,10 @@
         .data-mapping-item {
             font-size: 11px;
             padding: 4px 6px;
-            background: white;
+            background: var(--card-bg);
             border-radius: 3px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
         }
 
         .data-mapping-item.filled {
@@ -309,14 +405,14 @@
         }
 
         .data-mapping-item.missing {
-            border-color: #EF4444;
-            background: #FEE2E2;
+            border-color: #fbbf24;
+            background: #FEF3C7;
         }
 
         .action-footer {
             padding: 16px;
-            border-top: 1px solid #e2e8f0;
-            background: #f8fafc;
+            border-top: 1px solid var(--border-color);
+            background: var(--section-bg);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -324,7 +420,7 @@
 
         .footer-info {
             font-size: 12px;
-            color: #64748b;
+            color: var(--text-secondary);
         }
 
         .footer-actions {
@@ -334,11 +430,11 @@
 
         /* Progress Stats */
         .progress-stats {
-            background: white;
+            background: var(--card-bg);
             border-radius: 6px;
             padding: 12px;
             margin-bottom: 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
         }
 
         .progress-stats-grid {
@@ -359,13 +455,66 @@
 
         .progress-stat-label {
             font-size: 11px;
-            color: #64748b;
+            color: var(--text-secondary);
             margin-top: 4px;
         }
     </style>
 </head>
 <body>
-    <div class="app-layout" id="app"></div>
+    <div class="app-layout" id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">대시보드</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">보고서</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">템플릿 작성</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        // 다크모드 초기화 (페이지 로드 즉시)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
 
     <script>
         // CONFIG - System configuration
@@ -702,7 +851,14 @@
                 </footer>
             `;
 
-            document.getElementById('app').innerHTML = layout.render(content);
+            // 헤더 뒤에 콘텐츠 추가 (헤더 덮어쓰기 방지)
+            const appElement = document.getElementById('app');
+            const header = appElement.querySelector('.app-header');
+            if (header) {
+                header.insertAdjacentHTML('afterend', layout.render(content));
+            } else {
+                appElement.innerHTML = layout.render(content);
+            }
 
             renderSectionList();
             selectSection(sections[0]);

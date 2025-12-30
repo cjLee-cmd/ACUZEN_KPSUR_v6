@@ -6,7 +6,67 @@
     <title>마크다운 변환 - KPSUR AGENT | ACUZEN AI</title>
     <link rel="stylesheet" href="../css/styles/globals.css">
     <link rel="stylesheet" href="../css/styles/layout.css">
+    <!-- 파일 파싱 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- OCR 라이브러리 (이미지 기반 PDF 처리) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- 마크다운 렌더링 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
     <style>
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --section-bg: #F9FAFB;
+            --input-bg: white;
+            /* 경고색 - 주황색 계열 (눈에 편함) */
+            --warning-bg: #FFFBEB;
+            --warning-border: #FCD34D;
+            --warning-title: #B45309;
+            --warning-text: #92400E;
+            /* 상태 색상 */
+            --status-success: #10B981;
+            --status-error: #F59E0B;
+            --status-pending: #D1D5DB;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-shadow: none;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --section-bg: #334155;
+            --input-bg: #334155;
+            /* 경고색 - 다크모드 (주황색 계열) */
+            --warning-bg: #451a03;
+            --warning-border: #b45309;
+            --warning-title: #fbbf24;
+            --warning-text: #fcd34d;
+            /* 상태 색상 - 다크모드 */
+            --status-success: #34d399;
+            --status-error: #fbbf24;
+            --status-pending: #64748b;
+        }
+
+        /* 다크모드 카드 스타일 통일 */
+        [data-theme="dark"] .file-list-section,
+        [data-theme="dark"] .preview-section,
+        [data-theme="dark"] .log-section {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: 1px solid #475569;
+        }
+
         .page-container {
             max-width: 1600px;
             margin: 0 auto;
@@ -19,20 +79,20 @@
         .page-title {
             font-size: 24px;
             font-weight: 700;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: var(--spacing-xs);
         }
 
         .page-description {
             font-size: 14px;
-            color: #6B7280;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
 
         /* 경고 배너 */
         .warning-banner {
-            background: #FEF2F2;
-            border: 2px solid #FCA5A5;
+            background: var(--warning-bg);
+            border: 2px solid var(--warning-border);
             border-radius: 8px;
             padding: var(--spacing-lg);
             margin-bottom: var(--spacing-xl);
@@ -53,13 +113,13 @@
         .warning-title {
             font-size: 14px;
             font-weight: 700;
-            color: #DC2626;
+            color: var(--warning-title);
             margin-bottom: 4px;
         }
 
         .warning-text {
             font-size: 12px;
-            color: #991B1B;
+            color: var(--warning-text);
             line-height: 1.5;
         }
 
@@ -73,9 +133,9 @@
 
         /* 파일 목록 */
         .file-list-section {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
             display: flex;
             flex-direction: column;
             max-height: 600px;
@@ -83,13 +143,13 @@
 
         .section-header {
             padding: var(--spacing-lg);
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .section-title {
             font-size: 16px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: var(--spacing-sm);
         }
 
@@ -97,7 +157,7 @@
             display: flex;
             gap: var(--spacing-lg);
             font-size: 12px;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .stat-item {
@@ -108,7 +168,7 @@
 
         .stat-value {
             font-weight: 700;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .file-list {
@@ -128,7 +188,7 @@
         .group-header {
             font-size: 11px;
             font-weight: 600;
-            color: #9CA3AF;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: var(--spacing-sm);
@@ -150,9 +210,17 @@
             background: rgba(37, 115, 155, 0.05);
         }
 
+        [data-theme="dark"] .file-item:hover {
+            background: rgba(37, 115, 155, 0.15);
+        }
+
         .file-item.active {
             background: rgba(37, 115, 155, 0.1);
             border-left: 3px solid #25739B;
+        }
+
+        [data-theme="dark"] .file-item.active {
+            background: rgba(37, 115, 155, 0.2);
         }
 
         .file-item.converting {
@@ -166,7 +234,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: white;
+            background: var(--section-bg);
             border-radius: 6px;
             flex-shrink: 0;
         }
@@ -179,7 +247,7 @@
         .file-item-name {
             font-size: 12px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -198,7 +266,7 @@
         }
 
         .file-status.pending {
-            color: #D1D5DB;
+            color: var(--status-pending);
         }
 
         .file-status.converting {
@@ -206,26 +274,27 @@
         }
 
         .file-status.completed {
-            color: #10B981;
+            color: var(--status-success);
         }
 
         .file-status.error {
-            color: #EF4444;
+            color: var(--status-error);
         }
 
         /* 미리보기 섹션 */
         .preview-section {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
             display: flex;
             flex-direction: column;
             max-height: 600px;
+            overflow: hidden;
         }
 
         .preview-tabs {
             display: flex;
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
             padding: 0 var(--spacing-lg);
         }
 
@@ -235,7 +304,7 @@
             background: transparent;
             font-size: 13px;
             font-weight: 600;
-            color: #6B7280;
+            color: var(--text-secondary);
             cursor: pointer;
             position: relative;
             transition: all 0.2s ease;
@@ -262,6 +331,7 @@
         .preview-content {
             flex: 1;
             overflow-y: auto;
+            overflow-x: auto;
             padding: var(--spacing-lg);
         }
 
@@ -276,7 +346,7 @@
         .preview-empty {
             text-align: center;
             padding: 60px 20px;
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         .preview-empty-icon {
@@ -291,7 +361,9 @@
         .markdown-preview {
             font-size: 13px;
             line-height: 1.8;
-            color: #374151;
+            color: var(--text-primary);
+            overflow-x: auto;
+            max-width: 100%;
         }
 
         .markdown-preview h1,
@@ -307,37 +379,69 @@
         }
 
         .markdown-preview pre {
-            background: #F9FAFB;
+            background: var(--section-bg);
             padding: var(--spacing-md);
             border-radius: 6px;
             overflow-x: auto;
             margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+        }
+
+        .table-wrapper {
+            overflow: scroll;
+            margin-bottom: var(--spacing-md);
+            max-width: 100%;
+            max-height: 400px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-wrapper::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+            display: block;
+        }
+
+        .table-wrapper::-webkit-scrollbar-track {
+            background: var(--section-bg);
+            border-radius: 4px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 4px;
+        }
+
+        .table-wrapper::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
         }
 
         .markdown-preview table {
-            width: 100%;
+            min-width: 600px;
             border-collapse: collapse;
-            margin-bottom: var(--spacing-md);
+            margin-bottom: 0;
         }
 
         .markdown-preview th,
         .markdown-preview td {
-            border: 1px solid #E5E7EB;
+            border: 1px solid var(--border-color);
             padding: var(--spacing-sm);
             text-align: left;
+            white-space: nowrap;
         }
 
         .markdown-preview th {
-            background: #F9FAFB;
+            background: var(--section-bg);
             font-weight: 600;
         }
 
         /* 변환 로그 */
         .log-section {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: var(--spacing-lg);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
             max-height: 300px;
             display: flex;
             flex-direction: column;
@@ -349,18 +453,18 @@
             align-items: center;
             margin-bottom: var(--spacing-md);
             padding-bottom: var(--spacing-sm);
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .log-title {
             font-size: 14px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .log-clear {
             font-size: 11px;
-            color: #6B7280;
+            color: var(--text-secondary);
             cursor: pointer;
             padding: 4px 8px;
             border-radius: 4px;
@@ -368,7 +472,7 @@
         }
 
         .log-clear:hover {
-            background: #F3F4F6;
+            background: var(--section-bg);
         }
 
         .log-list {
@@ -385,24 +489,28 @@
         }
 
         .log-time {
-            color: #9CA3AF;
+            color: var(--text-muted);
             flex-shrink: 0;
         }
 
         .log-message {
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .log-message.success {
-            color: #10B981;
+            color: var(--status-success);
         }
 
         .log-message.error {
-            color: #EF4444;
+            color: var(--status-error);
         }
 
         .log-message.warning {
             color: #F59E0B;
+        }
+
+        [data-theme="dark"] .log-message.warning {
+            color: #fbbf24;
         }
 
         /* 액션 버튼 */
@@ -442,9 +550,13 @@
         }
 
         .btn-secondary {
-            background: white;
-            border: 2px solid #E5E7EB;
-            color: #6B7280;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            background: var(--section-bg);
         }
 
         .btn-convert {
@@ -486,6 +598,10 @@
             </div>
 
             <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
                 <div class="user-menu">
                     <div class="user-avatar">사</div>
                     <div class="user-info">
@@ -594,7 +710,7 @@
                         </button>
                         <button class="btn btn-primary btn-convert" id="convertBtn">
                             <span>✨</span>
-                            <span>전체 변환 시작</span>
+                            <span>마크다운 변환 및 LLM 분류</span>
                         </button>
                         <button class="btn btn-primary" id="nextBtn" disabled>
                             <span>다음 단계로</span>
@@ -713,6 +829,24 @@
         </footer>
     </div>
 
+    <!-- Dark Mode Script -->
+    <script>
+        // 다크모드 초기화 (페이지 로드 즉시)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
+
     <!-- JavaScript -->
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
@@ -722,6 +856,8 @@
         import markdownConverter from '../js/markdown-converter.js';
         import fileHandler from '../js/file-handler.js';
         import authManager from '../js/auth.js';
+        import fileStorage from '../js/file-storage.js';
+        import llmClient from '../js/llm-client.js';
 
         // 업로드된 파일 데이터 로드
         const uploadedFilesData = Storage.get('uploadedFiles') || [];
@@ -739,8 +875,166 @@
         let selectedFile = null;
         let logs = [];
 
+        // 전역 스코프에 files 노출 (디버깅 및 데이터 접근용)
+        window.files = files;
+
+        // 저장된 변환 결과 복원
+        const savedConversions = Storage.get('convertedMarkdowns') || {};
+        files.forEach(file => {
+            const saved = savedConversions[file.name];
+            if (saved) {
+                file.markdown = saved.markdown;
+                file.convertedAt = saved.convertedAt;
+                file.status = 'completed';
+            }
+        });
+
+        /**
+         * 파일 객체 로드 (IndexedDB 또는 Supabase Storage)
+         * @param {Object} file - 파일 메타데이터
+         * @returns {Promise<File>} 파일 객체
+         */
+        async function loadFileObject(file) {
+            // 1. IndexedDB에서 파일 로드 시도
+            const storedFile = await fileStorage.loadFileByName(file.name);
+            if (storedFile.success) {
+                console.log(`✅ File loaded from IndexedDB: ${file.name}`);
+                return storedFile.file;
+            }
+
+            // 2. IndexedDB에 없으면 Supabase Storage에서 가져오기
+            if (file.url) {
+                const response = await fetch(file.url);
+                if (!response.ok) {
+                    throw new Error(`파일을 가져올 수 없습니다: ${response.statusText}`);
+                }
+                const blob = await response.blob();
+                return new File([blob], file.name, { type: blob.type });
+            }
+
+            throw new Error('파일을 찾을 수 없습니다.');
+        }
+
+        /**
+         * 파일 데이터를 localStorage에 저장
+         * @param {Object} file - 파일 객체
+         */
+        function saveFileToLocalStorage(file) {
+            // uploadedFiles 업데이트 (rawId 포함)
+            const uploadedFiles = Storage.get('uploadedFiles') || [];
+            const idx = uploadedFiles.findIndex(f => f.fileName === file.name);
+            if (idx >= 0) {
+                uploadedFiles[idx].rawId = file.rawId;
+            }
+            Storage.set('uploadedFiles', uploadedFiles);
+
+            // convertedMarkdowns 업데이트
+            const savedConversions = Storage.get('convertedMarkdowns') || {};
+            savedConversions[file.name] = {
+                markdown: file.markdown,
+                rawId: file.rawId,
+                convertedAt: file.convertedAt
+            };
+            Storage.set('convertedMarkdowns', savedConversions);
+        }
+
+        /**
+         * 마크다운 변환 + LLM 분류 통합 실행
+         * Step 1: 라이브러리로 마크다운 변환
+         * Step 2: LLM에 파일명+마크다운 전송하여 Raw ID 분류
+         * Step 3: localStorage에 저장
+         */
+        async function classifyAndConvertAllFiles() {
+            const pendingFiles = files.filter(f => f.status === 'pending' || f.status === 'error');
+
+            if (pendingFiles.length === 0) {
+                showToast('모든 파일이 이미 처리되었습니다.', 'info');
+                return;
+            }
+
+            const apiKey = llmClient.getApiKey();
+            if (!apiKey) {
+                showToast('API 키가 설정되지 않았습니다. 설정 페이지에서 API 키를 입력해주세요.', 'error');
+                return;
+            }
+
+            document.getElementById('convertBtn').disabled = true;
+            addLog(`${pendingFiles.length}개 파일 처리를 시작합니다...`, 'info');
+            showLLMLoading('마크다운 변환 및 LLM 분류를 진행 중입니다...');
+
+            for (const file of pendingFiles) {
+                try {
+                    // === Step 1: 마크다운으로 변환 (라이브러리 사용) ===
+                    addLog(`📄 ${file.name} 마크다운 변환 중...`, 'info');
+                    file.status = 'converting';
+                    renderFileList();
+                    updateStats();
+
+                    const fileObj = await loadFileObject(file);
+                    const conversionResult = await markdownConverter.convertFile(fileObj, file.rawId || 'UNKNOWN');
+
+                    if (conversionResult.success) {
+                        file.markdown = conversionResult.data.markdownContent;
+                        file.convertedAt = conversionResult.data.convertedAt;
+                        addLog(`✅ ${file.name} 마크다운 변환 완료 (${conversionResult.data.duration}s)`, 'success');
+                    } else {
+                        file.status = 'error';
+                        addLog(`❌ ${file.name} 변환 실패: ${conversionResult.error}`, 'error');
+                        continue; // 다음 파일로 진행
+                    }
+
+                    // === Step 2: LLM에 파일명 + 마크다운 전송하여 Raw ID 분류 ===
+                    addLog(`🔍 ${file.name} Raw ID 분류 중 (LLM)...`, 'info');
+
+                    // 마크다운 내용을 LLM에 전송 (최대 3000자)
+                    const contentPreview = file.markdown.substring(0, 3000);
+                    const classifyResult = await llmClient.classifyDocument(file.name, contentPreview);
+
+                    if (classifyResult.success && classifyResult.rawId) {
+                        file.rawId = classifyResult.rawId;
+                        file.rawIdSource = 'llm';
+                        addLog(`✅ ${file.name} → ${file.rawId} 분류 완료`, 'success');
+                    } else if (classifyResult.needsUserInput) {
+                        addLog(`⚠️ ${file.name}: 분류 불확실 - 사용자 확인 필요`, 'warning');
+                    } else {
+                        addLog(`⚠️ ${file.name} 분류 실패: ${classifyResult.error || '알 수 없는 오류'}`, 'warning');
+                    }
+
+                    file.status = 'completed';
+                    renderFileList();
+                    updateStats();
+
+                    // === Step 3: localStorage에 저장 ===
+                    saveFileToLocalStorage(file);
+
+                    // 선택된 파일이면 미리보기 업데이트
+                    if (selectedFile?.id === file.id) {
+                        selectFile(file.id);
+                    }
+
+                    // Rate limit 방지를 위한 딜레이
+                    await new Promise(resolve => setTimeout(resolve, 800));
+
+                } catch (error) {
+                    console.error('Processing error:', error);
+                    file.status = 'error';
+                    addLog(`❌ ${file.name} 처리 실패: ${error.message}`, 'error');
+                    renderFileList();
+                    updateStats();
+                }
+            }
+
+            hideLLMLoading();
+            document.getElementById('convertBtn').disabled = false;
+            addLog('모든 파일 처리가 완료되었습니다.', 'success');
+            showToast('마크다운 변환 및 LLM 분류가 완료되었습니다.', 'success');
+        }
+
+        // 통합 함수 전역 노출
+        window.classifyAndConvertAllFiles = classifyAndConvertAllFiles;
+
         // Wait for both DOM and globals to load
-        function initializePage() {
+        async function initializePage() {
             // Check if globals are loaded
             if (!window.__GLOBALS_LOADED__) {
                 setTimeout(initializePage, 50);
@@ -758,7 +1052,17 @@
             renderFileList();
             updateStats();
 
-            addLog('시스템 준비 완료. 변환을 시작할 수 있습니다.');
+            addLog('시스템 준비 완료.');
+
+            // 처리 필요한 파일 수 표시
+            const pendingCount = files.filter(f => f.status === 'pending').length;
+            const completedCount = files.filter(f => f.status === 'completed').length;
+
+            if (pendingCount > 0) {
+                addLog(`${pendingCount}개 파일이 처리 대기 중입니다. "마크다운 변환 및 LLM 분류" 버튼을 클릭하세요.`);
+            } else if (completedCount === files.length) {
+                addLog('모든 파일이 처리 완료되었습니다. 다음 단계로 진행할 수 있습니다.', 'success');
+            }
         }
 
         // Start initialization when DOM is ready
@@ -772,9 +1076,14 @@
             const fileList = document.getElementById('fileList');
 
             // Group by RAW ID prefix
+            const requiredIds = ['RAW1', 'RAW2.1', 'RAW2.2', 'RAW2.3', 'RAW3', 'RAW4'];
+            const lineListingIds = ['RAW12', 'RAW13', 'RAW14', 'RAW15'];
+            const optionalIds = ['RAW2.6', 'RAW5', 'RAW6', 'RAW7.1', 'RAW7.2', 'RAW7.3', 'RAW7.4', 'RAW8', 'RAW9'];
+
             const groups = {
-                'required': files.filter(f => ['RAW1', 'RAW2.1', 'RAW2.2', 'RAW2.3', 'RAW3', 'RAW4'].includes(f.rawId)),
-                'lineListing': files.filter(f => ['RAW12', 'RAW14', 'RAW15'].includes(f.rawId))
+                'required': files.filter(f => requiredIds.includes(f.rawId)),
+                'lineListing': files.filter(f => lineListingIds.includes(f.rawId)),
+                'optional': files.filter(f => optionalIds.includes(f.rawId))
             };
 
             fileList.innerHTML = `
@@ -786,6 +1095,12 @@
                     <div class="group-header">Line Listing</div>
                     ${groups.lineListing.map(file => renderFileItem(file)).join('')}
                 </div>
+                ${groups.optional.length > 0 ? `
+                <div class="file-group">
+                    <div class="group-header">선택 문서</div>
+                    ${groups.optional.map(file => renderFileItem(file)).join('')}
+                </div>
+                ` : ''}
             `;
         }
 
@@ -830,18 +1145,22 @@
             // Update preview
             if (selectedFile) {
                 document.getElementById('preview-original').innerHTML = `
-                    <div style="padding: 20px; background: #F9FAFB; border-radius: 8px;">
-                        <h3 style="margin-bottom: 16px; color: #374151;">${selectedFile.name}</h3>
-                        <p style="color: #6B7280; font-size: 13px;">
+                    <div style="padding: 20px; background: var(--section-bg); border-radius: 8px;">
+                        <h3 style="margin-bottom: 16px; color: var(--text-primary);">${selectedFile.name}</h3>
+                        <p style="color: var(--text-secondary); font-size: 13px;">
                             원본 파일 미리보기는 실제 구현 시 PDF/Excel/Word 뷰어를 통해 표시됩니다.
                         </p>
                     </div>
                 `;
 
                 if (selectedFile.status === 'completed' && selectedFile.markdown) {
+                    // marked.js로 마크다운을 HTML로 렌더링
+                    let renderedHtml = marked.parse(selectedFile.markdown);
+                    // 테이블을 스크롤 가능한 wrapper로 감싸기
+                    renderedHtml = renderedHtml.replace(/<table>/g, '<div class="table-wrapper"><table>').replace(/<\/table>/g, '</table></div>');
                     document.getElementById('preview-markdown').innerHTML = `
                         <div class="markdown-preview">
-                            ${selectedFile.markdown}
+                            ${renderedHtml}
                         </div>
                     `;
                 } else {
@@ -897,70 +1216,13 @@
             addLog('로그가 초기화되었습니다.');
         }
 
-        // 전체 변환 시작
-        document.getElementById('convertBtn').addEventListener('click', async () => {
-            const pendingFiles = files.filter(f => f.status === 'pending');
+        // 전역 스코프에 함수 노출 (인라인 onclick에서 호출 가능하도록)
+        window.selectFile = selectFile;
+        window.switchPreviewTab = switchPreviewTab;
+        window.clearLog = clearLog;
 
-            if (pendingFiles.length === 0) {
-                showToast('모든 파일이 이미 변환되었습니다.', 'info');
-                return;
-            }
-
-            document.getElementById('convertBtn').disabled = true;
-            addLog(`${pendingFiles.length}개 파일 변환을 시작합니다.`, 'info');
-
-            showLLMLoading('AI가 문서를 마크다운으로 변환하고 있습니다...');
-
-            // 순차적으로 변환
-            for (const file of pendingFiles) {
-                file.status = 'converting';
-                renderFileList();
-                updateStats();
-                addLog(`${file.name} 변환 중...`, 'info');
-
-                try {
-                    // Supabase Storage에서 파일 가져오기
-                    const response = await fetch(file.url);
-                    if (!response.ok) {
-                        throw new Error(`파일을 가져올 수 없습니다: ${response.statusText}`);
-                    }
-
-                    const blob = await response.blob();
-                    const fileObj = new File([blob], file.name, { type: blob.type });
-
-                    // 마크다운 변환
-                    const result = await markdownConverter.convertFile(fileObj, file.rawId);
-
-                    if (result.success) {
-                        file.markdown = result.markdown;
-                        file.convertedAt = result.convertedAt;
-                        file.status = 'completed';
-
-                        addLog(`${file.name} 변환 완료 (${result.duration}ms)`, 'success');
-                    } else {
-                        file.status = 'error';
-                        addLog(`${file.name} 변환 실패: ${result.error}`, 'error');
-                    }
-                } catch (error) {
-                    console.error('Conversion error:', error);
-                    file.status = 'error';
-                    addLog(`${file.name} 변환 실패: ${error.message}`, 'error');
-                }
-
-                renderFileList();
-                updateStats();
-
-                // 선택된 파일이면 미리보기 업데이트
-                if (selectedFile?.id === file.id) {
-                    selectFile(file.id);
-                }
-            }
-
-            hideLLMLoading();
-            document.getElementById('convertBtn').disabled = false;
-            addLog('모든 파일 변환이 완료되었습니다.', 'success');
-            showToast('마크다운 변환이 완료되었습니다.', 'success');
-        });
+        // 마크다운 변환 및 LLM 분류 (통합 버튼)
+        document.getElementById('convertBtn').addEventListener('click', classifyAndConvertAllFiles);
 
         // 다음 단계로
         document.getElementById('nextBtn').addEventListener('click', () => {

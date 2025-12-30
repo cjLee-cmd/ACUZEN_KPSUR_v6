@@ -8,6 +8,261 @@
     <link rel="stylesheet" href="../css/styles/layout.css">
     <link rel="stylesheet" href="../css/styles/components.css">
     <style>
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --text-primary: #07161D;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --section-bg: #f8fafc;
+            --input-bg: white;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --section-bg: #334155;
+            --input-bg: #334155;
+        }
+
+        /* 다크모드 패널 스타일 */
+        [data-theme="dark"] .preview-panel,
+        [data-theme="dark"] .export-panel {
+            background: transparent !important;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .preview-header {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .preview-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .preview-info {
+            background: rgba(16, 185, 129, 0.15);
+            border-left-color: #34d399;
+        }
+
+        [data-theme="dark"] .preview-info-text {
+            color: #34d399;
+        }
+
+        [data-theme="dark"] .preview-content {
+            background: #1e293b;
+        }
+
+        [data-theme="dark"] .document-preview {
+            background: #334155;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .document-preview h1 {
+            color: var(--text-primary);
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .document-preview h2 {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .document-preview h3 {
+            color: #93c5fd;
+        }
+
+        [data-theme="dark"] .document-preview p {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .document-preview td {
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .zoom-control {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .zoom-btn {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .zoom-btn:hover {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .zoom-level {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .export-section-title {
+            color: var(--text-primary);
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .export-option {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .export-option:hover {
+            border-color: #60a5fa;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        [data-theme="dark"] .export-option-label {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .format-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .file-name-input {
+            background: #334155;
+            border-color: #475569;
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .file-name-preview {
+            background: #334155;
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .version-info {
+            background: #334155;
+        }
+
+        [data-theme="dark"] .version-info-label {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .version-info-value {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .export-btn.secondary {
+            background: #334155;
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .export-btn.secondary:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        [data-theme="dark"] .submission-panel {
+            background: rgba(251, 191, 36, 0.15);
+            border-color: #fbbf24;
+        }
+
+        [data-theme="dark"] .submission-title,
+        [data-theme="dark"] .submission-text {
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .submission-checklist {
+            background: #334155;
+        }
+
+        [data-theme="dark"] .submission-checklist-item {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .export-history-item {
+            background: #334155;
+        }
+
+        [data-theme="dark"] .export-history-name {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .export-history-meta {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .history-action-btn {
+            background: #1e293b;
+            border-color: #475569;
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .history-action-btn:hover {
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        /* Header styles */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #25739B;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dark-mode-toggle {
+            background: var(--section-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .dark-mode-toggle:hover {
+            border-color: #25739B;
+        }
+
+        [data-theme="dark"] .dark-mode-toggle {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        .icon-sun, .icon-moon {
+            font-size: 16px;
+        }
+
+        [data-theme="light"] .icon-moon {
+            display: none;
+        }
+
+        [data-theme="dark"] .icon-sun {
+            display: none;
+        }
+
         .output-container {
             display: grid;
             grid-template-columns: 1fr 400px;
@@ -395,7 +650,36 @@
     </style>
 </head>
 <body>
-    <div class="app-layout" id="app"></div>
+    <div class="app-layout" id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="header-logo">KPSUR AGENT</div>
+            </div>
+            <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+            </div>
+        </header>
+    </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
 
     <script>
         // CONFIG - System configuration
@@ -755,7 +1039,13 @@
                 </footer>
             `;
 
-            document.getElementById('app').innerHTML = layout.render(content);
+            const appElement = document.getElementById('app');
+            const header = appElement.querySelector('.app-header');
+            if (header) {
+                header.insertAdjacentHTML('afterend', layout.render(content));
+            } else {
+                appElement.innerHTML = layout.render(content);
+            }
 
             setupEventListeners();
             renderExportHistory();

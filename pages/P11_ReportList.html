@@ -7,6 +7,111 @@
     <link rel="stylesheet" href="../css/styles/globals.css">
     <link rel="stylesheet" href="../css/styles/layout.css">
     <style>
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --border-light: #F3F4F6;
+            --table-header-bg: #F9FAFB;
+            --input-bg: white;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-shadow: none;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --border-light: #334155;
+            --table-header-bg: #334155;
+            --input-bg: #334155;
+        }
+
+        /* 다크모드 컴포넌트 스타일 */
+        [data-theme="dark"] .filter-section,
+        [data-theme="dark"] .table-container {
+            background: var(--card-bg);
+            box-shadow: none;
+            border: 1px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .filter-input,
+        [data-theme="dark"] .filter-select {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .filter-chip {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .filter-chip:hover {
+            border-color: #25739B;
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .btn-reset {
+            background: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .view-toggle {
+            background: var(--border-color);
+        }
+
+        [data-theme="dark"] .view-btn {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .view-btn.active {
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .reports-table th {
+            background: var(--table-header-bg);
+            color: var(--text-secondary);
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .reports-table td {
+            color: var(--text-primary);
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .reports-table tr:hover {
+            background: rgba(37, 115, 155, 0.1);
+        }
+
+        [data-theme="dark"] .page-btn {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .page-btn:hover:not(:disabled) {
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .pagination {
+            border-top-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .table-header {
+            border-bottom-color: var(--border-color);
+        }
+
         .page-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -22,13 +127,13 @@
         .page-title-section h1 {
             font-size: 24px;
             font-weight: 700;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: var(--spacing-xs);
         }
 
         .page-subtitle {
             font-size: 13px;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .header-actions {
@@ -58,11 +163,11 @@
 
         /* 필터 섹션 */
         .filter-section {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: var(--spacing-lg);
             margin-bottom: var(--spacing-lg);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
         }
 
         .filter-row {
@@ -83,15 +188,17 @@
         .filter-label {
             font-size: 12px;
             font-weight: 600;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .filter-input, .filter-select {
             padding: var(--spacing-sm) var(--spacing-md);
-            border: 2px solid #E5E7EB;
+            border: 2px solid var(--border-color);
             border-radius: 6px;
             font-size: 13px;
             transition: all 0.2s ease;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
 
         .filter-input:focus, .filter-select:focus {
@@ -112,9 +219,9 @@
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
-            border: 2px solid #E5E7EB;
-            background: white;
-            color: #6B7280;
+            border: 2px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-secondary);
         }
 
         .filter-chip:hover {
@@ -149,15 +256,15 @@
         }
 
         .btn-reset {
-            background: #E5E7EB;
-            color: #6B7280;
+            background: var(--border-color);
+            color: var(--text-secondary);
         }
 
         /* 테이블 컨테이너 */
         .table-container {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
             overflow: hidden;
         }
 
@@ -166,18 +273,18 @@
             justify-content: space-between;
             align-items: center;
             padding: var(--spacing-lg);
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .table-title {
             font-size: 16px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .table-count {
             font-size: 13px;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .table-actions {
@@ -189,7 +296,7 @@
         .view-toggle {
             display: flex;
             gap: 4px;
-            background: #F3F4F6;
+            background: var(--border-light);
             padding: 4px;
             border-radius: 6px;
         }
@@ -202,11 +309,13 @@
             cursor: pointer;
             font-size: 13px;
             transition: all 0.2s ease;
+            color: var(--text-secondary);
         }
 
         .view-btn.active {
-            background: white;
+            background: var(--card-bg);
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
         }
 
         /* 테이블 */
@@ -219,12 +328,12 @@
             text-align: left;
             font-size: 11px;
             font-weight: 600;
-            color: #6B7280;
+            color: var(--text-secondary);
             padding: var(--spacing-md) var(--spacing-lg);
-            border-bottom: 1px solid #E5E7EB;
+            border-bottom: 1px solid var(--border-color);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            background: #F9FAFB;
+            background: var(--table-header-bg);
             position: sticky;
             top: 0;
         }
@@ -241,7 +350,7 @@
         .sort-icon {
             margin-left: 4px;
             font-size: 10px;
-            color: #D1D5DB;
+            color: var(--text-muted);
         }
 
         .sort-icon.active {
@@ -250,9 +359,9 @@
 
         .reports-table td {
             padding: var(--spacing-lg);
-            border-bottom: 1px solid #F3F4F6;
+            border-bottom: 1px solid var(--border-light);
             font-size: 13px;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .reports-table tr:hover {
@@ -316,7 +425,7 @@
 
         .stage-text {
             font-size: 11px;
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         .action-buttons {
@@ -344,12 +453,12 @@
             justify-content: space-between;
             align-items: center;
             padding: var(--spacing-lg);
-            border-top: 1px solid #E5E7EB;
+            border-top: 1px solid var(--border-color);
         }
 
         .pagination-info {
             font-size: 13px;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .pagination-controls {
@@ -359,12 +468,13 @@
 
         .page-btn {
             padding: var(--spacing-sm) var(--spacing-md);
-            border: 1px solid #E5E7EB;
-            background: white;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
             transition: all 0.2s ease;
+            color: var(--text-secondary);
         }
 
         .page-btn:hover:not(:disabled) {
@@ -423,6 +533,10 @@
             </div>
 
             <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
                 <div class="user-menu">
                     <div class="user-avatar">사</div>
                     <div class="user-info">
@@ -704,6 +818,24 @@
             </div>
         </footer>
     </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        // 다크모드 초기화 (페이지 로드 즉시)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
 
     <!-- JavaScript -->
     <script src="../components/AppLayout.js"></script>

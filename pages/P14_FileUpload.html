@@ -6,7 +6,165 @@
     <title>파일 업로드 - KPSUR AGENT | ACUZEN AI</title>
     <link rel="stylesheet" href="../css/styles/globals.css">
     <link rel="stylesheet" href="../css/styles/layout.css">
+    <!-- 파일 파싱 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --input-bg: white;
+            --section-bg: #F9FAFB;
+            --dropzone-bg: #F9FAFB;
+            --dropzone-border: #D1D5DB;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-shadow: none;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --input-bg: #334155;
+            --section-bg: #334155;
+            --dropzone-bg: #334155;
+            --dropzone-border: #475569;
+        }
+
+        /* 다크모드 컴포넌트 스타일 */
+        [data-theme="dark"] .upload-section,
+        [data-theme="dark"] .raw-id-guide {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .dropzone {
+            background: var(--dropzone-bg);
+            border-color: var(--dropzone-border);
+        }
+
+        [data-theme="dark"] .dropzone:hover,
+        [data-theme="dark"] .dropzone.drag-over {
+            border-color: #60a5fa;
+            background: rgba(37, 115, 155, 0.15);
+        }
+
+        [data-theme="dark"] .file-item {
+            background: var(--section-bg);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .file-item:hover {
+            background: rgba(37, 115, 155, 0.1);
+            border-color: #60a5fa;
+        }
+
+        [data-theme="dark"] .file-icon {
+            background: #475569;
+        }
+
+        [data-theme="dark"] .raw-id-item {
+            background: var(--section-bg);
+        }
+
+        [data-theme="dark"] .rawid-popup {
+            background: #1e293b;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .rawid-popup-header {
+            background: #334155;
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .rawid-popup-item:hover {
+            background: rgba(37, 115, 155, 0.15);
+        }
+
+        [data-theme="dark"] .rawid-popup-item.selected {
+            background: rgba(37, 115, 155, 0.2);
+        }
+
+        [data-theme="dark"] .rawid-popup-item-code {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .rawid-popup-item-name {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .rawid-popup-divider {
+            background: var(--border-color);
+        }
+
+        [data-theme="dark"] .classify-info {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        [data-theme="dark"] .classify-info-text {
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: #1e293b;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .modal-header {
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .modal-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .modal-footer {
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .raw-id-option {
+            border-color: var(--border-color);
+            background: var(--section-bg);
+        }
+
+        [data-theme="dark"] .raw-id-option:hover {
+            border-color: #60a5fa;
+            background: rgba(37, 115, 155, 0.15);
+        }
+
+        [data-theme="dark"] .raw-id-option.selected {
+            border-color: #60a5fa;
+            background: rgba(37, 115, 155, 0.2);
+        }
+
+        [data-theme="dark"] .raw-id-option-code {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            background: var(--section-bg);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .btn-secondary:hover {
+            background: #475569;
+        }
+
         .page-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -19,13 +177,13 @@
         .page-title {
             font-size: 24px;
             font-weight: 700;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: var(--spacing-xs);
         }
 
         .page-description {
             font-size: 14px;
-            color: #6B7280;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
 
@@ -38,29 +196,29 @@
 
         /* 파일 업로드 영역 */
         .upload-section {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: var(--spacing-xl);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
         }
 
         .section-title {
             font-size: 16px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: var(--spacing-lg);
             padding-bottom: var(--spacing-md);
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .dropzone {
-            border: 3px dashed #D1D5DB;
+            border: 3px dashed var(--dropzone-border);
             border-radius: 12px;
             padding: 60px 40px;
             text-align: center;
             transition: all 0.3s ease;
             cursor: pointer;
-            background: #F9FAFB;
+            background: var(--dropzone-bg);
         }
 
         .dropzone:hover {
@@ -80,19 +238,19 @@
 
         .dropzone-text {
             font-size: 14px;
-            color: #374151;
+            color: var(--text-primary);
             font-weight: 600;
             margin-bottom: var(--spacing-xs);
         }
 
         .dropzone-hint {
             font-size: 12px;
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         .dropzone-formats {
             font-size: 11px;
-            color: #6B7280;
+            color: var(--text-secondary);
             margin-top: var(--spacing-sm);
         }
 
@@ -112,15 +270,17 @@
             align-items: center;
             gap: var(--spacing-md);
             padding: var(--spacing-md);
-            background: #F9FAFB;
-            border: 1px solid #E5E7EB;
+            background: var(--section-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             transition: all 0.2s ease;
+            cursor: pointer;
         }
 
         .file-item:hover {
-            background: white;
+            background: var(--card-bg);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-color: #25739B;
         }
 
         .file-icon {
@@ -130,7 +290,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: white;
+            background: var(--card-bg);
             border-radius: 8px;
             flex-shrink: 0;
         }
@@ -143,7 +303,7 @@
         .file-name {
             font-size: 13px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: 2px;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -152,7 +312,7 @@
 
         .file-meta {
             font-size: 11px;
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         .file-raw-id {
@@ -162,17 +322,108 @@
             font-weight: 600;
             background: rgba(37, 115, 155, 0.1);
             color: #25739B;
-            cursor: pointer;
             transition: all 0.2s ease;
-        }
-
-        .file-raw-id:hover {
-            background: rgba(37, 115, 155, 0.2);
+            pointer-events: none;
         }
 
         .file-raw-id.unassigned {
             background: rgba(245, 158, 11, 0.1);
             color: #F59E0B;
+        }
+
+        /* RAW ID 선택 팝업 (드롭다운 스타일) */
+        .rawid-popup {
+            position: fixed;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 10001;
+            min-width: 280px;
+            max-width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .rawid-popup.show {
+            display: block;
+        }
+
+        .rawid-popup-header {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--section-bg);
+            border-radius: 12px 12px 0 0;
+            position: sticky;
+            top: 0;
+        }
+
+        .rawid-popup-list {
+            padding: var(--spacing-sm);
+        }
+
+        .rawid-popup-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .rawid-popup-item:hover {
+            background: rgba(37, 115, 155, 0.1);
+        }
+
+        .rawid-popup-item.selected {
+            background: rgba(37, 115, 155, 0.15);
+            border-left: 3px solid #25739B;
+        }
+
+        .rawid-popup-item-code {
+            font-size: 12px;
+            font-weight: 700;
+            color: #25739B;
+            min-width: 60px;
+        }
+
+        .rawid-popup-item-name {
+            font-size: 11px;
+            color: var(--text-secondary);
+            flex: 1;
+        }
+
+        .rawid-popup-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: var(--spacing-sm) 0;
+        }
+
+        .rawid-popup-section-title {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            padding: var(--spacing-xs) var(--spacing-md);
+            margin-top: var(--spacing-xs);
+        }
+
+        .rawid-popup-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+            display: none;
+        }
+
+        .rawid-popup-backdrop.show {
+            display: block;
         }
 
         .file-remove {
@@ -192,10 +443,10 @@
 
         /* RAW ID 가이드 */
         .raw-id-guide {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: var(--spacing-xl);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
             position: sticky;
             top: var(--spacing-lg);
         }
@@ -211,7 +462,7 @@
         .guide-header {
             font-size: 13px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: var(--spacing-md);
             display: flex;
             align-items: center;
@@ -247,25 +498,25 @@
             justify-content: space-between;
             align-items: center;
             padding: var(--spacing-sm);
-            background: #F9FAFB;
+            background: var(--section-bg);
             border-radius: 6px;
             font-size: 11px;
         }
 
         .raw-id-label {
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .raw-id-name {
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .raw-id-status {
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            border: 2px solid #D1D5DB;
+            border: 2px solid var(--dropzone-border);
             flex-shrink: 0;
         }
 
@@ -278,7 +529,7 @@
         .classify-section {
             margin-top: var(--spacing-xl);
             padding-top: var(--spacing-xl);
-            border-top: 2px solid #E5E7EB;
+            border-top: 2px solid var(--border-color);
         }
 
         .classify-info {
@@ -351,9 +602,9 @@
         }
 
         .btn-secondary {
-            background: white;
-            border: 2px solid #E5E7EB;
-            color: #6B7280;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
         }
 
         /* RAW ID 선택 모달 */
@@ -375,7 +626,7 @@
         }
 
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             width: 90%;
             max-width: 600px;
@@ -386,13 +637,13 @@
 
         .modal-header {
             padding: var(--spacing-xl);
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .modal-title {
             font-size: 18px;
             font-weight: 700;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .modal-body {
@@ -407,15 +658,16 @@
 
         .raw-id-option {
             padding: var(--spacing-md);
-            border: 2px solid #E5E7EB;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            background: var(--section-bg);
         }
 
         .raw-id-option:hover {
             border-color: #25739B;
-            background: rgba(37, 115, 155, 0.02);
+            background: rgba(37, 115, 155, 0.05);
         }
 
         .raw-id-option.selected {
@@ -432,12 +684,12 @@
 
         .raw-id-option-name {
             font-size: 11px;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .modal-footer {
             padding: var(--spacing-lg);
-            border-top: 1px solid #E5E7EB;
+            border-top: 1px solid var(--border-color);
             display: flex;
             justify-content: flex-end;
             gap: var(--spacing-sm);
@@ -483,6 +735,10 @@
             </div>
 
             <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
                 <div class="user-menu">
                     <div class="user-avatar">사</div>
                     <div class="user-info">
@@ -712,35 +968,41 @@
         </footer>
     </div>
 
-    <!-- RAW ID 선택 모달 -->
-    <div id="rawIdModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">RAW ID 선택</h2>
-            </div>
-
-            <div class="modal-body">
-                <div class="raw-id-grid" id="rawIdGrid">
-                    <!-- JavaScript로 채워집니다 -->
-                </div>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeRawIdModal()">취소</button>
-                <button class="btn btn-primary" onclick="confirmRawId()">확인</button>
-            </div>
+    <!-- RAW ID 선택 팝업 -->
+    <div id="rawIdPopupBackdrop" class="rawid-popup-backdrop" onclick="closeRawIdPopup()"></div>
+    <div id="rawIdPopup" class="rawid-popup">
+        <div class="rawid-popup-header">RAW ID 선택</div>
+        <div class="rawid-popup-list" id="rawIdPopupList">
+            <!-- JavaScript로 채워집니다 -->
         </div>
     </div>
 
+    <!-- Dark Mode Script -->
+    <script>
+        // 다크모드 초기화 (페이지 로드 즉시)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
+
     <!-- JavaScript -->
-    <script src="../components/AppLayout.js"></script>
-    <script src="../utils/layout-helper.js"></script>
     <script type="module">
         // ES6 Modules
         import { CONFIG, Storage, DateHelper } from '../js/config.js';
         import fileHandler from '../js/file-handler.js';
         import supabaseClient from '../js/supabase-client.js';
         import authManager from '../js/auth.js';
+        import fileStorage from '../js/file-storage.js';
 
         // RAW ID 정의
         const rawIdDefinitions = {
@@ -772,9 +1034,17 @@
         let uploadedFiles = [];
         let currentEditingFile = null;
         let selectedRawId = null;
+        let dropzoneInitialized = false;
+        let eventListenersInitialized = false;
 
         // Wait for both DOM and globals to load
         function initializePage() {
+            // setupDropzone은 globals와 관계없이 즉시 실행 (중복 호출 방지)
+            if (!dropzoneInitialized) {
+                setupDropzone();
+                dropzoneInitialized = true;
+            }
+
             // Check if globals are loaded
             if (!window.__GLOBALS_LOADED__) {
                 setTimeout(initializePage, 50);
@@ -789,8 +1059,13 @@
             }
 
             setupUserMenu();
-            setupDropzone();
             renderRawIdGuide();
+
+            // 이벤트 리스너 등록 (globals 로드 후 한 번만)
+            if (!eventListenersInitialized) {
+                setupEventListeners();
+                eventListenersInitialized = true;
+            }
         }
 
         // Start initialization when DOM is ready
@@ -833,6 +1108,17 @@
 
         function handleFiles(files) {
             Array.from(files).forEach(file => {
+                // 파일 유효성 검사
+                const validation = fileHandler.validateFile(file);
+                if (!validation.valid) {
+                    if (typeof showToast === 'function') {
+                        showToast(`${file.name}: ${validation.error}`, 'error');
+                    } else {
+                        alert(`${file.name}: ${validation.error}`);
+                    }
+                    return; // 이 파일은 건너뜀
+                }
+
                 const fileObj = {
                     id: Date.now() + Math.random(),
                     file: file,
@@ -861,19 +1147,132 @@
             }
 
             fileList.innerHTML = uploadedFiles.map(file => `
-                <div class="file-item">
+                <div class="file-item" data-file-id="${file.id}" onclick="handleFileItemClick(event, ${file.id})">
                     <div class="file-icon">${getFileIcon(file.name)}</div>
                     <div class="file-info">
                         <div class="file-name">${file.name}</div>
                         <div class="file-meta">${formatFileSize(file.size)}</div>
                     </div>
-                    <div class="file-raw-id ${file.rawId ? '' : 'unassigned'}" onclick="openRawIdSelector(${file.id})">
+                    <div class="file-raw-id ${file.rawId ? '' : 'unassigned'}">
                         ${file.rawId || '미분류'}
                     </div>
-                    <button class="file-remove" onclick="removeFile(${file.id})">🗑️</button>
+                    <button class="file-remove" onclick="event.stopPropagation(); removeFile(${file.id})">🗑️</button>
                 </div>
             `).join('');
         }
+
+        // 파일 카드 클릭 핸들러
+        function handleFileItemClick(event, fileId) {
+            // 삭제 버튼 클릭 시 제외
+            if (event.target.closest('.file-remove')) {
+                return;
+            }
+            openRawIdPopup(event, fileId);
+        }
+
+        // RAW ID 팝업 열기
+        function openRawIdPopup(event, fileId) {
+            currentEditingFile = uploadedFiles.find(f => f.id === fileId);
+            if (!currentEditingFile) return;
+
+            const popup = document.getElementById('rawIdPopup');
+            const backdrop = document.getElementById('rawIdPopupBackdrop');
+            const popupList = document.getElementById('rawIdPopupList');
+
+            // 팝업 내용 렌더링
+            let html = '';
+
+            // 필수 파일 섹션
+            html += '<div class="rawid-popup-section-title">필수 파일</div>';
+            rawIdDefinitions.required.forEach(raw => {
+                const isSelected = currentEditingFile.rawId === raw.id;
+                html += `
+                    <div class="rawid-popup-item ${isSelected ? 'selected' : ''}" onclick="selectRawIdFromPopup('${raw.id}')">
+                        <span class="rawid-popup-item-code">${raw.id}</span>
+                        <span class="rawid-popup-item-name">${raw.name}</span>
+                    </div>
+                `;
+            });
+
+            html += '<div class="rawid-popup-divider"></div>';
+
+            // 선택 파일 섹션
+            html += '<div class="rawid-popup-section-title">선택 파일</div>';
+            rawIdDefinitions.optional.forEach(raw => {
+                const isSelected = currentEditingFile.rawId === raw.id;
+                html += `
+                    <div class="rawid-popup-item ${isSelected ? 'selected' : ''}" onclick="selectRawIdFromPopup('${raw.id}')">
+                        <span class="rawid-popup-item-code">${raw.id}</span>
+                        <span class="rawid-popup-item-name">${raw.name}</span>
+                    </div>
+                `;
+            });
+
+            popupList.innerHTML = html;
+
+            // 팝업 위치 계산
+            const fileItem = event.currentTarget;
+            const rect = fileItem.getBoundingClientRect();
+
+            // 화면 오른쪽에 공간이 충분하면 오른쪽에, 아니면 왼쪽에 표시
+            const popupWidth = 300;
+            let left = rect.right + 10;
+            if (left + popupWidth > window.innerWidth) {
+                left = rect.left - popupWidth - 10;
+            }
+            if (left < 10) {
+                left = 10;
+            }
+
+            // 세로 위치 - 파일 카드 중앙에 맞춤
+            let top = rect.top;
+            const popupHeight = 400;
+            if (top + popupHeight > window.innerHeight - 20) {
+                top = window.innerHeight - popupHeight - 20;
+            }
+            if (top < 20) {
+                top = 20;
+            }
+
+            popup.style.left = left + 'px';
+            popup.style.top = top + 'px';
+
+            // 팝업 표시
+            popup.classList.add('show');
+            backdrop.classList.add('show');
+        }
+
+        // RAW ID 선택 (팝업에서)
+        function selectRawIdFromPopup(rawId) {
+            if (currentEditingFile) {
+                currentEditingFile.rawId = rawId;
+                renderFileList();
+                updateProgress();
+                closeRawIdPopup();
+                showToast(`${rawId} 태그가 적용되었습니다.`, 'success');
+            }
+        }
+
+        // RAW ID 팝업 닫기
+        function closeRawIdPopup() {
+            document.getElementById('rawIdPopup').classList.remove('show');
+            document.getElementById('rawIdPopupBackdrop').classList.remove('show');
+            currentEditingFile = null;
+        }
+
+        // ESC 키로 팝업 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeRawIdPopup();
+            }
+        });
+
+        // 전역에서 접근 가능하도록 window 객체에 노출
+        window.handleFileItemClick = handleFileItemClick;
+        window.openRawIdPopup = openRawIdPopup;
+        window.selectRawIdFromPopup = selectRawIdFromPopup;
+        window.closeRawIdPopup = closeRawIdPopup;
+        window.removeFile = removeFile;
 
         function renderRawIdGuide() {
             // Required files
@@ -919,8 +1318,9 @@
             const progress = (uploadedRequired / rawIdDefinitions.required.length) * 100;
             document.getElementById('uploadProgress').style.width = `${progress}%`;
 
-            // 필수 파일이 모두 업로드되면 다음 버튼 활성화
-            document.getElementById('nextBtn').disabled = uploadedRequired < rawIdDefinitions.required.length;
+            // 분류된 파일이 있으면 다음 버튼 활성화 (필수 파일 누락 시 경고 후 진행 가능)
+            const classifiedFiles = uploadedFiles.filter(f => f.rawId && f.rawId !== 'UNKNOWN');
+            document.getElementById('nextBtn').disabled = classifiedFiles.length === 0;
 
             renderRawIdGuide();
         }
@@ -951,170 +1351,175 @@
             document.getElementById('classifyBtn').disabled = uploadedFiles.length === 0;
         }
 
-        function openRawIdSelector(fileId) {
-            currentEditingFile = uploadedFiles.find(f => f.id === fileId);
-            if (!currentEditingFile) return;
 
-            selectedRawId = currentEditingFile.rawId;
+        // 이벤트 리스너 설정 (globals 로드 후 호출)
+        function setupEventListeners() {
+            // LLM 자동 분류
+            document.getElementById('classifyBtn').addEventListener('click', async () => {
+                try {
+                    const totalFiles = uploadedFiles.length;
+                    showLLMLoading('AI가 파일을 분석하여 RAW ID를 자동으로 분류하고 있습니다...', true);
+                    updateLLMProgress(0, totalFiles, '준비 중...');
 
-            // Render RAW ID grid
-            const grid = document.getElementById('rawIdGrid');
-            const allRawIds = [...rawIdDefinitions.required, ...rawIdDefinitions.optional];
+                    let successCount = 0;
+                    let failCount = 0;
+                    let processedCount = 0;
 
-            grid.innerHTML = allRawIds.map(raw => `
-                <div class="raw-id-option ${selectedRawId === raw.id ? 'selected' : ''}" onclick="selectRawId('${raw.id}')">
-                    <div class="raw-id-option-code">${raw.id}</div>
-                    <div class="raw-id-option-name">${raw.name}</div>
-                </div>
-            `).join('');
+                    // 각 파일에 대해 LLM 분류 실행
+                    for (const fileData of uploadedFiles) {
+                        // 요청 방향으로 설정 (KPSUR -> AI)
+                        setLLMFlowDirection('request');
+                        // 진행 상황 업데이트
+                        updateLLMProgress(processedCount, totalFiles, fileData.name);
 
-            document.getElementById('rawIdModal').classList.add('show');
-        }
+                        if (fileData.rawId) {
+                            // 이미 분류됨
+                            successCount++;
+                            processedCount++;
+                            updateLLMProgress(processedCount, totalFiles, fileData.name);
+                            continue;
+                        }
 
-        function selectRawId(rawId) {
-            selectedRawId = rawId;
+                        // fileHandler를 사용한 자동 분류
+                        const classification = await fileHandler.classifyFile(fileData.file);
 
-            // Update UI
-            document.querySelectorAll('.raw-id-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            event.target.closest('.raw-id-option').classList.add('selected');
-        }
+                        // 응답 방향으로 설정 (AI -> KPSUR)
+                        setLLMFlowDirection('response');
 
-        function confirmRawId() {
-            if (currentEditingFile && selectedRawId) {
-                currentEditingFile.rawId = selectedRawId;
-                renderFileList();
-                updateProgress();
-                closeRawIdModal();
-                showToast(`${selectedRawId} 태그가 적용되었습니다.`, 'success');
-            }
-        }
+                        if (classification.rawId && !classification.needsUserInput) {
+                            // 분류 성공
+                            fileData.rawId = classification.rawId;
+                            fileData.classified = true;
+                            successCount++;
+                        } else {
+                            // 분류 실패 또는 사용자 입력 필요
+                            fileData.classified = false;
+                            failCount++;
+                        }
 
-        function closeRawIdModal() {
-            document.getElementById('rawIdModal').classList.remove('show');
-            currentEditingFile = null;
-            selectedRawId = null;
-        }
-
-        // LLM 자동 분류
-        document.getElementById('classifyBtn').addEventListener('click', async () => {
-            showLLMLoading('AI가 파일을 분석하여 RAW ID를 자동으로 분류하고 있습니다...');
-
-            try {
-                let successCount = 0;
-                let failCount = 0;
-
-                // 각 파일에 대해 LLM 분류 실행
-                for (const fileData of uploadedFiles) {
-                    if (fileData.rawId) {
-                        // 이미 분류됨
-                        successCount++;
-                        continue;
+                        processedCount++;
+                        updateLLMProgress(processedCount, totalFiles, fileData.name);
                     }
 
-                    // fileHandler를 사용한 자동 분류
-                    const classification = await fileHandler.classifyFile(fileData.file);
+                    renderFileList();
+                    updateProgress();
 
-                    if (classification.rawId && !classification.needsUserInput) {
-                        // 분류 성공
-                        fileData.rawId = classification.rawId;
-                        fileData.classified = true;
-                        successCount++;
+                    hideLLMLoading();
+
+                    if (failCount > 0) {
+                        showToast(`분류 완료: ${successCount}개 성공, ${failCount}개 수동 분류 필요`, 'warning');
                     } else {
-                        // 분류 실패 또는 사용자 입력 필요
-                        fileData.classified = false;
-                        failCount++;
+                        showToast(`모든 파일이 성공적으로 분류되었습니다. (${successCount}개)`, 'success');
+                    }
+                } catch (error) {
+                    console.error('Classification error:', error);
+                    if (typeof hideLLMLoading === 'function') hideLLMLoading();
+                    if (typeof showToast === 'function') {
+                        showToast('파일 분류 중 오류가 발생했습니다: ' + error.message, 'error');
+                    } else {
+                        alert('파일 분류 중 오류가 발생했습니다: ' + error.message);
                     }
                 }
+            });
 
-                renderFileList();
-                updateProgress();
+            // 다음 단계로
+            document.getElementById('nextBtn').addEventListener('click', async () => {
+                try {
+                    // 업로드된 파일이 없으면 진행 불가
+                    if (uploadedFiles.length === 0) {
+                        showToast('업로드된 파일이 없습니다.', 'warning');
+                        return;
+                    }
 
-                hideLLMLoading();
+                    const missingRequired = rawIdDefinitions.required.filter(raw =>
+                        !uploadedFiles.some(f => f.rawId === raw.id)
+                    );
 
-                if (failCount > 0) {
-                    showToast(`분류 완료: ${successCount}개 성공, ${failCount}개 수동 분류 필요`, 'warning');
-                } else {
-                    showToast(`모든 파일이 성공적으로 분류되었습니다. (${successCount}개)`, 'success');
-                }
-            } catch (error) {
-                console.error('Classification error:', error);
-                hideLLMLoading();
-                showToast('파일 분류 중 오류가 발생했습니다: ' + error.message, 'error');
-            }
-        });
-
-        // 다음 단계로
-        document.getElementById('nextBtn').addEventListener('click', async () => {
-            const missingRequired = rawIdDefinitions.required.filter(raw =>
-                !uploadedFiles.some(f => f.rawId === raw.id)
-            );
-
-            if (missingRequired.length > 0) {
-                showToast('필수 파일이 모두 업로드되지 않았습니다.', 'warning');
-                return;
-            }
-
-            showLLMLoading('파일 매칭 테이블을 생성하고 Supabase에 업로드하고 있습니다...');
-
-            try {
-                // 1. 파일 매칭 테이블 생성
-                const matchingTable = fileHandler.generateFileMatchingTable(
-                    uploadedFiles.map(f => ({
-                        file: f.file,
-                        fileName: f.name,
-                        rawId: f.rawId,
-                        classifiedAt: DateHelper.formatISO()
-                    }))
-                );
-
-                // 2. Supabase Storage에 파일 업로드
-                const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
-                const uploadResults = [];
-
-                for (const fileData of uploadedFiles) {
-                    try {
-                        const result = await fileHandler.uploadToStorage(
-                            fileData.file,
-                            reportId,
-                            fileData.rawId
+                    // 필수 파일이 누락된 경우 확인 후 진행
+                    if (missingRequired.length > 0) {
+                        const missingNames = missingRequired.map(r => r.name).join(', ');
+                        const confirmProceed = confirm(
+                            `다음 필수 파일이 누락되었습니다:\n${missingNames}\n\n그래도 계속 진행하시겠습니까?`
                         );
+                        if (!confirmProceed) {
+                            return;
+                        }
+                    }
 
-                        if (result.success) {
+                    showLLMLoading('파일을 저장하고 있습니다...');
+
+                    // 보고서 ID 가져오기
+                    const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+                    const reportName = new URLSearchParams(window.location.search).get('reportName') || `Report_${reportId}`;
+
+                    // 1. 파일 매칭 테이블 생성 (reportName 문자열 전달)
+                    const matchingTable = fileHandler.generateFileMatchingTable(reportName);
+
+                    // 2. IndexedDB에 파일 저장 (P15에서 사용)
+                    await fileStorage.clearAll(); // 기존 파일 초기화
+                    const saveResults = await fileStorage.saveFiles(uploadedFiles);
+                    console.log('✅ Files saved to IndexedDB:', saveResults);
+
+                    // 3. Supabase Storage에 파일 업로드 (선택적)
+                    const uploadResults = [];
+
+                    for (const fileData of uploadedFiles) {
+                        try {
+                            const result = await fileHandler.uploadToStorage(
+                                fileData.file,
+                                reportId,
+                                fileData.rawId
+                            );
+
+                            if (result.success) {
+                                uploadResults.push({
+                                    fileName: fileData.name,
+                                    rawId: fileData.rawId,
+                                    url: result.url,
+                                    path: result.path
+                                });
+                            } else {
+                                // Supabase 업로드 실패해도 IndexedDB에는 저장됨
+                                uploadResults.push({
+                                    fileName: fileData.name,
+                                    rawId: fileData.rawId,
+                                    url: null,
+                                    path: null
+                                });
+                            }
+                        } catch (uploadError) {
+                            console.warn('Supabase upload skipped:', uploadError.message);
+                            // IndexedDB에는 저장되어 있으므로 계속 진행
                             uploadResults.push({
                                 fileName: fileData.name,
                                 rawId: fileData.rawId,
-                                url: result.url,
-                                path: result.path
+                                url: null,
+                                path: null
                             });
                         }
-                    } catch (uploadError) {
-                        console.error('File upload error:', uploadError);
-                        showToast(`파일 업로드 실패: ${fileData.name}`, 'error');
                     }
-                }
 
-                // 3. 업로드 정보를 localStorage에 저장
-                Storage.set('uploadedFiles', uploadResults);
-                Storage.set('fileMatchingTable', matchingTable);
+                    // 4. 업로드 정보를 localStorage에 저장
+                    Storage.set('uploadedFiles', uploadResults);
+                    Storage.set('fileMatchingTable', matchingTable);
 
-                hideLLMLoading();
+                    hideLLMLoading();
 
-                if (uploadResults.length === uploadedFiles.length) {
-                    showToast(`모든 파일이 성공적으로 업로드되었습니다. (${uploadResults.length}개)`, 'success');
+                    showToast(`모든 파일이 성공적으로 저장되었습니다. (${uploadResults.length}개)`, 'success');
                     setTimeout(() => {
                         navigateTo(`P15_MarkdownConversion.html?reportId=${reportId}`);
                     }, 1000);
-                } else {
-                    showToast(`일부 파일 업로드에 실패했습니다. (성공: ${uploadResults.length}/${uploadedFiles.length})`, 'warning');
+                } catch (error) {
+                    console.error('Upload process error:', error);
+                    if (typeof hideLLMLoading === 'function') hideLLMLoading();
+                    if (typeof showToast === 'function') {
+                        showToast('파일 저장 중 오류가 발생했습니다: ' + error.message, 'error');
+                    } else {
+                        alert('파일 저장 중 오류가 발생했습니다: ' + error.message);
+                    }
                 }
-            } catch (error) {
-                console.error('Upload process error:', error);
-                hideLLMLoading();
-                showToast('파일 업로드 중 오류가 발생했습니다: ' + error.message, 'error');
-            }
-        });
+            });
+        }
     </script>
     <script type="module" src="../utils/globals.js"></script>
 </body>

@@ -317,9 +317,246 @@
         .back-link:hover {
             text-decoration: underline;
         }
+
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --section-bg: #F9FAFB;
+            --input-bg: white;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --section-bg: #334155;
+            --input-bg: #334155;
+        }
+
+        [data-theme="dark"] body {
+            background: #1e293b;
+        }
+
+        /* 다크모드 스타일 */
+        [data-theme="dark"] .page-title {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .page-description {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .test-tabs {
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .tab-button {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .tab-button:hover,
+        [data-theme="dark"] .tab-button.active {
+            color: #60a5fa;
+            border-bottom-color: #60a5fa;
+        }
+
+        [data-theme="dark"] .test-controls,
+        [data-theme="dark"] .test-progress,
+        [data-theme="dark"] .test-results {
+            background: transparent;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .model-checkbox {
+            border-color: #475569;
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .model-checkbox:hover {
+            border-color: #60a5fa;
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        [data-theme="dark"] .btn-primary {
+            background: #25739B;
+        }
+
+        [data-theme="dark"] .btn-primary:disabled {
+            background: #475569;
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            background: #334155;
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+
+        [data-theme="dark"] .btn-secondary:hover {
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        [data-theme="dark"] .progress-bar-container {
+            background: #475569;
+        }
+
+        [data-theme="dark"] .progress-text {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .result-item {
+            background: #334155;
+            border-left-color: #475569;
+        }
+
+        [data-theme="dark"] .result-item.success {
+            border-left-color: #34d399;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        [data-theme="dark"] .result-item.error {
+            border-left-color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+        }
+
+        [data-theme="dark"] .result-item.warning {
+            border-left-color: #fcd34d;
+            background: rgba(251, 191, 36, 0.1);
+        }
+
+        [data-theme="dark"] .result-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .result-details {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .result-time {
+            color: #64748b;
+        }
+
+        [data-theme="dark"] .summary-card {
+            background: #334155;
+        }
+
+        [data-theme="dark"] .summary-value {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .summary-label {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .loading-content {
+            background: #1e293b;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .back-link {
+            color: #60a5fa;
+        }
+
+        /* Header styles */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #25739B;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dark-mode-toggle {
+            background: var(--section-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .dark-mode-toggle:hover {
+            border-color: #25739B;
+        }
+
+        [data-theme="dark"] .dark-mode-toggle {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        .icon-sun, .icon-moon {
+            font-size: 16px;
+        }
+
+        [data-theme="light"] .icon-moon {
+            display: none;
+        }
+
+        [data-theme="dark"] .icon-sun {
+            display: none;
+        }
     </style>
 </head>
 <body>
+    <!-- Dark Mode Script -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
+
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="header-logo">KPSUR AGENT</div>
+        </div>
+        <div class="header-right">
+            <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+                <span class="icon-sun">☀️</span>
+                <span class="icon-moon">🌙</span>
+            </button>
+        </div>
+    </header>
+
     <div class="app-layout">
     <div class="app-content">
     <main class="main-content">
@@ -464,7 +701,6 @@
         </div>
     </div>
 
-    <script src="../utils/test-runner.js"></script>
     <script>
         // Tab switching
         document.querySelectorAll('.tab-button').forEach(button => {

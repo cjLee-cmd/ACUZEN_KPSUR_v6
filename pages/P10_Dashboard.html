@@ -7,6 +7,49 @@
     <link rel="stylesheet" href="../css/styles/globals.css">
     <link rel="stylesheet" href="../css/styles/layout.css">
     <style>
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --card-shadow-hover: rgba(0, 0, 0, 0.15);
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --border-light: #F3F4F6;
+            --table-hover: rgba(37, 115, 155, 0.02);
+            --btn-secondary-bg: white;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-shadow: none;
+            --card-shadow-hover: none;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --border-light: #334155;
+            --table-hover: rgba(37, 115, 155, 0.1);
+            --btn-secondary-bg: #334155;
+        }
+
+        /* 다크모드 카드 스타일 통일 */
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .content-card {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .stat-card:hover,
+        [data-theme="dark"] .content-card:hover {
+            transform: none;
+            box-shadow: none !important;
+        }
+
         /* 페이지별 커스텀 스타일 */
         .page-container {
             max-width: 1400px;
@@ -29,12 +72,12 @@
         .welcome-title {
             font-size: 24px;
             font-weight: 700;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .welcome-subtitle {
             font-size: 13px;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .action-buttons {
@@ -66,13 +109,13 @@
         }
 
         .btn-secondary {
-            background: white;
+            background: var(--btn-secondary-bg);
             color: #25739B;
             border: 2px solid #25739B;
         }
 
         .btn-secondary:hover {
-            background: rgba(37, 115, 155, 0.05);
+            background: rgba(37, 115, 155, 0.1);
         }
 
         /* 통계 카드 */
@@ -84,16 +127,16 @@
         }
 
         .stat-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
             transition: all 0.2s ease;
         }
 
         .stat-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px var(--card-shadow-hover);
         }
 
         .stat-header {
@@ -139,7 +182,7 @@
 
         .stat-label {
             font-size: 12px;
-            color: #6B7280;
+            color: var(--text-secondary);
             font-weight: 500;
             margin-bottom: 6px;
         }
@@ -162,10 +205,10 @@
         }
 
         .content-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: var(--spacing-xl);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
         }
 
         .card-header {
@@ -174,13 +217,13 @@
             align-items: center;
             margin-bottom: var(--spacing-lg);
             padding-bottom: var(--spacing-md);
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .card-title {
             font-size: 16px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .card-action {
@@ -204,22 +247,22 @@
             text-align: left;
             font-size: 11px;
             font-weight: 600;
-            color: #6B7280;
+            color: var(--text-secondary);
             padding: var(--spacing-sm) var(--spacing-md);
-            border-bottom: 1px solid #E5E7EB;
+            border-bottom: 1px solid var(--border-color);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .reports-table td {
             padding: var(--spacing-md);
-            border-bottom: 1px solid #F3F4F6;
+            border-bottom: 1px solid var(--border-light);
             font-size: 13px;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .reports-table tr:hover {
-            background: rgba(37, 115, 155, 0.02);
+            background: var(--table-hover);
         }
 
         .report-name {
@@ -267,7 +310,7 @@
 
         .stage-indicator {
             font-size: 11px;
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         /* 활동 내역 */
@@ -286,7 +329,7 @@
         }
 
         .activity-item:hover {
-            background: rgba(37, 115, 155, 0.02);
+            background: var(--table-hover);
         }
 
         .activity-icon {
@@ -322,20 +365,20 @@
 
         .activity-title {
             font-size: 13px;
-            color: #374151;
+            color: var(--text-primary);
             font-weight: 500;
             margin-bottom: 2px;
         }
 
         .activity-time {
             font-size: 11px;
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         .empty-state {
             text-align: center;
             padding: var(--spacing-xl);
-            color: #9CA3AF;
+            color: var(--text-muted);
         }
 
         .empty-icon {
@@ -345,7 +388,7 @@
 
         .empty-text {
             font-size: 14px;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         /* 반응형 */
@@ -399,6 +442,10 @@
             </div>
 
             <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
                 <div class="user-menu">
                     <div class="user-avatar">사</div>
                     <div class="user-info">
@@ -708,6 +755,24 @@
         </footer>
     </div>
 
+    <!-- Dark Mode Script -->
+    <script>
+        // 다크모드 초기화 (페이지 로드 즉시)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
+
     <!-- JavaScript -->
     <script type="module" src="../utils/globals.js"></script>
     <script>
@@ -737,6 +802,7 @@
                 const testSession = {
                     userName: '김작성자',
                     userRole: 'Author',
+                    userPosition: '약물감시담당자',
                     email: 'author@kpsur.test'
                 };
                 saveSessionData(testSession);

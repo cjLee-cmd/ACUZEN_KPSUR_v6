@@ -321,10 +321,253 @@
             justify-content: flex-end;
             gap: 8px;
         }
+
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --text-primary: #07161D;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --section-bg: #f8fafc;
+            --input-bg: white;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --section-bg: #334155;
+            --input-bg: #334155;
+        }
+
+        /* 다크모드 스타일 */
+        [data-theme="dark"] .page-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .page-subtitle {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .control-bar,
+        [data-theme="dark"] .user-table-container {
+            background: transparent !important;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .stat-value {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .stat-label {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .search-input,
+        [data-theme="dark"] .filter-select {
+            background: #334155;
+            border-color: #475569;
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .user-table thead {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .user-table th {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .user-table tbody tr {
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .user-table tbody tr:hover {
+            background: #334155;
+        }
+
+        [data-theme="dark"] .user-table td {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .user-name {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .user-email {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .role-badge.master {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .role-badge.author {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .role-badge.reviewer {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fcd34d;
+        }
+
+        [data-theme="dark"] .role-badge.viewer {
+            background: #334155;
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .status-badge.active {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        [data-theme="dark"] .status-badge.inactive {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .action-btn {
+            background: #334155;
+            border-color: #475569;
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .action-btn:hover {
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .user-modal-content {
+            background: #1e293b;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .user-modal-header {
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .user-modal-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .form-label {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .form-input,
+        [data-theme="dark"] .form-select {
+            background: #334155;
+            border-color: #475569;
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .user-modal-footer {
+            border-color: #475569;
+        }
+
+        /* Header styles */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #25739B;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dark-mode-toggle {
+            background: var(--section-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .dark-mode-toggle:hover {
+            border-color: #25739B;
+        }
+
+        [data-theme="dark"] .dark-mode-toggle {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        .icon-sun, .icon-moon {
+            font-size: 16px;
+        }
+
+        [data-theme="light"] .icon-moon {
+            display: none;
+        }
+
+        [data-theme="dark"] .icon-sun {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="app-layout" id="app"></div>
+    <div class="app-layout" id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="header-logo">KPSUR AGENT</div>
+            </div>
+            <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+            </div>
+        </header>
+    </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
 
     <!-- Add/Edit User Modal -->
     <div id="userModal" class="user-modal">
@@ -493,7 +736,13 @@
                 </footer>
             `;
 
-            document.getElementById('app').innerHTML = layout.render(content);
+            const appElement = document.getElementById('app');
+            const header = appElement.querySelector('.app-header');
+            if (header) {
+                header.insertAdjacentHTML('afterend', layout.render(content));
+            } else {
+                appElement.innerHTML = layout.render(content);
+            }
 
             renderUsers();
         }
