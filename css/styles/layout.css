@@ -593,3 +593,194 @@
     color: #9CA3AF;
     margin-top: var(--spacing-sm);
 }
+
+/* ========================================
+   Dark Mode - 다크모드 스타일
+   ======================================== */
+
+[data-theme="dark"] .app-layout {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .app-header {
+    background: #1e293b;
+    border-bottom-color: #334155;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .logo-subtitle {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .breadcrumb-item {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .breadcrumb-separator {
+    color: #475569;
+}
+
+[data-theme="dark"] .user-menu:hover {
+    background: rgba(37, 115, 155, 0.15);
+}
+
+[data-theme="dark"] .user-name {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .user-role {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .user-menu-toggle {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .workflow-sidebar {
+    background: #1e293b;
+    border-left-color: #334155;
+}
+
+[data-theme="dark"] .workflow-header h3 {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .progress-text {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .progress-bar {
+    background: #334155;
+}
+
+[data-theme="dark"] .workflow-stage {
+    border-color: #334155;
+}
+
+[data-theme="dark"] .workflow-stage.pending {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .stage-name {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .stage-label {
+    color: #cbd5e1;
+}
+
+[data-theme="dark"] .stage-status {
+    color: #64748b;
+}
+
+[data-theme="dark"] .workflow-footer {
+    border-top-color: #334155;
+}
+
+[data-theme="dark"] .medical-badge {
+    background: #334155;
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .app-footer {
+    background: #1e293b;
+    border-top-color: #334155;
+}
+
+[data-theme="dark"] .footer-content {
+    color: #64748b;
+}
+
+[data-theme="dark"] .toast {
+    background: #1e293b;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .toast-message {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .loading-subtext {
+    color: #64748b;
+}
+
+[data-theme="dark"] .loading-content {
+    background: #1e293b;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .loading-text {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .user-dropdown {
+    background: #1e293b;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background: rgba(37, 115, 155, 0.15);
+}
+
+[data-theme="dark"] .dropdown-label {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .dropdown-divider {
+    background: #334155;
+}
+
+[data-theme="dark"] .workflow-header {
+    border-bottom-color: #334155;
+}
+
+/* Dark mode toggle button */
+.dark-mode-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #F3F4F6;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.dark-mode-toggle:hover {
+    background: #E5E7EB;
+    transform: scale(1.05);
+}
+
+.dark-mode-toggle .icon-sun,
+.dark-mode-toggle .icon-moon {
+    position: absolute;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.dark-mode-toggle .icon-moon {
+    opacity: 1;
+}
+
+.dark-mode-toggle .icon-sun {
+    opacity: 0;
+}
+
+[data-theme="dark"] .dark-mode-toggle {
+    background: #334155;
+}
+
+[data-theme="dark"] .dark-mode-toggle:hover {
+    background: #475569;
+}
+
+[data-theme="dark"] .dark-mode-toggle .icon-moon {
+    opacity: 0;
+}
+
+[data-theme="dark"] .dark-mode-toggle .icon-sun {
+    opacity: 1;
+}

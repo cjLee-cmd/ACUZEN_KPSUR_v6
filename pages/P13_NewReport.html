@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>새 보고서 생성 - KPSUR AGENT | ACUZEN AI</title>
-    <link rel="stylesheet" href="../styles/globals.css">
-    <link rel="stylesheet" href="../styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
     <style>
         .page-container {
             max-width: 1000px;
@@ -19,22 +19,22 @@
         .page-title {
             font-size: 24px;
             font-weight: 700;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: var(--spacing-xs);
         }
 
         .page-description {
             font-size: 14px;
-            color: #6B7280;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
 
         /* 폼 카드 */
         .form-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: var(--spacing-xl);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 3px var(--card-shadow);
             margin-bottom: var(--spacing-lg);
         }
 
@@ -52,7 +52,7 @@
             gap: var(--spacing-sm);
             margin-bottom: var(--spacing-lg);
             padding-bottom: var(--spacing-md);
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .section-number {
@@ -71,7 +71,7 @@
         .section-title {
             font-size: 16px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .form-row {
@@ -94,7 +94,7 @@
         .form-label {
             font-size: 13px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: var(--spacing-xs);
@@ -115,11 +115,12 @@
 
         .form-input, .form-select, .form-textarea {
             padding: var(--spacing-md);
-            border: 2px solid #E5E7EB;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             font-size: 14px;
             transition: all 0.2s ease;
-            background: white;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
 
         .form-input:focus, .form-select:focus, .form-textarea:focus {
@@ -129,8 +130,8 @@
         }
 
         .form-input:disabled, .form-select:disabled {
-            background: #F9FAFB;
-            color: #9CA3AF;
+            background: var(--section-bg);
+            color: var(--text-muted);
             cursor: not-allowed;
         }
 
@@ -141,7 +142,7 @@
 
         .form-help {
             font-size: 12px;
-            color: #6B7280;
+            color: var(--text-secondary);
             line-height: 1.4;
         }
 
@@ -154,7 +155,7 @@
             padding: var(--spacing-md);
             border: 2px solid #25739B;
             border-radius: 8px;
-            background: white;
+            background: var(--input-bg);
             color: #25739B;
             font-size: 14px;
             font-weight: 600;
@@ -212,19 +213,19 @@
             display: flex;
             justify-content: space-between;
             padding: var(--spacing-sm);
-            background: white;
+            background: var(--input-bg);
             border-radius: 6px;
         }
 
         .auto-filled-label {
             font-size: 12px;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .auto-filled-value {
             font-size: 13px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         /* 액션 버튼 */
@@ -233,7 +234,7 @@
             justify-content: space-between;
             gap: var(--spacing-md);
             padding-top: var(--spacing-xl);
-            border-top: 2px solid #E5E7EB;
+            border-top: 2px solid var(--border-color);
         }
 
         .btn {
@@ -261,13 +262,13 @@
         }
 
         .btn-secondary {
-            background: white;
-            border: 2px solid #E5E7EB;
-            color: #6B7280;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
         }
 
         .btn-secondary:hover {
-            background: #F9FAFB;
+            background: var(--section-bg);
         }
 
         /* 약품명 검색 모달 */
@@ -289,7 +290,7 @@
         }
 
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             width: 90%;
             max-width: 800px;
@@ -301,26 +302,28 @@
 
         .modal-header {
             padding: var(--spacing-xl);
-            border-bottom: 2px solid #E5E7EB;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .modal-title {
             font-size: 18px;
             font-weight: 700;
-            color: #374151;
+            color: var(--text-primary);
         }
 
         .modal-search {
             padding: var(--spacing-lg);
-            border-bottom: 1px solid #E5E7EB;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .search-input {
             width: 100%;
             padding: var(--spacing-md);
-            border: 2px solid #E5E7EB;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             font-size: 14px;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
 
         .search-input:focus {
@@ -342,32 +345,33 @@
 
         .drug-item {
             padding: var(--spacing-md);
-            border: 2px solid #E5E7EB;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
+            background: var(--input-bg);
         }
 
         .drug-item:hover {
             border-color: #25739B;
-            background: rgba(37, 115, 155, 0.02);
+            background: rgba(37, 115, 155, 0.05);
         }
 
         .drug-item-name {
             font-size: 14px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
             margin-bottom: 4px;
         }
 
         .drug-item-meta {
             font-size: 12px;
-            color: #6B7280;
+            color: var(--text-secondary);
         }
 
         .modal-footer {
             padding: var(--spacing-lg);
-            border-top: 1px solid #E5E7EB;
+            border-top: 1px solid var(--border-color);
             text-align: right;
         }
 
@@ -387,6 +391,130 @@
             .btn-primary {
                 width: 100%;
             }
+        }
+
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --input-bg: white;
+            --section-bg: #F9FAFB;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-shadow: none;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --input-bg: #334155;
+            --section-bg: #334155;
+        }
+
+        /* 다크모드 컴포넌트 스타일 */
+        [data-theme="dark"] .page-title,
+        [data-theme="dark"] .section-title,
+        [data-theme="dark"] .form-label,
+        [data-theme="dark"] .drug-item-name,
+        [data-theme="dark"] .auto-filled-value,
+        [data-theme="dark"] .modal-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .page-description,
+        [data-theme="dark"] .form-help,
+        [data-theme="dark"] .drug-item-meta,
+        [data-theme="dark"] .auto-filled-label {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .form-card {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: #1e293b;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .form-input,
+        [data-theme="dark"] .form-select,
+        [data-theme="dark"] .form-textarea,
+        [data-theme="dark"] .search-input {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .form-input:disabled,
+        [data-theme="dark"] .form-select:disabled {
+            background: #475569;
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .section-header,
+        [data-theme="dark"] .form-actions,
+        [data-theme="dark"] .modal-header,
+        [data-theme="dark"] .modal-search,
+        [data-theme="dark"] .modal-footer {
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .auto-filled-section {
+            background: rgba(37, 115, 155, 0.15);
+            border-color: rgba(37, 115, 155, 0.4);
+        }
+
+        [data-theme="dark"] .auto-filled-title {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .auto-filled-item {
+            background: var(--input-bg);
+        }
+
+        [data-theme="dark"] .drug-search-btn {
+            background: var(--input-bg);
+            color: #60a5fa;
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .drug-search-btn:hover {
+            background: rgba(37, 115, 155, 0.2);
+        }
+
+        [data-theme="dark"] .drug-item {
+            border-color: var(--border-color);
+            background: var(--input-bg);
+        }
+
+        [data-theme="dark"] .drug-item:hover {
+            border-color: #60a5fa;
+            background: rgba(37, 115, 155, 0.15);
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .btn-secondary:hover {
+            background: #475569;
+        }
+
+        [data-theme="dark"] .label-badge {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
         }
     </style>
 </head>
@@ -411,6 +539,10 @@
             </div>
 
             <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
                 <div class="user-menu">
                     <div class="user-avatar">사</div>
                     <div class="user-info">
@@ -481,12 +613,13 @@
                                             <span class="auto-filled-value" id="af_company">-</span>
                                         </div>
                                         <div class="auto-filled-item">
-                                            <span class="auto-filled-label">CS3_대표자명</span>
-                                            <span class="auto-filled-value" id="af_ceo">-</span>
+                                            <span class="auto-filled-label">CS4_보고종료날짜</span>
+                                            <input type="date" class="form-input" id="af_cs4" style="width: 150px; font-size: 12px;" onchange="updateReportDates()">
                                         </div>
                                         <div class="auto-filled-item">
-                                            <span class="auto-filled-label">CS4_전화번호</span>
-                                            <span class="auto-filled-value" id="af_phone">-</span>
+                                            <span class="auto-filled-label">CS3_보고시작날짜</span>
+                                            <span class="auto-filled-value" id="af_cs3">-</span>
+                                            <span style="font-size: 10px; color: #6B7280;">(CS4 - CS24 자동계산)</span>
                                         </div>
                                         <div class="auto-filled-item">
                                             <span class="auto-filled-label">CS5_국내허가일자</span>
@@ -514,21 +647,21 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">
-                                            최초허가국 (CS7) <span class="required">*</span>
+                                            버전넘버 (CS7) <span class="required">*</span>
                                         </label>
                                         <input
                                             type="text"
                                             class="form-input"
                                             id="first_approval_country"
-                                            placeholder="예: 영국"
+                                            placeholder="예: 1.0"
                                             required
                                         >
-                                        <div class="form-help">최초로 허가를 받은 국가명을 입력하세요.</div>
+                                        <div class="form-help">보고서 버전 번호를 입력하세요.</div>
                                     </div>
 
                                     <div class="form-group">
                                         <label class="form-label">
-                                            최초허가일자 (CS6) <span class="required">*</span>
+                                            보고서제출일 (CS6) <span class="required">*</span>
                                         </label>
                                         <input
                                             type="date"
@@ -536,14 +669,14 @@
                                             id="first_approval_date"
                                             required
                                         >
-                                        <div class="form-help">최초 허가 날짜를 선택하세요.</div>
+                                        <div class="form-help">보고서 제출 날짜를 선택하세요.</div>
                                     </div>
                                 </div>
 
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">
-                                            작성자 (CS20) <span class="required">*</span>
+                                            작성자 <span class="required">*</span>
                                         </label>
                                         <input
                                             type="text"
@@ -556,7 +689,7 @@
 
                                     <div class="form-group">
                                         <label class="form-label">
-                                            작성자 직책 (CS21) <span class="required">*</span>
+                                            작성자 직책 <span class="required">*</span>
                                         </label>
                                         <input
                                             type="text"
@@ -572,29 +705,29 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">
-                                            보고 주기 (CS24) <span class="required">*</span>
+                                            보고주기 (CS24) <span class="required">*</span>
                                         </label>
-                                        <select class="form-select" id="report_period" required>
+                                        <select class="form-select" id="report_period" required onchange="updateReportDates()">
                                             <option value="">선택하세요</option>
-                                            <option value="2024Q1">2024 1분기 (01-01 ~ 03-31)</option>
-                                            <option value="2024Q2">2024 2분기 (04-01 ~ 06-30)</option>
-                                            <option value="2024Q3">2024 3분기 (07-01 ~ 09-30)</option>
-                                            <option value="2024Q4">2024 4분기 (10-01 ~ 12-31)</option>
+                                            <option value="5" selected>5년</option>
+                                            <option value="3">3년</option>
+                                            <option value="1">1년</option>
                                         </select>
-                                        <div class="form-help">보고서가 다루는 기간을 선택하세요.</div>
+                                        <div class="form-help">보고 기간을 선택하세요. (CS3 = CS4 - CS24)</div>
                                     </div>
 
                                     <div class="form-group">
                                         <label class="form-label">
-                                            제출자 (CS13) <span class="required">*</span>
+                                            유효기간 (CS13) <span class="required">*</span>
                                         </label>
                                         <input
                                             type="text"
                                             class="form-input"
                                             id="submitter"
+                                            placeholder="예: 36개월"
                                             required
                                         >
-                                        <div class="form-help">보고서 제출 담당자</div>
+                                        <div class="form-help">의약품 유효기간</div>
                                     </div>
                                 </div>
                             </div>
@@ -771,9 +904,26 @@
         </div>
     </div>
 
+    <!-- Dark Mode Script -->
+    <script>
+        // 다크모드 초기화 (페이지 로드 즉시)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
+
     <!-- JavaScript -->
-    <script src="../components/AppLayout.js"></script>
-    <script src="../utils/layout-helper.js"></script>
+    <script type="module" src="../utils/globals.js"></script>
     <script>
         // 약품 데이터베이스 (샘플)
         const drugDatabase = [
@@ -782,8 +932,8 @@
                 ingredient: '토지나메란',
                 brand: '코미나티주',
                 company: '한국화이자제약',
-                ceo: '오동욱',
-                phone: '02-317-2114',
+                report_start_date: '2021-03-05',
+                report_end_date: '2026-03-04',
                 approval_date: '2021-03-05',
                 efficacy: '16세 이상에서 코로나19 예방',
                 dosage: '0.3mL를 3주 간격으로 2회 근육주사'
@@ -793,8 +943,8 @@
                 ingredient: '암로디핀',
                 brand: '노바스크정',
                 company: '한국화이자제약',
-                ceo: '오동욱',
-                phone: '02-317-2114',
+                report_start_date: '1997-05-20',
+                report_end_date: '2002-05-19',
                 approval_date: '1997-05-20',
                 efficacy: '고혈압, 협심증 치료',
                 dosage: '1일 1회 5mg 경구투여'
@@ -804,17 +954,101 @@
                 ingredient: '메트포르민',
                 brand: '글루코파지정',
                 company: '한국머크',
-                ceo: '김철수',
-                phone: '02-123-4567',
+                report_start_date: '2001-08-15',
+                report_end_date: '2006-08-14',
                 approval_date: '2001-08-15',
                 efficacy: '제2형 당뇨병 치료',
                 dosage: '1일 2-3회 500-850mg 경구투여'
+            },
+            {
+                id: 4,
+                ingredient: '아토르바스타틴',
+                brand: '리피토정',
+                company: '한국화이자제약',
+                report_start_date: '2000-01-15',
+                report_end_date: '2005-01-14',
+                approval_date: '2000-01-15',
+                efficacy: '고콜레스테롤혈증, 이상지질혈증 치료',
+                dosage: '1일 1회 10-80mg 경구투여'
+            },
+            {
+                id: 5,
+                ingredient: '에소메프라졸',
+                brand: '넥시움정',
+                company: '한국아스트라제네카',
+                report_start_date: '2002-06-10',
+                report_end_date: '2007-06-09',
+                approval_date: '2002-06-10',
+                efficacy: '위식도역류질환, 소화성궤양 치료',
+                dosage: '1일 1회 20-40mg 경구투여'
+            },
+            {
+                id: 6,
+                ingredient: '로수바스타틴',
+                brand: '크레스토정',
+                company: '한국아스트라제네카',
+                report_start_date: '2004-03-22',
+                report_end_date: '2009-03-21',
+                approval_date: '2004-03-22',
+                efficacy: '고콜레스테롤혈증, 고지혈증 치료',
+                dosage: '1일 1회 5-20mg 경구투여'
+            },
+            {
+                id: 7,
+                ingredient: '셀레콕시브',
+                brand: '쎄레브렉스캡슐',
+                company: '한국화이자제약',
+                report_start_date: '2001-11-08',
+                report_end_date: '2006-11-07',
+                approval_date: '2001-11-08',
+                efficacy: '골관절염, 류마티스관절염 치료',
+                dosage: '1일 1-2회 100-200mg 경구투여'
+            },
+            {
+                id: 8,
+                ingredient: '둘라글루타이드',
+                brand: '트루리시티주',
+                company: '한국릴리',
+                report_start_date: '2016-09-05',
+                report_end_date: '2021-09-04',
+                approval_date: '2016-09-05',
+                efficacy: '제2형 당뇨병 치료',
+                dosage: '주 1회 0.75-1.5mg 피하주사'
+            },
+            {
+                id: 9,
+                ingredient: '리바록사반',
+                brand: '자렐토정',
+                company: '바이엘코리아',
+                report_start_date: '2012-07-18',
+                report_end_date: '2017-07-17',
+                approval_date: '2012-07-18',
+                efficacy: '심부정맥혈전증 예방 및 치료',
+                dosage: '1일 1회 10-20mg 경구투여'
+            },
+            {
+                id: 10,
+                ingredient: '엠파글리플로진',
+                brand: '자디앙정',
+                company: '한국베링거인겔하임',
+                report_start_date: '2015-04-28',
+                report_end_date: '2020-04-27',
+                approval_date: '2015-04-28',
+                efficacy: '제2형 당뇨병 치료',
+                dosage: '1일 1회 10-25mg 경구투여'
             }
         ];
 
         let selectedDrug = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Wait for both DOM and globals to load
+        function initializePage() {
+            // Check if globals are loaded
+            if (!window.__GLOBALS_LOADED__) {
+                setTimeout(initializePage, 50);
+                return;
+            }
+
             const session = loadSessionData();
             if (session) {
                 document.querySelector('.user-name').textContent = session.userName;
@@ -823,12 +1057,29 @@
 
                 // 작성자 자동 입력
                 document.getElementById('author_name').value = session.userName;
+                // 작성자 직책 자동 입력
+                if (session.userPosition) {
+                    document.getElementById('author_position').value = session.userPosition;
+                }
+            }
+
+            // 버전넘버 초기값 '1.0' 자동 설정
+            const versionInput = document.getElementById('first_approval_country');
+            if (versionInput && !versionInput.value) {
+                versionInput.value = '1.0';
             }
 
             setupUserMenu();
             setupDrugSearch();
             setupForm();
-        });
+        }
+
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
 
         function setupForm() {
             const form = document.getElementById('newReportForm');
@@ -854,16 +1105,45 @@
 
                 showLLMLoading('새 보고서를 생성하고 있습니다...');
 
-                // 실제로는 API 호출
+                // 보고서 ID 생성
+                const reportId = Date.now().toString();
+
+                // 사용자 입력 데이터를 CS 형식으로 매핑하여 저장
+                const userInputData = {
+                    reportId: reportId,
+                    createdAt: new Date().toISOString(),
+                    // CS 데이터 매핑 (Source-CS-Sections.md 기준)
+                    CS0: selectedDrug.ingredient,           // 성분명
+                    CS1: selectedDrug.brand,                // 브랜드명
+                    CS2: selectedDrug.company,              // 회사명
+                    CS5: selectedDrug.approval_date,        // 국내허가일자
+                    CS6: formData.first_approval_date,      // 보고서제출일
+                    CS7: formData.first_approval_country,   // 최초허가국
+                    CS13: formData.submitter,               // 제출자/유효기간
+                    CS24: formData.report_period,           // MedDRA버전/보고주기
+                    // 추가 정보 (약품DB에서 자동 입력)
+                    CS15: selectedDrug.efficacy,            // 효능효과
+                    CS16: selectedDrug.dosage,              // 용법용량
+                    // 메타 정보
+                    authorName: formData.author_name,
+                    authorPosition: formData.author_position,
+                    description: formData.description
+                };
+
+                // localStorage에 저장
+                localStorage.setItem('current_report', JSON.stringify(userInputData));
+                console.log('✅ 사용자 입력 데이터 저장:', userInputData);
+
+                // 저장 완료 후 처리
                 setTimeout(() => {
                     hideLLMLoading();
                     showToast('보고서가 생성되었습니다.', 'success');
 
                     // 다음 단계 (파일 업로드)로 이동
                     setTimeout(() => {
-                        navigateTo('P14_FileUpload.html?reportId=new');
+                        navigateTo(`P14_FileUpload.html?reportId=${reportId}`);
                     }, 1000);
-                }, 2000);
+                }, 1000);
             });
         }
 
@@ -917,16 +1197,42 @@
                 document.getElementById('af_ingredient').textContent = selectedDrug.ingredient;
                 document.getElementById('af_brand').textContent = selectedDrug.brand;
                 document.getElementById('af_company').textContent = selectedDrug.company;
-                document.getElementById('af_ceo').textContent = selectedDrug.ceo;
-                document.getElementById('af_phone').textContent = selectedDrug.phone;
+                document.getElementById('af_cs4').value = selectedDrug.report_end_date;
                 document.getElementById('af_approval_date').textContent = selectedDrug.approval_date;
                 document.getElementById('af_efficacy').textContent = selectedDrug.efficacy;
                 document.getElementById('af_dosage').textContent = selectedDrug.dosage;
+
+                // CS3 자동 계산
+                updateReportDates();
 
                 // 모달 닫기
                 closeDrugSelector();
 
                 showToast('약품 정보가 자동으로 입력되었습니다.', 'success');
+            }
+        }
+
+        // CS3 = CS4 - CS24 계산 함수
+        function updateReportDates() {
+            const cs4Input = document.getElementById('af_cs4');
+            const cs24Select = document.getElementById('report_period');
+            const cs3Display = document.getElementById('af_cs3');
+
+            if (!cs4Input || !cs24Select || !cs3Display) return;
+
+            const cs4Value = cs4Input.value;
+            const cs24Value = parseInt(cs24Select.value) || 5; // 기본 5년
+
+            if (cs4Value) {
+                const cs4Date = new Date(cs4Value);
+                const cs3Date = new Date(cs4Date);
+                cs3Date.setFullYear(cs3Date.getFullYear() - cs24Value);
+                cs3Date.setDate(cs3Date.getDate() + 1); // 시작일은 종료일 - N년 + 1일
+
+                const cs3Formatted = cs3Date.toISOString().split('T')[0];
+                cs3Display.textContent = cs3Formatted;
+            } else {
+                cs3Display.textContent = '-';
             }
         }
     </script>
