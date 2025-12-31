@@ -689,6 +689,122 @@
         [data-theme="dark"] .icon-sun {
             display: none;
         }
+
+        /* 수동 체크리스트 스타일 */
+        .manual-checklist-section {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            background: var(--section-bg);
+        }
+
+        .manual-checklist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .manual-checklist-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .manual-checklist-progress {
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .manual-checklist-items {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .checklist-group {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .checklist-group-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #25739B;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 0;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+
+        .checklist-item:hover {
+            background: var(--section-bg);
+            margin: 0 -8px;
+            padding-left: 8px;
+            padding-right: 8px;
+            border-radius: 4px;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: #10B981;
+        }
+
+        .checklist-item .check-text {
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .checklist-item input[type="checkbox"]:checked + .check-text {
+            color: #059669;
+            text-decoration: line-through;
+        }
+
+        [data-theme="dark"] .manual-checklist-section {
+            background: transparent;
+        }
+
+        [data-theme="dark"] .checklist-group {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .checklist-group-title {
+            color: #60a5fa;
+            border-bottom-color: #475569;
+        }
+
+        [data-theme="dark"] .checklist-item:hover {
+            background: rgba(96, 165, 250, 0.1);
+        }
+
+        [data-theme="dark"] .checklist-item input[type="checkbox"]:checked + .check-text {
+            color: #34d399;
+        }
+
+        @media (max-width: 1024px) {
+            .manual-checklist-items {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -995,6 +1111,78 @@
                                     <div class="issue-empty-text">
                                         "QC 검증 시작" 버튼을 클릭하여<br>
                                         보고서 품질 검증을 시작하세요
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 수동 체크리스트 섹션 -->
+                            <div class="manual-checklist-section" id="manualChecklistSection">
+                                <div class="manual-checklist-header">
+                                    <h4 class="manual-checklist-title">📋 수동 검증 체크리스트</h4>
+                                    <div class="manual-checklist-progress">
+                                        <span id="manualCheckProgress">0</span> / <span id="manualCheckTotal">12</span> 완료
+                                    </div>
+                                </div>
+                                <div class="manual-checklist-items">
+                                    <div class="checklist-group">
+                                        <div class="checklist-group-title">📊 데이터 정확성</div>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="data">
+                                            <span class="check-text">모든 CS 데이터가 원본 문서와 일치함</span>
+                                        </label>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="data">
+                                            <span class="check-text">모든 PH 서술문이 정확하게 추출됨</span>
+                                        </label>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="data">
+                                            <span class="check-text">표 데이터 숫자가 원본과 동일함</span>
+                                        </label>
+                                    </div>
+                                    <div class="checklist-group">
+                                        <div class="checklist-group-title">📄 문서 구조</div>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="structure">
+                                            <span class="check-text">표 번호가 순차적으로 정렬됨</span>
+                                        </label>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="structure">
+                                            <span class="check-text">섹션 번호가 올바르게 지정됨</span>
+                                        </label>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="structure">
+                                            <span class="check-text">목차와 실제 섹션이 일치함</span>
+                                        </label>
+                                    </div>
+                                    <div class="checklist-group">
+                                        <div class="checklist-group-title">✍️ 내용 검토</div>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="content">
+                                            <span class="check-text">서술문이 RAW 문서 내용과 일치함</span>
+                                        </label>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="content">
+                                            <span class="check-text">의학 용어가 정확하게 사용됨</span>
+                                        </label>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="content">
+                                            <span class="check-text">리뷰에서 수정한 내용이 반영됨</span>
+                                        </label>
+                                    </div>
+                                    <div class="checklist-group">
+                                        <div class="checklist-group-title">⚖️ 규정 준수</div>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="regulatory">
+                                            <span class="check-text">MFDS 가이드라인 요구사항 충족</span>
+                                        </label>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="regulatory">
+                                            <span class="check-text">필수 섹션이 모두 포함됨</span>
+                                        </label>
+                                        <label class="checklist-item">
+                                            <input type="checkbox" class="manual-check" data-category="regulatory">
+                                            <span class="check-text">회사 정보가 정확하게 기재됨</span>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -1406,8 +1594,53 @@
             window.location.href = `P20_Output.html?reportId=${reportId}`;
         }
 
+        // 수동 체크리스트 진행 상황 업데이트
+        function updateManualCheckProgress() {
+            const checkboxes = document.querySelectorAll('.manual-check');
+            const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const total = checkboxes.length;
+
+            document.getElementById('manualCheckProgress').textContent = checked;
+            document.getElementById('manualCheckTotal').textContent = total;
+
+            // 모든 항목이 체크되면 승인 버튼 활성화
+            if (checked === total && issues.length === 0) {
+                document.getElementById('approveBtn').style.display = 'block';
+            }
+
+            // localStorage에 체크 상태 저장
+            const checkStates = {};
+            checkboxes.forEach((cb, index) => {
+                checkStates[`check_${index}`] = cb.checked;
+            });
+            Storage.set('manualQCChecks', checkStates);
+        }
+
+        // 수동 체크리스트 상태 복원
+        function restoreManualCheckStates() {
+            const savedStates = Storage.get('manualQCChecks') || {};
+            const checkboxes = document.querySelectorAll('.manual-check');
+
+            checkboxes.forEach((cb, index) => {
+                if (savedStates[`check_${index}`]) {
+                    cb.checked = true;
+                }
+            });
+
+            updateManualCheckProgress();
+        }
+
+        // 수동 체크리스트 이벤트 리스너 설정
+        function setupManualChecklistListeners() {
+            document.querySelectorAll('.manual-check').forEach(cb => {
+                cb.addEventListener('change', updateManualCheckProgress);
+            });
+        }
+
         // Initialize on load
         init();
+        setupManualChecklistListeners();
+        restoreManualCheckStates();
     </script>
 </body>
 </html>

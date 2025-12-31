@@ -1,65 +1,307 @@
 /**
  * Output Generator
  * 최종 Word 문서 출력
+ * docx.js 라이브러리를 사용한 실제 Word 문서 생성
  */
 
-import { DateHelper } from './config.js';
+// DateHelper fallback
+const DateHelper = window.DateHelper || {
+    formatYYMMDD_hhmmss: () => {
+        const now = new Date();
+        return now.toISOString().replace(/[-:T]/g, '').substring(0, 14);
+    },
+    formatISO: () => new Date().toISOString()
+};
 
 class OutputGenerator {
     constructor() {
-        this.outputHistory = [];
+        this.outputHistory = this.loadHistory();
+        this.loadDocxLibrary();
+    }
+
+    /**
+     * docx.js 라이브러리 로드
+     */
+    async loadDocxLibrary() {
+        if (typeof docx !== 'undefined') return;
+
+        try {
+            // CDN에서 docx.js 로드
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/docx@8.5.0/build/index.js';
+            document.head.appendChild(script);
+            await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+            });
+            console.log('docx.js library loaded');
+        } catch (e) {
+            console.warn('Failed to load docx.js, will use HTML fallback');
+        }
+    }
+
+    /**
+     * 저장된 히스토리 로드
+     */
+    loadHistory() {
+        try {
+            return JSON.parse(localStorage.getItem('outputHistory')) || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    /**
+     * 히스토리 저장
+     */
+    saveHistory() {
+        try {
+            localStorage.setItem('outputHistory', JSON.stringify(this.outputHistory.slice(0, 10)));
+        } catch (e) {
+            console.warn('Failed to save history');
+        }
     }
 
     /**
      * 마크다운을 Word 문서로 변환
-     * Note: docx 라이브러리 필요
+     * docx.js 라이브러리 사용
      */
     async generateWordDocument(reportName, markdownContent, isDraft = false) {
         console.log(`📄 Generating Word document: ${reportName}`);
 
-        console.warn('⚠️ Word document generation requires docx library');
-
-        // docx 라이브러리를 사용한 Word 문서 생성 (실제 구현 필요)
-        // const doc = new Document({
-        //     sections: [{
-        //         properties: {},
-        //         children: this.markdownToDocxParagraphs(markdownContent)
-        //     }]
-        // });
-        //
-        // const blob = await Packer.toBlob(doc);
-        //
-        // const suffix = isDraft ? '_Draft' : '';
-        // const timestamp = DateHelper.formatYYMMDD_hhmmss();
-        // const filename = `${reportName}${suffix}_${timestamp}.docx`;
-        //
-        // this.downloadBlob(blob, filename);
-
-        // 임시 구현: 마크다운 다운로드
         const suffix = isDraft ? '_Draft' : '';
         const timestamp = DateHelper.formatYYMMDD_hhmmss();
-        const filename = `${reportName}${suffix}_${timestamp}.md`;
+        const filename = `${reportName}${suffix}_${timestamp}.docx`;
 
-        const blob = new Blob([markdownContent], {
-            type: 'text/markdown;charset=utf-8'
+        try {
+            // docx.js가 로드되었는지 확인
+            if (typeof docx !== 'undefined') {
+                const blob = await this.createDocxBlob(markdownContent, reportName, isDraft);
+                this.downloadBlob(blob, filename);
+
+                // 출력 이력 기록
+                this.outputHistory.unshift({
+                    id: Date.now(),
+                    name: filename,
+                    format: 'docx',
+                    timestamp: new Date().toLocaleString('ko-KR'),
+                    size: this.formatFileSize(blob.size),
+                    reportName: reportName,
+                    isDraft: isDraft,
+                    generatedAt: DateHelper.formatISO()
+                });
+                this.saveHistory();
+
+                console.log(`✅ Word document generated: ${filename}`);
+                return { success: true, filename: filename, size: blob.size };
+            }
+        } catch (error) {
+            console.warn('docx generation failed, falling back to HTML:', error);
+        }
+
+        // Fallback: HTML로 다운로드
+        return this.downloadHTML(reportName, markdownContent, isDraft);
+    }
+
+    /**
+     * docx Blob 생성
+     */
+    async createDocxBlob(markdownContent, reportName, isDraft) {
+        const { Document, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell,
+                WidthType, AlignmentType, Packer, BorderStyle } = docx;
+
+        // 마크다운 파싱
+        const sections = this.parseMarkdownToSections(markdownContent);
+
+        // 문서 자식 요소 생성
+        const children = [];
+
+        // Draft 워터마크
+        if (isDraft) {
+            children.push(
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    spacing: { after: 400 },
+                    children: [
+                        new TextRun({
+                            text: '[ DRAFT - 초안 ]',
+                            bold: true,
+                            color: 'FF0000',
+                            size: 32
+                        })
+                    ]
+                })
+            );
+        }
+
+        // 섹션별 콘텐츠 추가
+        for (const section of sections) {
+            // 헤딩
+            if (section.heading) {
+                children.push(
+                    new Paragraph({
+                        text: section.heading.text,
+                        heading: section.heading.level === 1 ? HeadingLevel.HEADING_1 :
+                                 section.heading.level === 2 ? HeadingLevel.HEADING_2 :
+                                 HeadingLevel.HEADING_3,
+                        spacing: { before: 240, after: 120 }
+                    })
+                );
+            }
+
+            // 문단
+            for (const para of section.paragraphs || []) {
+                children.push(
+                    new Paragraph({
+                        children: [new TextRun({ text: para, size: 22 })],
+                        spacing: { after: 120 }
+                    })
+                );
+            }
+
+            // 테이블
+            if (section.table && section.table.length > 0) {
+                children.push(this.createDocxTable(section.table));
+            }
+        }
+
+        // 문서 생성
+        const doc = new Document({
+            creator: 'KPSUR AGENT',
+            title: reportName,
+            description: 'PSUR 자동 생성 보고서',
+            sections: [{
+                properties: {},
+                children: children
+            }]
         });
 
-        this.downloadBlob(blob, filename);
+        return await Packer.toBlob(doc);
+    }
 
-        // 출력 이력 기록
-        this.outputHistory.push({
-            reportName: reportName,
-            filename: filename,
-            isDraft: isDraft,
-            generatedAt: DateHelper.formatISO()
+    /**
+     * 마크다운을 섹션으로 파싱
+     */
+    parseMarkdownToSections(markdown) {
+        const sections = [];
+        const lines = markdown.split('\n');
+        let currentSection = { paragraphs: [] };
+        let inTable = false;
+        let tableLines = [];
+
+        for (const line of lines) {
+            // 헤딩 파싱
+            if (line.startsWith('# ')) {
+                if (currentSection.heading || currentSection.paragraphs.length > 0) {
+                    sections.push(currentSection);
+                }
+                currentSection = {
+                    heading: { level: 1, text: line.substring(2).trim() },
+                    paragraphs: [],
+                    table: null
+                };
+            } else if (line.startsWith('## ')) {
+                if (currentSection.heading || currentSection.paragraphs.length > 0) {
+                    sections.push(currentSection);
+                }
+                currentSection = {
+                    heading: { level: 2, text: line.substring(3).trim() },
+                    paragraphs: [],
+                    table: null
+                };
+            } else if (line.startsWith('### ')) {
+                if (currentSection.heading || currentSection.paragraphs.length > 0) {
+                    sections.push(currentSection);
+                }
+                currentSection = {
+                    heading: { level: 3, text: line.substring(4).trim() },
+                    paragraphs: [],
+                    table: null
+                };
+            } else if (line.startsWith('|')) {
+                // 테이블 시작 또는 계속
+                inTable = true;
+                if (!line.includes('---')) {
+                    tableLines.push(line);
+                }
+            } else if (inTable && !line.startsWith('|')) {
+                // 테이블 종료
+                if (tableLines.length > 0) {
+                    currentSection.table = this.parseTableLines(tableLines);
+                    tableLines = [];
+                }
+                inTable = false;
+                if (line.trim()) {
+                    currentSection.paragraphs.push(line.trim());
+                }
+            } else if (line.trim()) {
+                currentSection.paragraphs.push(line.trim());
+            }
+        }
+
+        // 마지막 테이블 처리
+        if (tableLines.length > 0) {
+            currentSection.table = this.parseTableLines(tableLines);
+        }
+
+        if (currentSection.heading || currentSection.paragraphs.length > 0 || currentSection.table) {
+            sections.push(currentSection);
+        }
+
+        return sections;
+    }
+
+    /**
+     * 테이블 라인 파싱
+     */
+    parseTableLines(lines) {
+        return lines.map(line => {
+            return line.split('|').filter(cell => cell.trim()).map(cell => cell.trim());
+        });
+    }
+
+    /**
+     * docx 테이블 생성
+     */
+    createDocxTable(tableData) {
+        const { Table, TableRow, TableCell, Paragraph, TextRun, WidthType, BorderStyle } = docx;
+
+        const rows = tableData.map((rowData, rowIndex) => {
+            return new TableRow({
+                children: rowData.map(cellText => {
+                    return new TableCell({
+                        children: [
+                            new Paragraph({
+                                children: [
+                                    new TextRun({
+                                        text: cellText,
+                                        bold: rowIndex === 0,
+                                        size: 20,
+                                        color: rowIndex === 0 ? 'FFFFFF' : '000000'
+                                    })
+                                ]
+                            })
+                        ],
+                        shading: rowIndex === 0 ? { fill: '25739B' } : undefined,
+                        margins: { top: 50, bottom: 50, left: 75, right: 75 }
+                    });
+                })
+            });
         });
 
-        console.log(`✅ Document generated: ${filename}`);
+        return new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: rows
+        });
+    }
 
-        return {
-            success: true,
-            filename: filename
-        };
+    /**
+     * 파일 크기 포맷
+     */
+    formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
     }
 
     /**
@@ -354,4 +596,8 @@ status: ${metadata.isDraft ? 'DRAFT' : 'FINAL'}
 // Singleton instance
 const outputGenerator = new OutputGenerator();
 
-export default outputGenerator;
+// 전역으로 내보내기 (ES6 모듈 대신)
+if (typeof window !== 'undefined') {
+    window.outputGenerator = outputGenerator;
+    window.OutputGenerator = OutputGenerator;
+}

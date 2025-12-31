@@ -681,6 +681,129 @@
         }
     </script>
 
+    <!-- Output Generator -->
+    <script src="../js/output-generator.js"></script>
+
+    <!-- UI Helper Functions -->
+    <script>
+        // Toast 컨테이너 생성
+        function ensureToastContainer() {
+            if (!document.getElementById('toast-container')) {
+                const container = document.createElement('div');
+                container.id = 'toast-container';
+                container.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 99999;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                `;
+                document.body.appendChild(container);
+            }
+        }
+
+        // Toast 표시
+        function showToast(message, type = 'success', duration = 5000) {
+            ensureToastContainer();
+            const container = document.getElementById('toast-container');
+            const toastId = `toast-${Date.now()}`;
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+
+            const colors = {
+                success: { bg: '#ECFDF5', text: '#065F46', border: '#6EE7B7' },
+                error: { bg: '#FEF2F2', text: '#991B1B', border: '#FCA5A5' },
+                warning: { bg: '#FEF3C7', text: '#92400E', border: '#FDE047' },
+                info: { bg: '#EBF5FF', text: '#1E40AF', border: '#93C5FD' }
+            };
+            const color = colors[type] || colors.success;
+
+            Object.assign(toast.style, {
+                padding: '16px 24px',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                minWidth: '200px',
+                maxWidth: '400px',
+                wordBreak: 'break-word',
+                animation: 'slideIn 0.3s ease-out',
+                cursor: 'pointer',
+                background: color.bg,
+                color: color.text,
+                border: `1px solid ${color.border}`
+            });
+
+            toast.addEventListener('click', () => toast.remove());
+            container.appendChild(toast);
+
+            if (duration > 0) {
+                setTimeout(() => toast.remove(), duration);
+            }
+            return toastId;
+        }
+
+        // LLM 로딩 표시
+        function showLLMLoading(message = '처리 중...') {
+            hideLLMLoading();
+            const overlay = document.createElement('div');
+            overlay.id = 'llm-loading-overlay';
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex; align-items: center; justify-content: center;
+                z-index: 99998;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white; padding: 32px; border-radius: 16px;
+                text-align: center; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            `;
+
+            const spinner = document.createElement('div');
+            spinner.style.cssText = `
+                width: 40px; height: 40px;
+                border: 4px solid #E5E7EB; border-top-color: #25739B;
+                border-radius: 50%; animation: spin 1s linear infinite;
+                margin: 0 auto 16px;
+            `;
+
+            const text = document.createElement('div');
+            text.id = 'llm-loading-text';
+            text.textContent = message;
+            text.style.cssText = 'font-size: 14px; color: #6B7280; font-weight: 500;';
+
+            if (!document.getElementById('llm-loading-styles')) {
+                const style = document.createElement('style');
+                style.id = 'llm-loading-styles';
+                style.textContent = `
+                    @keyframes spin { to { transform: rotate(360deg); } }
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            content.appendChild(spinner);
+            content.appendChild(text);
+            overlay.appendChild(content);
+            document.body.appendChild(overlay);
+        }
+
+        // LLM 로딩 숨김
+        function hideLLMLoading() {
+            const overlay = document.getElementById('llm-loading-overlay');
+            if (overlay) overlay.remove();
+        }
+    </script>
+
     <script>
         // CONFIG - System configuration
         const CONFIG = {
@@ -752,16 +875,11 @@
             }
         }
 
-        // outputGenerator stub
-        const outputGenerator = {
-            generate: async (format, options) => ({ success: true, url: '#' }),
-            getOutputHistory: () => Storage.get('outputHistory') || []
-        };
-
         // authManager stub
         const authManager = {
             isAuthenticated: () => true,
-            getUser: () => ({ name: '관리자', role: 'Admin' })
+            getUser: () => ({ name: '관리자', role: 'Admin' }),
+            getCurrentUser: () => ({ name: '관리자', role: 'Admin' })
         };
 
         // Load draft report and QC results
@@ -770,7 +888,8 @@
         const reportContent = draftReport.content || '';
 
         let zoomLevel = 100;
-        let exportHistory = outputGenerator.getOutputHistory();
+        // outputGenerator는 output-generator.js에서 로드됨
+        let exportHistory = (window.outputGenerator && window.outputGenerator.getOutputHistory()) || [];
 
         // Initialize the page
         function init() {
@@ -1124,43 +1243,62 @@
             const fileName = document.getElementById('fileName').value;
             const isDraft = document.getElementById('saveAsDraft')?.checked || false;
 
+            // outputGenerator 확인
+            const generator = window.outputGenerator;
+            if (!generator) {
+                showToast('출력 모듈을 로드하지 못했습니다.', 'error');
+                return;
+            }
+
             showLLMLoading('최종 문서를 생성하고 있습니다...');
 
             try {
-                // Validate report format
-                const validation = outputGenerator.validateReportFormat(reportContent);
-                if (!validation.valid) {
-                    hideLLMLoading();
-                    showToast('보고서 검증 실패: ' + validation.issues.join(', '), 'error');
-                    return;
+                // 저장된 보고서 내용 가져오기
+                let content = reportContent;
+
+                // 내용이 없으면 현재 미리보기에서 가져오기
+                if (!content || content.trim().length === 0) {
+                    const preview = document.getElementById('documentPreview');
+                    if (preview) {
+                        content = preview.innerHTML;
+                    }
+                }
+
+                // 보고서 검증 (내용이 있을 때만)
+                if (content && content.length > 100) {
+                    const validation = generator.validateReportFormat(content);
+                    if (!validation.valid) {
+                        // 경고만 표시하고 계속 진행
+                        console.warn('Report validation warnings:', validation.issues);
+                    }
                 }
 
                 // Add metadata
                 const metadata = {
                     reportName: fileName,
                     version: '1.0',
-                    date: DateHelper.formatISO(),
+                    date: DateHelper.formatISO ? DateHelper.formatISO() : new Date().toISOString(),
                     author: authManager.getCurrentUser()?.name || 'Unknown',
                     isDraft: isDraft
                 };
 
-                const contentWithMetadata = outputGenerator.addMetadata(reportContent, metadata);
+                const contentWithMetadata = generator.addMetadata(content, metadata);
 
                 // Export based on format
                 let result;
                 if (format === 'docx') {
-                    result = await outputGenerator.generateWordDocument(fileName, contentWithMetadata, isDraft);
+                    result = await generator.generateWordDocument(fileName, contentWithMetadata, isDraft);
                 } else if (format === 'html') {
-                    result = outputGenerator.downloadHTML(fileName, contentWithMetadata, isDraft);
+                    result = generator.downloadHTML(fileName, contentWithMetadata, isDraft);
                 } else if (format === 'pdf') {
-                    result = outputGenerator.printToPDF(fileName, contentWithMetadata, isDraft);
+                    result = generator.printToPDF(fileName, contentWithMetadata, isDraft);
                 } else if (format === 'both') {
-                    result = await outputGenerator.generateWordDocument(fileName, contentWithMetadata, isDraft);
-                    outputGenerator.printToPDF(fileName, contentWithMetadata, isDraft);
+                    result = await generator.generateWordDocument(fileName, contentWithMetadata, isDraft);
+                    generator.printToPDF(fileName, contentWithMetadata, isDraft);
                 }
 
                 // Update export history
-                exportHistory = outputGenerator.getOutputHistory();
+                exportHistory = generator.getOutputHistory();
                 renderExportHistory();
 
                 hideLLMLoading();
