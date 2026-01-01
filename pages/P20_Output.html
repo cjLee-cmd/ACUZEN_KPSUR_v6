@@ -819,6 +819,25 @@
                         // Markdown을 HTML로 간단 변환
                         let content = section.content;
 
+                        // 표 변환 (줄바꿈 변환 전에 먼저 처리)
+                        content = content.replace(/(\|[^\n]+\|\n)+/g, (tableMatch) => {
+                            const rows = tableMatch.trim().split('\n');
+                            let tableHtml = '<table>';
+                            rows.forEach((row, idx) => {
+                                const cells = row.split('|').filter(c => c.trim() !== '');
+                                // 구분선 (|---|---|) 건너뛰기
+                                if (cells.every(c => /^[\s:-]+$/.test(c))) {
+                                    return;
+                                }
+                                const isHeader = idx === 0;
+                                const tag = isHeader ? 'th' : 'td';
+                                const cellsHtml = cells.map(c => '<' + tag + '>' + c.trim() + '</' + tag + '>').join('');
+                                tableHtml += '<tr>' + cellsHtml + '</tr>';
+                            });
+                            tableHtml += '</table>';
+                            return tableHtml;
+                        });
+
                         // 기본 마크다운 변환
                         content = content
                             .replace(/^### (.*$)/gim, '<h3>$1</h3>')
@@ -828,16 +847,6 @@
                             .replace(/\*(.*?)\*/g, '<em>$1</em>')
                             .replace(/\n\n/g, '</p><p>')
                             .replace(/\n/g, '<br>');
-
-                        // 표 변환 (간단한 마크다운 표)
-                        content = content.replace(/\|(.+)\|/g, (match) => {
-                            const cells = match.split('|').filter(c => c.trim());
-                            if (cells.some(c => c.match(/^[\s-]+$/))) {
-                                return ''; // 구분선 제거
-                            }
-                            const cellHtml = cells.map(c => `<td>${c.trim()}</td>`).join('');
-                            return `<tr>${cellHtml}</tr>`;
-                        });
 
                         html += `<div class="section-content"><p>${content}</p></div>\n`;
                     }
