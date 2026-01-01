@@ -254,8 +254,12 @@ class AuthManager {
 // Singleton instance
 const authManager = new AuthManager();
 
-// 전역으로 내보내기 (ES6 모듈 대신 window 객체 사용)
+// 전역으로 내보내기 (window 객체)
 if (typeof window !== 'undefined') {
     window.authManager = authManager;
     window.AuthManager = AuthManager;
 }
+
+// ES6 모듈 export
+export default authManager;
+export { AuthManager };

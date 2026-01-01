@@ -3,10 +3,6 @@
  * GitHub Pages 배포용 - API 키는 localStorage에서 관리
  */
 
-// IIFE로 감싸서 const 선언이 전역 스코프와 충돌하지 않도록 함
-(function() {
-'use strict';
-
 const CONFIG = {
     // Supabase 설정 (공개 정보 - GitHub Pages에서 사용 가능)
     SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
@@ -101,11 +97,10 @@ const Storage = {
         try {
             const value = localStorage.getItem(key);
             if (!value) return null;
-            // Try JSON parse first, fallback to raw string (for API keys, etc.)
             try {
                 return JSON.parse(value);
             } catch {
-                return value; // Return raw string if not valid JSON
+                return value;
             }
         } catch (e) {
             console.error(`Error reading from localStorage (${key}):`, e);
@@ -165,11 +160,12 @@ const DateHelper = {
     }
 };
 
-// 전역으로 내보내기 (ES6 모듈 대신 window 객체 사용)
+// 전역으로 내보내기 (window 객체)
 if (typeof window !== 'undefined') {
     window.CONFIG = CONFIG;
     window.Storage = Storage;
     window.DateHelper = DateHelper;
 }
 
-})(); // IIFE 종료
+// ES6 모듈 export
+export { CONFIG, Storage, DateHelper };
