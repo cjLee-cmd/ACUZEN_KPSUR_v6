@@ -196,4 +196,8 @@ class OCRHelper {
 // Singleton instance
 const ocrHelper = new OCRHelper();
 
-export default ocrHelper;
+// 전역으로 내보내기 (window 객체 - ES6 모듈 대신)
+if (typeof window !== 'undefined') {
+    window.ocrHelper = ocrHelper;
+    window.OCRHelper = OCRHelper;
+}
