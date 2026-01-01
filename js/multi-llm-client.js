@@ -131,9 +131,17 @@ const LLM_PROVIDERS = {
                 maxTokens: 8192,
                 quality: 'high',
                 description: '실험용 Pro - 무료'
+            },
+            'gemini-3-flash-preview': {
+                name: 'Gemini 3 Flash Preview',
+                inputPrice: 0,
+                outputPrice: 0,
+                maxTokens: 65536,
+                quality: 'fast',
+                description: '최신 Flash - 빠르고 효율적'
             }
         },
-        defaultModel: 'gemini-2.0-flash-exp',
+        defaultModel: 'gemini-3-flash-preview',
         apiKeyName: 'GOOGLE_API_KEY'
     }
 };

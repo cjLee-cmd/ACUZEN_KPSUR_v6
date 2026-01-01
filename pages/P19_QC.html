@@ -1111,6 +1111,7 @@
 
                             <div class="qc-controls">
                                 <select class="llm-model-select" id="llmModel">
+                                    <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview (기본)</option>
                                     <option value="gemini-2.0-pro">Gemini 2.0 Pro (정확도 우선)</option>
                                     <option value="gemini-2.0-flash">Gemini 2.0 Flash (속도 우선)</option>
                                 </select>
@@ -1608,7 +1609,7 @@
             });
 
             const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
-            window.location.href = `P20_Output.html?reportId=${reportId}`;
+            navigateTo(`P20_Output.html?reportId=${reportId}`);
         }
 
         // 수동 체크리스트 진행 상황 업데이트

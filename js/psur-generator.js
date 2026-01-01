@@ -22,6 +22,10 @@ const PSURGenerator = {
     examplesLoaded: false,
     generationContextLoaded: false,
 
+    // UserPrompt 템플릿
+    userPromptTemplate: null,
+    userPromptTemplateLoaded: false,
+
     // 예시 파일 저장소
     examples: {},
 
@@ -302,6 +306,40 @@ const PSURGenerator = {
     },
 
     /**
+     * UserPrompt 템플릿 로드 (UserPrompt-1.md)
+     */
+    async loadUserPromptTemplate() {
+        if (this.userPromptTemplateLoaded && this.userPromptTemplate) {
+            return this.userPromptTemplate;
+        }
+
+        console.log('[PSURGenerator] Loading UserPrompt-1.md...');
+
+        const paths = [
+            '../UserPrompt-1.md',
+            './UserPrompt-1.md',
+            '/UserPrompt-1.md'
+        ];
+
+        for (const path of paths) {
+            try {
+                const response = await fetch(path);
+                if (response.ok) {
+                    this.userPromptTemplate = await response.text();
+                    this.userPromptTemplateLoaded = true;
+                    console.log(`[PSURGenerator] UserPrompt template loaded from ${path} (${this.userPromptTemplate.length} chars)`);
+                    return this.userPromptTemplate;
+                }
+            } catch (e) {
+                // 다음 경로 시도
+            }
+        }
+
+        console.warn('[PSURGenerator] UserPrompt-1.md not found');
+        return null;
+    },
+
+    /**
      * 모든 예시 파일을 하나의 문자열로 결합
      */
     combineExamples() {
@@ -367,43 +405,63 @@ const PSURGenerator = {
             }
         }
 
-        // 템플릿 로드
-        if (!this.templatesLoaded || Object.keys(this.templates).length === 0) {
-            if (onProgress) onProgress({ step: 'templates', message: '템플릿 로드 중...' });
-            await this.loadTemplates();
-            this.templatesLoaded = true;
+        // UserPrompt 템플릿 먼저 로드 (성공 시 다른 로드 스킵)
+        if (!this.userPromptTemplateLoaded) {
+            if (onProgress) onProgress({ step: 'userPrompt', message: 'UserPrompt 템플릿 로드 중...' });
+            await this.loadUserPromptTemplate();
         }
 
-        // 예시 파일 로드
-        if (!this.examplesLoaded || Object.keys(this.examples).length === 0) {
-            if (onProgress) onProgress({ step: 'examples', message: '예시 파일 로드 중...' });
-            await this.loadExamples();
-        }
-
-        // 사용자 입력 데이터 결정
-        let inputData = userInputData;
-        if (useTestData || !inputData) {
-            if (onProgress) onProgress({ step: 'testdata', message: '테스트 데이터 로드 중...' });
-            inputData = await this.loadTestRawData();
-        }
-
-        if (!inputData) {
-            return { success: false, error: '데이터 정의서(RawData_Definition)가 없습니다.' };
-        }
-
-        // 마크다운 통합
+        // 마크다운 통합 (항상 필요)
         if (onProgress) onProgress({ step: 'combine', message: '마크다운 통합 중...' });
         const combinedMarkdown = this.combineAllMarkdowns(convertedMarkdowns);
 
-        // 템플릿 통합
-        const templatesText = this.combineTemplates();
+        let prompt;
 
-        // 예시 통합
-        const examplesText = this.combineExamples();
+        // UserPrompt 로드 성공 시: 불필요한 로드 스킵
+        if (this.userPromptTemplate) {
+            console.log('[PSURGenerator] UserPrompt-1.md 사용 - 추가 로드 스킵');
+            if (onProgress) onProgress({ step: 'prompt', message: '프롬프트 생성 중 (UserPrompt 모드)...' });
 
-        // 프롬프트 생성
-        if (onProgress) onProgress({ step: 'prompt', message: '프롬프트 생성 중...' });
-        const prompt = this.buildFullReportPrompt(combinedMarkdown, inputData, templatesText, examplesText);
+            // UserPrompt-1.md에 모든 정보가 포함되어 있으므로 추가 로드 불필요
+            prompt = this.buildFullReportPrompt(combinedMarkdown, '', '', '');
+        } else {
+            // Fallback: 모든 리소스 로드
+            console.warn('[PSURGenerator] UserPrompt-1.md 로드 실패 - Fallback 모드');
+
+            // 템플릿 로드
+            if (!this.templatesLoaded || Object.keys(this.templates).length === 0) {
+                if (onProgress) onProgress({ step: 'templates', message: '템플릿 로드 중...' });
+                await this.loadTemplates();
+                this.templatesLoaded = true;
+            }
+
+            // 예시 파일 로드
+            if (!this.examplesLoaded || Object.keys(this.examples).length === 0) {
+                if (onProgress) onProgress({ step: 'examples', message: '예시 파일 로드 중...' });
+                await this.loadExamples();
+            }
+
+            // 사용자 입력 데이터 결정
+            let inputData = userInputData;
+            if (useTestData || !inputData) {
+                if (onProgress) onProgress({ step: 'testdata', message: '테스트 데이터 로드 중...' });
+                inputData = await this.loadTestRawData();
+            }
+
+            if (!inputData) {
+                return { success: false, error: '데이터 정의서(RawData_Definition)가 없습니다.' };
+            }
+
+            // 템플릿 통합
+            const templatesText = this.combineTemplates();
+
+            // 예시 통합
+            const examplesText = this.combineExamples();
+
+            // 프롬프트 생성
+            if (onProgress) onProgress({ step: 'prompt', message: '프롬프트 생성 중 (Fallback 모드)...' });
+            prompt = this.buildFullReportPrompt(combinedMarkdown, inputData, templatesText, examplesText);
+        }
         console.log(`[PSURGenerator] Prompt length: ${prompt.length} chars`);
 
         // API 호출
@@ -444,8 +502,25 @@ const PSURGenerator = {
 
     /**
      * 전체 보고서 생성용 프롬프트
+     * UserPrompt-1.md 템플릿을 사용하고 {{RAW_DATA_PLACEHOLDER}}를 교체
      */
     buildFullReportPrompt(combinedMarkdown, userInputData, templatesText, examplesText = '') {
+        // UserPrompt-1.md 템플릿이 로드되어 있으면 사용
+        if (this.userPromptTemplate) {
+            console.log('[PSURGenerator] Using UserPrompt-1.md template with placeholder replacement');
+
+            // 플레이스홀더를 실제 원시자료로 교체
+            const prompt = this.userPromptTemplate.replace(
+                '{{RAW_DATA_PLACEHOLDER}}',
+                combinedMarkdown
+            );
+
+            console.log(`[PSURGenerator] Placeholder replaced. Prompt length: ${prompt.length} chars`);
+            return prompt;
+        }
+
+        // Fallback: 템플릿이 없으면 기존 하드코딩된 프롬프트 사용
+        console.warn('[PSURGenerator] UserPrompt template not loaded, using fallback prompt');
         return `# PSUR 전체 보고서 생성 요청
 
 ## 역할

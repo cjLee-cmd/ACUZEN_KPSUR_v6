@@ -928,7 +928,8 @@
                                         <div class="hybrid-phase">
                                             <div class="phase-header">Phase 1: 초안</div>
                                             <select class="form-select" id="hybrid_phase1_model">
-                                                <option value="claude-sonnet-3-5" selected>Claude Sonnet 3.5</option>
+                                                <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview (기본)</option>
+                                                <option value="claude-sonnet-3-5">Claude Sonnet 3.5</option>
                                                 <option value="claude-haiku-3-5">Claude Haiku 3.5 (경제적)</option>
                                                 <option value="gemini-2.5-flash">Gemini 2.5 Flash (초경제적)</option>
                                             </select>
@@ -966,6 +967,7 @@
                                                     <option value="gpt-4o-mini">GPT-4o Mini - 경제적 (~$0.10)</option>
                                                 </optgroup>
                                                 <optgroup label="Google">
+                                                    <option value="gemini-3-flash-preview">Gemini 3 Flash Preview - 기본 (무료)</option>
                                                     <option value="gemini-2.0-pro">Gemini 2.0 Pro - 균형 (~$0.25)</option>
                                                     <option value="gemini-2.5-flash">Gemini 2.5 Flash - 최저 비용 (~$0.05)</option>
                                                 </optgroup>
@@ -1508,6 +1510,7 @@
                 'claude-haiku-3-5': '~$0.20',
                 'gpt-4o': '~$0.80',
                 'gpt-4o-mini': '~$0.10',
+                'gemini-3-flash-preview': '무료',
                 'gemini-2.0-pro': '~$0.25',
                 'gemini-2.5-flash': '~$0.05'
             };
