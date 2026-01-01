@@ -10,9 +10,9 @@ const CONFIG = {
 
     // LLM 설정
     LLM: {
-        DEFAULT_MODEL: 'gemini-3-flash-preview',
+        DEFAULT_MODEL: 'gemini-2.0-flash',
         MODELS: {
-            FLASH: 'gemini-3-flash-preview',
+            FLASH: 'gemini-2.0-flash',
             PRO: 'gemini-2.0-pro-exp'
         },
         API_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models'
