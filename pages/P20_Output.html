@@ -783,9 +783,63 @@
         // Load draft report and QC results
         const draftReport = window.Storage.get('draftReport') || {};
         const qcResults = window.Storage.get('qcResults') || {};
+        const generatedSections = window.Storage.get('generatedSections') || [];
         const reportContent = draftReport.content || '';
 
         let zoomLevel = 100;
+
+        // Generate preview HTML from sections
+        function generatePreviewHTML() {
+            // 1. draftReport.content가 있으면 사용
+            if (reportContent && reportContent.trim().length > 0) {
+                return reportContent;
+            }
+
+            // 2. generatedSections에서 생성
+            if (generatedSections && generatedSections.length > 0) {
+                let html = '<h1>의약품 재심사 안전성 정기보고서</h1>\n';
+
+                generatedSections.forEach((section, index) => {
+                    if (section && section.content) {
+                        // Markdown을 HTML로 간단 변환
+                        let content = section.content;
+
+                        // 기본 마크다운 변환
+                        content = content
+                            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                            .replace(/^# (.*$)/gim, '<h2>$1</h2>')
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/\n\n/g, '</p><p>')
+                            .replace(/\n/g, '<br>');
+
+                        // 표 변환 (간단한 마크다운 표)
+                        content = content.replace(/\|(.+)\|/g, (match) => {
+                            const cells = match.split('|').filter(c => c.trim());
+                            if (cells.some(c => c.match(/^[\s-]+$/))) {
+                                return ''; // 구분선 제거
+                            }
+                            const cellHtml = cells.map(c => `<td>${c.trim()}</td>`).join('');
+                            return `<tr>${cellHtml}</tr>`;
+                        });
+
+                        html += `<div class="section-content"><p>${content}</p></div>\n`;
+                    }
+                });
+
+                return html;
+            }
+
+            // 3. Fallback - 기본 메시지
+            return `
+                <h1>의약품 재심사 안전성 정기보고서</h1>
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <p style="font-size: 16px;">📝 생성된 보고서 내용이 없습니다.</p>
+                    <p style="font-size: 14px;">템플릿 작성 단계에서 보고서를 생성해 주세요.</p>
+                </div>
+            `;
+        }
         // outputGenerator는 output-generator.js에서 로드됨
         let exportHistory = [];
         try {
@@ -835,81 +889,7 @@
 
                         <div class="preview-content" id="previewContent">
                             <div class="document-preview" id="documentPreview">
-                                <h1>의약품 재심사 안전성 정기보고서</h1>
-
-                                <h2>품목 정보</h2>
-                                <p><strong>성분명:</strong> 토지리주맙</p>
-                                <p><strong>브랜드명:</strong> 악템라주</p>
-                                <p><strong>판매사:</strong> 한국로슈</p>
-                                <p><strong>제조사:</strong> 로슈 파마 AG</p>
-
-                                <h2>1. 개요</h2>
-                                <h3>1.1 품목 정보</h3>
-                                <ul>
-                                    <li>성분명: 토지리주맙</li>
-                                    <li>브랜드명: 악템라주</li>
-                                    <li>국내 허가일자: 2014-03-18</li>
-                                </ul>
-
-                                <h3>1.2 효능·효과</h3>
-                                <p>류마티스 관절염의 치료</p>
-
-                                <h3>1.3 용법·용량</h3>
-                                <p>성인: 8mg/kg을 4주마다 정맥주사</p>
-
-                                <h2>2. 국내외 허가현황</h2>
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>국가</th>
-                                            <th>허가일자</th>
-                                            <th>허가번호</th>
-                                            <th>상태</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>한국</td>
-                                            <td>2014-03-18</td>
-                                            <td>201403018</td>
-                                            <td>허가</td>
-                                        </tr>
-                                        <tr>
-                                            <td>미국</td>
-                                            <td>2010-01-08</td>
-                                            <td>BLA 125276</td>
-                                            <td>허가</td>
-                                        </tr>
-                                        <tr>
-                                            <td>EU</td>
-                                            <td>2009-01-16</td>
-                                            <td>EU/1/08/492/001</td>
-                                            <td>허가</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-
-                                <h2>3. 시판 후 Sales 데이터</h2>
-                                <p>당해 보고기간 동안 총 12,543건의 판매가 이루어졌으며, 전년 대비 8.3% 증가하였습니다.
-                                주요 판매처는 상급종합병원(67%)과 종합병원(28%)이었으며, 요양병원 및 의원급 의료기관의
-                                판매 비중은 5%로 나타났습니다.</p>
-
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>연도</th>
-                                            <th>판매량 (개)</th>
-                                            <th>전년 대비</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr><td>2020</td><td>10,234</td><td>-</td></tr>
-                                        <tr><td>2021</td><td>11,567</td><td>+13.0%</td></tr>
-                                        <tr><td>2022</td><td>11,892</td><td>+2.8%</td></tr>
-                                        <tr><td>2023</td><td>12,115</td><td>+1.9%</td></tr>
-                                        <tr><td>2024</td><td>12,543</td><td>+3.5%</td></tr>
-                                    </tbody>
-                                </table>
+                                ${generatePreviewHTML()}
                             </div>
                         </div>
                     </div>
