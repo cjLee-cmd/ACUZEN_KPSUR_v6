@@ -5,7 +5,8 @@
  */
 
 // Storage fallback (config.js에서 이미 선언된 경우 재선언하지 않음)
-if (!window.Storage) {
+// window.Storage는 브라우저 내장 인터페이스이므로, get 메서드 유무로 체크
+if (!window.Storage || typeof window.Storage.get !== 'function') {
     window.Storage = {
         get: (key) => {
             try {
