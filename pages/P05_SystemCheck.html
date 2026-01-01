@@ -788,7 +788,7 @@
             if (message.includes('Gemini API 키가 설정되지 않았습니다')) {
                 errorMessage.innerHTML = `
                     Gemini API 키가 설정되지 않았습니다.<br><br>
-                    <a href="P91_Settings.html" style="color: #25739B; font-weight: 600; text-decoration: underline;">
+                    <a href="#" onclick="navigateTo('P91_Settings.html'); return false;" style="color: #25739B; font-weight: 600; text-decoration: underline; cursor: pointer;">
                         ⚙️ 시스템 설정에서 API 키 등록하기 →
                     </a>
                 `;
