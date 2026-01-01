@@ -8,42 +8,149 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; background: #f5f5f5; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #020617;
+            color: #e2e8f0;
+        }
         .container { max-width: 1200px; margin: 0 auto; }
-        h1 { margin-bottom: 20px; color: #333; }
-        .test-section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .test-section h2 { margin-bottom: 15px; color: #2563eb; }
-        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; margin-right: 10px; margin-bottom: 10px; }
-        .btn-primary { background: #2563eb; color: white; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-secondary { background: #6b7280; color: white; }
-        .btn-success { background: #16a34a; color: white; }
-        .btn-success:hover { background: #15803d; }
-        .log-area { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; max-height: 400px; overflow-y: auto; margin-top: 15px; white-space: pre-wrap; }
+        h1 { margin-bottom: 20px; color: #f8fafc; }
+        .test-section {
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 20px 50px rgba(2, 6, 23, 0.55);
+        }
+        .test-section h2 { margin-bottom: 15px; color: #7dd3fc; }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            color: #f8fafc;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.45);
+        }
+        .btn-primary { background: linear-gradient(135deg, #0ea5e9, #2563eb); }
+        .btn-primary:hover { background: linear-gradient(135deg, #38bdf8, #1d4ed8); }
+        .btn-secondary { background: #334155; }
+        .btn-secondary:hover { background: #475569; }
+        .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+        .btn-success:hover { background: linear-gradient(135deg, #34d399, #047857); }
+        .log-area {
+            background: #030712;
+            color: #e2e8f0;
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            font-family: monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+            white-space: pre-wrap;
+        }
         .result-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .result-table th, .result-table td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
-        .result-table th { background: #f3f4f6; font-weight: 600; }
+        .result-table th, .result-table td { border: 1px solid rgba(148, 163, 184, 0.2); padding: 10px; text-align: left; }
+        .result-table th { background: rgba(51, 65, 85, 0.6); font-weight: 600; color: #f1f5f9; }
         .status-pass { color: #16a34a; font-weight: bold; }
         .status-fail { color: #dc2626; font-weight: bold; }
         .status-pending { color: #ca8a04; }
-        .markdown-input { width: 100%; height: 200px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-family: monospace; font-size: 13px; resize: vertical; }
-        .markdown-preview { background: #fafafa; border: 1px solid #e5e7eb; padding: 15px; border-radius: 6px; max-height: 300px; overflow-y: auto; font-size: 13px; }
-        .extracted-data { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; margin-top: 10px; }
+        .markdown-input {
+            width: 100%;
+            height: 200px;
+            padding: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            background: rgba(3, 7, 18, 0.7);
+            color: #f8fafc;
+            font-family: monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+        .markdown-input::placeholder { color: rgba(226, 232, 240, 0.4); }
+        .markdown-preview {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: #e2e8f0;
+        }
+        .extracted-data {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
         .extracted-data pre { white-space: pre-wrap; font-size: 12px; }
-        .loading { display: none; align-items: center; gap: 10px; padding: 15px; background: #fef3c7; border-radius: 6px; margin-top: 15px; }
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(245, 158, 11, 0.15);
+            border-radius: 10px;
+            margin-top: 15px;
+            color: #fde68a;
+        }
         .loading.active { display: flex; }
-        .spinner { width: 20px; height: 20px; border: 2px solid #f59e0b; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        .spinner { width: 20px; height: 20px; border: 2px solid #fde68a; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .input-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .input-tab { padding: 10px 20px; border: none; background: #e5e7eb; border-radius: 6px 6px 0 0; cursor: pointer; font-weight: 500; }
-        .input-tab.active { background: #2563eb; color: white; }
+        .input-tab {
+            padding: 10px 20px;
+            border: none;
+            background: rgba(51, 65, 85, 0.6);
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: #cbd5f5;
+        }
+        .input-tab.active { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; }
         .input-content { display: none; }
         .input-content.active { display: block; }
-        .file-drop { border: 2px dashed #d1d5db; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .file-drop:hover { border-color: #2563eb; background: #f0f9ff; }
-        .file-drop.dragover { border-color: #2563eb; background: #dbeafe; }
-        .api-key-section { background: #fef3c7; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        .api-key-input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace; }
+        .file-drop {
+            border: 2px dashed rgba(148, 163, 184, 0.4);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(15, 23, 42, 0.4);
+            color: #cbd5f5;
+        }
+        .file-drop:hover { border-color: #38bdf8; background: rgba(14, 165, 233, 0.08); }
+        .file-drop.dragover { border-color: #38bdf8; background: rgba(14, 165, 233, 0.15); }
+        .api-key-section {
+            background: rgba(253, 224, 71, 0.12);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(250, 204, 21, 0.35);
+        }
+        .api-key-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            background: rgba(2, 6, 23, 0.6);
+            color: #f8fafc;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -60,7 +167,7 @@
             </div>
             <div style="margin-top: 15px;">
                 <label><strong>LLM Model:</strong></label>
-                <select id="modelSelect" style="padding: 8px; margin-left: 10px;">
+                <select id="modelSelect" style="padding: 8px; margin-left: 10px; background: rgba(15, 23, 42, 0.85); color: #f1f5f9;">
                     <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                     <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                 </select>

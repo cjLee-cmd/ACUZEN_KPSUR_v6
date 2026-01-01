@@ -100,48 +100,40 @@ const LLM_PROVIDERS = {
         name: 'Google Gemini',
         endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
         models: {
-            'gemini-2.5-pro': {
-                name: 'Gemini 2.5 Pro',
+            'gemini-3-pro-preview': {
+                name: 'Gemini 3 Pro Preview',
                 inputPrice: 1.25,
                 outputPrice: 5,
                 maxTokens: 65536,
                 quality: 'highest',
                 description: '최고 품질 - 심층 분석'
             },
-            'gemini-2.0-flash-exp': {
+            'gemini-3-flash-preview': {
+                name: 'Gemini 3 Flash Preview',
+                inputPrice: 0.075,
+                outputPrice: 0.30,
+                maxTokens: 65536,
+                quality: 'fast',
+                description: '빠른 처리 - 기본 모델'
+            },
+            'gemini-2.5-pro': {
+                name: 'Gemini 2.5 Pro',
+                inputPrice: 1.25,
+                outputPrice: 5,
+                maxTokens: 65536,
+                quality: 'high',
+                description: '고품질 - 정밀 분석'
+            },
+            'gemini-2.5-flash': {
                 name: 'Gemini 2.5 Flash',
                 inputPrice: 0.075,
                 outputPrice: 0.30,
                 maxTokens: 65536,
                 quality: 'fast',
-                description: '빠른 처리 - 매우 경제적'
-            },
-            'gemini-2.0-flash-exp': {
-                name: 'Gemini 2.0 Flash Exp',
-                inputPrice: 0,
-                outputPrice: 0,
-                maxTokens: 8192,
-                quality: 'fast',
-                description: '실험용 - 무료'
-            },
-            'gemini-2.0-pro-exp': {
-                name: 'Gemini 2.0 Pro Exp',
-                inputPrice: 0,
-                outputPrice: 0,
-                maxTokens: 8192,
-                quality: 'high',
-                description: '실험용 Pro - 무료'
-            },
-            'gemini-2.0-flash': {
-                name: 'Gemini 2.0 Flash',
-                inputPrice: 0,
-                outputPrice: 0,
-                maxTokens: 65536,
-                quality: 'fast',
                 description: 'Flash - 빠르고 효율적'
             }
         },
-        defaultModel: 'gemini-2.0-flash',
+        defaultModel: 'gemini-3-flash-preview',
         apiKeyName: 'GOOGLE_API_KEY'
     }
 };
@@ -164,7 +156,7 @@ const HYBRID_MODES = {
     },
     'gemini-opus': {
         name: 'Gemini → Opus (초경제적)',
-        phase1: { provider: 'google', model: 'gemini-2.0-flash-exp', description: '전체 초안' },
+        phase1: { provider: 'google', model: 'gemini-3-flash-preview', description: '전체 초안' },
         phase2: { provider: 'claude', model: 'claude-opus-4-5', description: '핵심 섹션 개선' },
         refineSections: [9, 10],
         estimatedSavings: 80
