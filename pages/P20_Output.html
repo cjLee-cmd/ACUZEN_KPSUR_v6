@@ -788,14 +788,46 @@
 
         let zoomLevel = 100;
 
+        // 마크다운을 HTML로 변환하는 헬퍼 함수
+        function convertMarkdownToHTML(content) {
+            // 표 변환 (줄바꿈 변환 전에 먼저 처리)
+            content = content.replace(/(\|[^\n]+\|\n)+/g, (tableMatch) => {
+                const rows = tableMatch.trim().split('\n');
+                let tableHtml = '<table>';
+                rows.forEach((row, idx) => {
+                    const cells = row.split('|').filter(c => c.trim() !== '');
+                    // 구분선 (|---|---|) 건너뛰기
+                    if (cells.every(c => /^[\s:-]+$/.test(c))) {
+                        return;
+                    }
+                    const isHeader = idx === 0;
+                    const tag = isHeader ? 'th' : 'td';
+                    const cellsHtml = cells.map(c => '<' + tag + '>' + c.trim() + '</' + tag + '>').join('');
+                    tableHtml += '<tr>' + cellsHtml + '</tr>';
+                });
+                tableHtml += '</table>';
+                return tableHtml;
+            });
+
+            // 기본 마크다운 변환 - 헤더 레벨 순서대로 처리 (높은 레벨부터)
+            content = content
+                .replace(/^###### (.*$)/gim, '<h6>$1</h6>')
+                .replace(/^##### (.*$)/gim, '<h5>$1</h5>')
+                .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>');
+
+            return content;
+        }
+
         // Generate preview HTML from sections
         function generatePreviewHTML() {
-            // 1. draftReport.content가 있으면 사용
-            if (reportContent && reportContent.trim().length > 0) {
-                return reportContent;
-            }
-
-            // 2. generatedSections에서 생성 (배열 또는 객체 형태 모두 지원)
+            // 1. generatedSections에서 생성 (우선순위 최상위)
             let sectionsArray = [];
 
             if (generatedSections) {
@@ -816,43 +848,18 @@
 
                 sectionsArray.forEach((section) => {
                     if (section && section.content) {
-                        // Markdown을 HTML로 간단 변환
-                        let content = section.content;
-
-                        // 표 변환 (줄바꿈 변환 전에 먼저 처리)
-                        content = content.replace(/(\|[^\n]+\|\n)+/g, (tableMatch) => {
-                            const rows = tableMatch.trim().split('\n');
-                            let tableHtml = '<table>';
-                            rows.forEach((row, idx) => {
-                                const cells = row.split('|').filter(c => c.trim() !== '');
-                                // 구분선 (|---|---|) 건너뛰기
-                                if (cells.every(c => /^[\s:-]+$/.test(c))) {
-                                    return;
-                                }
-                                const isHeader = idx === 0;
-                                const tag = isHeader ? 'th' : 'td';
-                                const cellsHtml = cells.map(c => '<' + tag + '>' + c.trim() + '</' + tag + '>').join('');
-                                tableHtml += '<tr>' + cellsHtml + '</tr>';
-                            });
-                            tableHtml += '</table>';
-                            return tableHtml;
-                        });
-
-                        // 기본 마크다운 변환
-                        content = content
-                            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                            .replace(/^# (.*$)/gim, '<h2>$1</h2>')
-                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                            .replace(/\n\n/g, '</p><p>')
-                            .replace(/\n/g, '<br>');
-
+                        // 헬퍼 함수를 사용하여 마크다운 변환
+                        const content = convertMarkdownToHTML(section.content);
                         html += `<div class="section-content"><p>${content}</p></div>\n`;
                     }
                 });
 
                 return html;
+            }
+
+            // 2. draftReport.content가 있으면 사용 (Fallback)
+            if (reportContent && reportContent.trim().length > 0) {
+                return '<div class="section-content"><p>' + convertMarkdownToHTML(reportContent) + '</p></div>';
             }
 
             // 3. Fallback - 기본 메시지
