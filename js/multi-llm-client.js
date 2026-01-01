@@ -4,27 +4,26 @@
  * GitHub Pages 정적 호스팅 호환
  */
 
-// Storage fallback (config.js에서 이미 선언된 경우 재선언하지 않음)
-// window.Storage는 브라우저 내장 인터페이스이므로, get 메서드 유무로 체크
-if (!window.Storage || typeof window.Storage.get !== 'function') {
-    window.Storage = {
-        get: (key) => {
-            try {
-                const item = localStorage.getItem(key);
-                return item ? JSON.parse(item) : null;
-            } catch (e) {
-                return localStorage.getItem(key);
-            }
-        },
-        set: (key, value) => {
-            try {
-                localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
-            } catch (e) {
-                console.error('Storage.set error:', e);
-            }
+// AppStorage - 커스텀 스토리지 유틸리티
+// (window.Storage는 브라우저 내장 인터페이스라 덮어쓸 수 없음)
+const AppStorage = window.AppStorage || {
+    get: (key) => {
+        try {
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : null;
+        } catch (e) {
+            return localStorage.getItem(key);
         }
-    };
-}
+    },
+    set: (key, value) => {
+        try {
+            localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        } catch (e) {
+            console.error('AppStorage.set error:', e);
+        }
+    }
+};
+window.AppStorage = AppStorage;
 
 // DateHelper fallback (config.js에서 이미 선언된 경우 재선언하지 않음)
 if (!window.DateHelper) {
@@ -184,7 +183,7 @@ class MultiLLMClient {
     setApiKey(provider, apiKey) {
         const keyName = LLM_PROVIDERS[provider]?.apiKeyName;
         if (keyName) {
-            Storage.set(keyName, apiKey);
+            AppStorage.set(keyName, apiKey);
             console.log(`✅ ${provider} API key set`);
             return true;
         }
@@ -193,7 +192,7 @@ class MultiLLMClient {
 
     getApiKey(provider) {
         const keyName = LLM_PROVIDERS[provider]?.apiKeyName;
-        return keyName ? Storage.get(keyName) : null;
+        return keyName ? AppStorage.get(keyName) : null;
     }
 
     hasApiKey(provider) {
