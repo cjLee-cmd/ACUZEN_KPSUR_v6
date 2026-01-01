@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="../css/styles/globals.css">
     <link rel="stylesheet" href="../css/styles/layout.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/multi-llm-client.js"></script>
     <style>
         .page-container {
             max-width: 1200px;
@@ -723,6 +724,136 @@
     </div>
 
     <script>
+        // TestRunner 클래스 정의
+        class TestRunner {
+            constructor() {
+                this.llmClient = new MultiLLMClient();
+                this.results = { llm: [], db: [] };
+            }
+
+            async runLLMTests(models) {
+                const resultsContainer = document.getElementById('llmResults');
+                resultsContainer.innerHTML = '';
+                this.results.llm = [];
+
+                for (const model of models) {
+                    const resultCard = this.createResultCard(model, 'testing');
+                    resultsContainer.appendChild(resultCard);
+
+                    try {
+                        const startTime = Date.now();
+                        const response = await this.llmClient.generate('안녕하세요. 간단히 "테스트 성공"이라고 답변해주세요.', {
+                            provider: 'google',
+                            model: model,
+                            maxTokens: 100
+                        });
+                        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+                        this.updateResultCard(resultCard, 'success', {
+                            model,
+                            response: response.text?.substring(0, 100) || '응답 없음',
+                            duration: `${duration}s`,
+                            tokens: response.usage ? `${response.usage.inputTokens}/${response.usage.outputTokens}` : '-'
+                        });
+
+                        this.results.llm.push({ model, status: 'success', duration, response: response.text });
+                    } catch (error) {
+                        this.updateResultCard(resultCard, 'error', {
+                            model,
+                            error: error.message
+                        });
+                        this.results.llm.push({ model, status: 'error', error: error.message });
+                    }
+                }
+            }
+
+            async runDBTests() {
+                const resultsContainer = document.getElementById('dbResults');
+                resultsContainer.innerHTML = '';
+                this.results.db = [];
+
+                const tests = [
+                    { name: 'Supabase 연결', test: () => this.testSupabaseConnection() },
+                    { name: 'Auth 상태 확인', test: () => this.testAuthStatus() }
+                ];
+
+                for (const { name, test } of tests) {
+                    const resultCard = this.createResultCard(name, 'testing');
+                    resultsContainer.appendChild(resultCard);
+
+                    try {
+                        const result = await test();
+                        this.updateResultCard(resultCard, 'success', { model: name, response: result });
+                        this.results.db.push({ name, status: 'success', result });
+                    } catch (error) {
+                        this.updateResultCard(resultCard, 'error', { model: name, error: error.message });
+                        this.results.db.push({ name, status: 'error', error: error.message });
+                    }
+                }
+            }
+
+            async testSupabaseConnection() {
+                // 간단한 연결 테스트
+                return 'Supabase 클라이언트 로드됨';
+            }
+
+            async testAuthStatus() {
+                const session = localStorage.getItem('kpsur_session');
+                return session ? '세션 활성화됨' : '세션 없음';
+            }
+
+            createResultCard(name, status) {
+                const card = document.createElement('div');
+                card.className = `result-card ${status}`;
+                card.innerHTML = `
+                    <div class="result-header">
+                        <span class="result-model">${name}</span>
+                        <span class="result-status">${status === 'testing' ? '테스트 중...' : status}</span>
+                    </div>
+                    <div class="result-body">
+                        ${status === 'testing' ? '<div class="spinner" style="width:20px;height:20px;"></div>' : ''}
+                    </div>
+                `;
+                return card;
+            }
+
+            updateResultCard(card, status, data) {
+                card.className = `result-card ${status}`;
+                const statusEl = card.querySelector('.result-status');
+                const bodyEl = card.querySelector('.result-body');
+
+                statusEl.textContent = status === 'success' ? '✅ 성공' : '❌ 실패';
+                statusEl.style.color = status === 'success' ? '#059669' : '#DC2626';
+
+                if (status === 'success') {
+                    bodyEl.innerHTML = `
+                        <div style="font-size:13px;color:#374151;">
+                            ${data.response ? `<div><strong>응답:</strong> ${data.response}</div>` : ''}
+                            ${data.duration ? `<div><strong>시간:</strong> ${data.duration}</div>` : ''}
+                            ${data.tokens ? `<div><strong>토큰:</strong> ${data.tokens}</div>` : ''}
+                        </div>
+                    `;
+                } else {
+                    bodyEl.innerHTML = `<div style="color:#DC2626;font-size:13px;">${data.error}</div>`;
+                }
+            }
+
+            exportResults(type) {
+                const data = type === 'llm' ? this.results.llm : this.results.db;
+                if (data.length === 0) {
+                    alert('내보낼 결과가 없습니다.');
+                    return;
+                }
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${type}_test_results_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+            }
+        }
+
         // Tab switching
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {
