@@ -785,6 +785,7 @@
             const apiKeyRaw = localStorage.getItem('GOOGLE_API_KEY');
             if (!apiKeyRaw) {
                 console.log('API key not found. Redirecting to Settings...');
+                if (typeof setNavigationFlag === 'function') setNavigationFlag();
                 window.location.href = 'P91_Settings.html?firstSetup=true';
             }
         }, 100);
@@ -850,7 +851,7 @@
 
         function createNewReport() {
             // 새 보고서 생성 페이지로 이동
-            window.location.href = 'P13_NewReport.html';
+            navigateTo('P13_NewReport.html');
         }
 
         function loadDashboardStats() {
