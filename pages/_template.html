@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>페이지 제목 - KPSUR AGENT | ACUZEN AI</title>
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
+    <style>
+        /* 페이지별 커스텀 스타일 */
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #25739B;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .page-description {
+            font-size: 14px;
+            color: #6B7280;
+            line-height: 1.6;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: var(--spacing-xl);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid #E5E7EB;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">보고서명</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">현재 페이지</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content with Sidebar -->
+        <div class="app-content">
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="page-container">
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <h1 class="page-title">페이지 제목</h1>
+                        <p class="page-description">페이지에 대한 설명을 여기에 작성합니다.</p>
+                    </div>
+
+                    <!-- Content Cards -->
+                    <div class="content-card">
+                        <h2 class="card-title">섹션 제목</h2>
+                        <p>여기에 콘텐츠를 작성합니다.</p>
+                    </div>
+
+                    <div class="content-card">
+                        <h2 class="card-title">또 다른 섹션</h2>
+                        <p>여기에 콘텐츠를 작성합니다.</p>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Workflow Sidebar (Right) -->
+            <aside class="workflow-sidebar">
+                <div class="workflow-header">
+                    <h3>진행 상황</h3>
+                    <div class="workflow-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 22%"></div>
+                        </div>
+                        <div class="progress-text">2 / 9 단계</div>
+                    </div>
+                </div>
+
+                <div class="workflow-stages">
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">🔐</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 1</div>
+                            <div class="stage-label">로그인</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage current">
+                        <div class="stage-icon">📋</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 2</div>
+                            <div class="stage-label">보고서 상태</div>
+                        </div>
+                        <div class="stage-status">◉</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 3</div>
+                            <div class="stage-label">파일 업로드</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">🔄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 4</div>
+                            <div class="stage-label">MD 변환</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">⚙️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 5</div>
+                            <div class="stage-label">데이터 추출</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 6</div>
+                            <div class="stage-label">템플릿 작성</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✏️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 7</div>
+                            <div class="stage-label">리뷰</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✅</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 8</div>
+                            <div class="stage-label">QC 검증</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 9</div>
+                            <div class="stage-label">최종 출력</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+                </div>
+
+                <div style="padding: 16px; border-top: 1px solid #E5E7EB;">
+                    <a href="P90_SystemTest.html" style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #F9FAFB; border-radius: 8px; text-decoration: none; color: #6B7280; font-size: 12px; transition: all 0.2s; border: 1px solid #E5E7EB;" onmouseover="this.style.background='#25739B'; this.style.color='white'; this.style.borderColor='#25739B';" onmouseout="this.style.background='#F9FAFB'; this.style.color='#6B7280'; this.style.borderColor='#E5E7EB';">
+                        <span style="font-size: 16px;">🔧</span>
+                        <span style="font-weight: 600;">시스템 테스트</span>
+                    </a>
+                </div>
+
+                <div class="workflow-footer">
+                    <div class="medical-badge">의료용 AI 소프트웨어</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                Copyright. Power Solution., Inc. 2026.
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="../components/AppLayout.js"></script>
+    <script src="../utils/layout-helper.js"></script>
+    <script>
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            // 세션 데이터 확인 (로그인 필요 페이지의 경우)
+            const session = loadSessionData();
+            if (!session) {
+                window.location.href = 'P01_Login.html';
+                return;
+            }
+
+            // 사용자 메뉴 설정
+            setupUserMenu();
+
+            // 페이지별 초기화 코드
+            initializePage();
+        });
+
+        function initializePage() {
+            // 여기에 페이지별 초기화 코드 작성
+            console.log('Page initialized');
+        }
+
+        // LLM 사용 예시
+        async function processWithLLM() {
+            showLLMLoading('AI가 데이터를 처리하고 있습니다...');
+
+            try {
+                // API 호출 또는 처리
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // 성공
+                showToast('처리가 완료되었습니다.', 'success');
+            } catch (error) {
+                showToast('오류가 발생했습니다.', 'error');
+            } finally {
+                hideLLMLoading();
+            }
+        }
+    </script>
+</body>
+</html>

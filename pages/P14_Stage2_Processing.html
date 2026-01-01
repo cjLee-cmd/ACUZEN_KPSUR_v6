@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 2 - Raw Data 처리 - KPSUR AGENT</title>
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/components.css">
+    <style>
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --text-primary: #07161D;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --accent-color: #25739B;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+        }
+
+        body {
+            background: var(--page-bg);
+            min-height: 100vh;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #25739B;
+        }
+
+        .dark-mode-toggle {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .stage-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .stage-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .stage-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #25739B, #122E4E);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .stage-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .stage-description {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Upload Area */
+        .upload-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 40px;
+            margin-bottom: 24px;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--page-bg);
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #25739B;
+            background: rgba(37, 115, 155, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .upload-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .upload-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .upload-formats {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .format-badge {
+            background: rgba(37, 115, 155, 0.1);
+            color: #25739B;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* File List */
+        .file-list {
+            margin-top: 24px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--page-bg);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .file-icon {
+            font-size: 24px;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .file-remove {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        /* Action Button */
+        .action-section {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .btn-process {
+            background: linear-gradient(135deg, #25739B, #122E4E);
+            color: white;
+            border: none;
+            padding: 16px 48px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-process:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 115, 155, 0.3);
+        }
+
+        .btn-process:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Progress Modal */
+        .progress-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .progress-modal.show {
+            display: flex;
+        }
+
+        .progress-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-header {
+            margin-bottom: 32px;
+        }
+
+        .progress-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .progress-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Steps */
+        .progress-steps {
+            margin-bottom: 32px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            background: var(--page-bg);
+            transition: all 0.3s;
+        }
+
+        .step-item.active {
+            background: rgba(37, 115, 155, 0.1);
+            border: 1px solid #25739B;
+        }
+
+        .step-item.completed {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .step-item.error {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .step-item.active .step-icon {
+            background: #25739B;
+            color: white;
+            animation: pulse 1.5s infinite;
+        }
+
+        .step-item.completed .step-icon {
+            background: #10B981;
+            color: white;
+        }
+
+        .step-item.error .step-icon {
+            background: #ef4444;
+            color: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .step-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .step-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .step-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .step-item.active .step-status {
+            color: #25739B;
+        }
+
+        .step-item.completed .step-status {
+            color: #10B981;
+        }
+
+        /* Overall Progress Bar */
+        .overall-progress {
+            margin-bottom: 24px;
+        }
+
+        .progress-bar-container {
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #25739B, #10B981);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-percentage {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border-color);
+            border-top-color: #25739B;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Cancel button */
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+        .btn-cancel:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        /* Info Section */
+        .info-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+        }
+
+        .info-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .raw-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .raw-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--page-bg);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .raw-item-id {
+            font-weight: 600;
+            color: #25739B;
+        }
+
+        /* Footer */
+        .app-footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        [data-theme="dark"] .upload-zone {
+            background: #334155;
+        }
+
+        [data-theme="dark"] .progress-content {
+            background: #1e293b;
+        }
+
+        [data-theme="dark"] .step-item {
+            background: #334155;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">보고서</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">Raw Data 처리</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="stage-container">
+            <div class="stage-header">
+                <div class="stage-badge">Stage 2</div>
+                <h1 class="stage-title">Raw Data 처리</h1>
+                <p class="stage-description">
+                    PDF, Excel, Word 파일을 업로드하세요.<br>
+                    시스템이 자동으로 데이터를 추출하고 보고서를 생성합니다.
+                </p>
+            </div>
+
+            <!-- Upload Card -->
+            <div class="upload-card">
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-title">파일을 드래그하거나 클릭하여 업로드</div>
+                    <div class="upload-subtitle">여러 파일을 한번에 선택할 수 있습니다</div>
+                    <div class="upload-formats">
+                        <span class="format-badge">PDF</span>
+                        <span class="format-badge">Excel (.xlsx)</span>
+                        <span class="format-badge">Word (.docx)</span>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc" style="display: none;">
+
+                <!-- File List -->
+                <div class="file-list" id="fileList"></div>
+
+                <!-- Test User Input Option -->
+                <div class="test-input-option" style="margin-top: 24px; padding: 16px; background: var(--page-bg); border-radius: 8px; border: 1px dashed var(--border-color);">
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                        <input type="checkbox" id="useTestInput" style="width: 18px; height: 18px;">
+                        <div>
+                            <div style="font-weight: 600; color: var(--text-primary);">테스트 모드: RawData_Definition.md 사용</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">체크하면 변수 정의 파일을 사용자 입력으로 자동 로드합니다</div>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Action Button -->
+                <div class="action-section">
+                    <button class="btn-process" id="btnProcess" disabled onclick="startProcessing()">
+                        <span>🚀</span>
+                        <span>LLM 처리 시작</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="info-section">
+                <div class="info-title">📋 지원 문서 유형 (RAW ID)</div>
+                <div class="raw-list" id="rawList"></div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                Copyright. Power Solution., Inc. 2026.
+            </div>
+        </footer>
+    </div>
+
+    <!-- Progress Modal -->
+    <div class="progress-modal" id="progressModal">
+        <div class="progress-content">
+            <div class="progress-header">
+                <h2 class="progress-title">🤖 LLM 처리 중</h2>
+                <p class="progress-subtitle">잠시만 기다려주세요. 자동으로 처리됩니다.</p>
+            </div>
+
+            <div class="overall-progress">
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+                </div>
+                <div class="progress-percentage"><span id="progressPercent">0</span>% 완료</div>
+            </div>
+
+            <div class="progress-steps" id="progressSteps">
+                <div class="step-item" data-step="1">
+                    <div class="step-icon">1</div>
+                    <div class="step-info">
+                        <div class="step-name">파일 읽기 및 변환</div>
+                        <div class="step-status">대기 중</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="2">
+                    <div class="step-icon">2</div>
+                    <div class="step-info">
+                        <div class="step-name">RAW 문서 유형 판단</div>
+                        <div class="step-status">대기 중</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="3">
+                    <div class="step-icon">3</div>
+                    <div class="step-info">
+                        <div class="step-name">마크다운 결합</div>
+                        <div class="step-status">대기 중</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="4">
+                    <div class="step-icon">4</div>
+                    <div class="step-info">
+                        <div class="step-name">PSUR 보고서 생성 (LLM)</div>
+                        <div class="step-status">대기 중</div>
+                    </div>
+                </div>
+                <div class="step-item" data-step="5">
+                    <div class="step-icon">5</div>
+                    <div class="step-info">
+                        <div class="step-name">결과 저장</div>
+                        <div class="step-status">대기 중</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-cancel" onclick="cancelProcessing()">취소</button>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../utils/ui-helpers.js"></script>
+    <script src="../utils/session.js"></script>
+    <script src="../utils/navigation.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/file-handler.js"></script>
+    <script src="../js/file-storage.js"></script>
+    <script src="../js/markdown-converter.js"></script>
+    <script src="../js/multi-llm-client.js"></script>
+    <script src="../js/workflow-manager.js"></script>
+    <script src="../js/psur-generator.js"></script>
+
+    <script>
+        // Dark mode
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Global state
+        let uploadedFiles = [];
+        let isProcessing = false;
+        let processingAborted = false;
+
+        // RAW ID definitions
+        const RAW_IDS = window.CONFIG?.RAW_IDS || {
+            'RAW1': '최신첨부문서',
+            'RAW2.1': '용법용량',
+            'RAW2.2': '효능효과',
+            'RAW2.3': '사용상의주의사항',
+            'RAW3': '시판후sales데이터',
+            'RAW4': '허가현황',
+            'RAW12': '국내신속보고LineListing',
+            'RAW14': '원시자료LineListing',
+            'RAW15': '정기보고LineListing'
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRawList();
+            setupDragDrop();
+            setupFileInput();
+        });
+
+        // Render RAW list
+        function renderRawList() {
+            const container = document.getElementById('rawList');
+            container.innerHTML = Object.entries(RAW_IDS).map(([id, name]) => `
+                <div class="raw-item">
+                    <span class="raw-item-id">${id}</span>
+                    <span>${name}</span>
+                </div>
+            `).join('');
+        }
+
+        // Setup drag and drop
+        function setupDragDrop() {
+            const zone = document.getElementById('uploadZone');
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+
+        // Setup file input
+        function setupFileInput() {
+            document.getElementById('fileInput').addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        // Handle files
+        function handleFiles(files) {
+            const validExtensions = ['.pdf', '.xlsx', '.xls', '.docx', '.doc'];
+
+            Array.from(files).forEach(file => {
+                const ext = '.' + file.name.split('.').pop().toLowerCase();
+                if (validExtensions.includes(ext)) {
+                    if (!uploadedFiles.find(f => f.name === file.name)) {
+                        uploadedFiles.push(file);
+                    }
+                } else {
+                    showToast(`지원하지 않는 형식: ${file.name}`, 'error');
+                }
+            });
+
+            renderFileList();
+            updateProcessButton();
+        }
+
+        // Render file list
+        function renderFileList() {
+            const container = document.getElementById('fileList');
+
+            if (uploadedFiles.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = uploadedFiles.map((file, index) => `
+                <div class="file-item">
+                    <span class="file-icon">${getFileIcon(file.name)}</span>
+                    <div class="file-info">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${formatFileSize(file.size)}</div>
+                    </div>
+                    <button class="file-remove" onclick="removeFile(${index})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        // Get file icon
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            if (ext === 'pdf') return '📄';
+            if (['xlsx', 'xls'].includes(ext)) return '📊';
+            if (['docx', 'doc'].includes(ext)) return '📝';
+            return '📁';
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Remove file
+        function removeFile(index) {
+            uploadedFiles.splice(index, 1);
+            renderFileList();
+            updateProcessButton();
+        }
+
+        // Update process button
+        function updateProcessButton() {
+            const btn = document.getElementById('btnProcess');
+            btn.disabled = uploadedFiles.length === 0;
+        }
+
+        // ===== PROCESSING =====
+
+        // Test user input content (RawData_Definition.md)
+        let testUserInput = null;
+
+        // Load test user input
+        async function loadTestUserInput() {
+            try {
+                const response = await fetch('../90_Test/01_Context/RawData_Definition.md');
+                if (response.ok) {
+                    testUserInput = await response.text();
+                    console.log('테스트 사용자 입력 로드 완료:', testUserInput.length, '자');
+                    return true;
+                }
+            } catch (e) {
+                console.warn('테스트 사용자 입력 로드 실패:', e);
+            }
+            return false;
+        }
+
+        // Start processing
+        async function startProcessing() {
+            if (uploadedFiles.length === 0) {
+                showToast('파일을 업로드해주세요', 'error');
+                return;
+            }
+
+            isProcessing = true;
+            processingAborted = false;
+            showProgressModal();
+
+            try {
+                // Check if test mode is enabled
+                const useTestMode = document.getElementById('useTestInput').checked;
+                if (useTestMode) {
+                    await loadTestUserInput();
+                }
+
+                // Step 1: File reading and conversion (0-20%)
+                await processStep(1, '파일 읽기 및 변환 중...', async () => {
+                    return await convertFilesToMarkdown();
+                }, 20);
+
+                if (processingAborted) return;
+
+                // Step 2: RAW type detection (20-35%)
+                await processStep(2, 'RAW 문서 유형 판단 중...', async () => {
+                    return await detectRawTypes();
+                }, 35);
+
+                if (processingAborted) return;
+
+                // Step 3: Combine markdowns (35-45%)
+                await processStep(3, '마크다운 결합 중...', async () => {
+                    return await combineAllMarkdowns();
+                }, 45);
+
+                if (processingAborted) return;
+
+                // Step 4: PSUR generation with LLM (45-90%)
+                await processStep(4, 'PSUR 보고서 생성 중...', async () => {
+                    return await generatePSURWithLLM();
+                }, 90);
+
+                if (processingAborted) return;
+
+                // Step 5: Save results (90-100%)
+                await processStep(5, '결과 저장 중...', async () => {
+                    return await saveResults();
+                }, 100);
+
+                // Complete
+                showToast('PSUR 보고서 생성이 완료되었습니다!', 'success');
+
+                // Wait a moment then navigate
+                setTimeout(() => {
+                    hideProgressModal();
+                    navigateToStage3();
+                }, 1500);
+
+            } catch (error) {
+                console.error('Processing error:', error);
+                showToast('처리 중 오류가 발생했습니다: ' + error.message, 'error');
+                markStepError(getCurrentStep());
+            } finally {
+                isProcessing = false;
+            }
+        }
+
+        let currentStep = 0;
+
+        function getCurrentStep() {
+            return currentStep;
+        }
+
+        // Process a step with custom progress percentage
+        async function processStep(stepNum, statusText, processFn, endProgress) {
+            currentStep = stepNum;
+            setStepActive(stepNum, statusText);
+
+            const result = await processFn();
+
+            if (!processingAborted) {
+                setStepCompleted(stepNum);
+                updateProgress(endProgress);
+            }
+
+            return result;
+        }
+
+        // Step 3: Combine all markdowns into one
+        async function combineAllMarkdowns() {
+            const { markdowns } = window._processingData;
+
+            // Build combined markdown with RAW type headers
+            let combined = "# 통합 RAW 데이터\n\n";
+            combined += `생성일시: ${new Date().toLocaleString('ko-KR')}\n\n`;
+            combined += "---\n\n";
+
+            // Group by RAW type
+            const byRawType = {};
+            markdowns.forEach(m => {
+                const rawType = m.rawType || 'UNKNOWN';
+                if (!byRawType[rawType]) {
+                    byRawType[rawType] = [];
+                }
+                byRawType[rawType].push(m);
+            });
+
+            // Build combined content
+            for (const [rawType, docs] of Object.entries(byRawType)) {
+                combined += `## ${rawType}\n\n`;
+                docs.forEach(doc => {
+                    combined += `### ${doc.filename}\n\n`;
+                    combined += doc.markdown + "\n\n";
+                });
+                combined += "---\n\n";
+            }
+
+            window._processingData.combinedMarkdown = combined;
+            console.log('마크다운 결합 완료:', combined.length, '자');
+            return combined;
+        }
+
+        // Step 4: Generate PSUR with LLM (using PSURGenerator)
+        async function generatePSURWithLLM() {
+            const { combinedMarkdown } = window._processingData;
+
+            // Get API key from config or settings
+            const apiKey = window.CONFIG?.GOOGLE_API_KEY ||
+                           localStorage.getItem('googleApiKey') ||
+                           localStorage.getItem('gemini_api_key');
+
+            if (!apiKey) {
+                throw new Error('Gemini API 키가 설정되지 않았습니다. 설정 페이지에서 API 키를 입력해주세요.');
+            }
+
+            // Initialize PSURGenerator
+            await window.PSURGenerator.init(apiKey);
+
+            // Get user input (test input or null)
+            const userInput = testUserInput || '';
+
+            // Generate PSUR with progress updates
+            const progressCallback = (info) => {
+                if (info.section) {
+                    setStepActive(4, `${info.section} 생성 중... (${info.progress}%)`);
+                }
+                // Update progress bar (45% to 90% range)
+                const progressRange = 90 - 45;
+                const actualProgress = 45 + (info.progress / 100) * progressRange;
+                updateProgress(Math.round(actualProgress));
+            };
+
+            const sections = await window.PSURGenerator.generateFullPSUR(
+                combinedMarkdown,
+                userInput,
+                progressCallback
+            );
+
+            window._processingData.generatedSections = sections;
+            window._processingData.finalReport = window.PSURGenerator.getFinalReport();
+
+            console.log('PSUR 생성 완료:', Object.keys(sections).length, '섹션');
+            return sections;
+        }
+
+        // Step 5: Save results to storage
+        async function saveResults() {
+            const { markdowns, combinedMarkdown, generatedSections, finalReport } = window._processingData;
+
+            const Storage = window.Storage || {
+                set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+            };
+
+            // Save stage 2 result
+            Storage.set('stage2_result', {
+                markdowns: markdowns,
+                combinedMarkdown: combinedMarkdown,
+                generatedSections: generatedSections,
+                finalReport: finalReport,
+                processedAt: new Date().toISOString()
+            });
+
+            // Convert to Stage 3 format
+            const sectionsForStage3 = {};
+            for (const [id, section] of Object.entries(generatedSections)) {
+                sectionsForStage3[`S${id}`] = {
+                    content: section.content,
+                    name: section.name
+                };
+            }
+
+            // Save in format Stage 3 expects
+            Storage.set('draftReport', {
+                content: finalReport,
+                sections: sectionsForStage3,
+                createdAt: new Date().toISOString()
+            });
+
+            console.log('결과 저장 완료:', {
+                sectionsCount: Object.keys(sectionsForStage3).length,
+                reportLength: finalReport.length
+            });
+
+            return true;
+        }
+
+        // Step 1: Convert files to markdown
+        async function convertFilesToMarkdown() {
+            const markdowns = [];
+            const converter = window.markdownConverter;
+            const handler = window.fileHandler;
+
+            for (const file of uploadedFiles) {
+                let content = '';
+
+                if (handler && typeof handler.readFile === 'function') {
+                    const fileData = await handler.readFile(file);
+                    // readFile returns an object with 'text' property
+                    content = (fileData && typeof fileData === 'object') ?
+                        (fileData.text || JSON.stringify(fileData)) :
+                        String(fileData || '');
+                } else {
+                    // Fallback: basic text reading
+                    content = await readFileAsText(file);
+                }
+
+                // Ensure content is a string
+                if (typeof content !== 'string') {
+                    content = String(content || '');
+                }
+
+                const markdown = converter ?
+                    converter.textToBasicMarkdown(content, file.name) :
+                    `# ${file.name}\n\n${content}`;
+
+                markdowns.push({
+                    filename: file.name,
+                    markdown: markdown,
+                    rawType: null
+                });
+            }
+
+            // Store for next steps
+            window._processingData = { markdowns };
+            return markdowns;
+        }
+
+        // Fallback file reader
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        // Step 2: Detect RAW types
+        async function detectRawTypes() {
+            const { markdowns } = window._processingData;
+            const llmClient = window.multiLLMClient;
+
+            for (const doc of markdowns) {
+                // Use LLM to detect RAW type
+                const prompt = `다음 문서의 내용을 보고, 아래 RAW ID 중 하나를 선택하세요:
+${Object.entries(RAW_IDS).map(([id, name]) => `- ${id}: ${name}`).join('\n')}
+
+문서 파일명: ${doc.filename}
+문서 내용 (앞부분):
+${doc.markdown.substring(0, 2000)}
+
+응답 형식: RAW ID만 출력 (예: RAW1, RAW2.1, RAW3 등)`;
+
+                if (llmClient && typeof llmClient.sendMessage === 'function') {
+                    try {
+                        const response = await llmClient.sendMessage(prompt);
+                        const rawId = extractRawId(response.content || response);
+                        doc.rawType = rawId;
+                    } catch (e) {
+                        console.warn('LLM detection failed, using filename heuristic');
+                        doc.rawType = detectRawTypeFromFilename(doc.filename);
+                    }
+                } else {
+                    doc.rawType = detectRawTypeFromFilename(doc.filename);
+                }
+            }
+
+            window._processingData.markdowns = markdowns;
+            return markdowns;
+        }
+
+        // Extract RAW ID from LLM response
+        function extractRawId(text) {
+            const match = text.match(/RAW\d+(\.\d+)?/i);
+            return match ? match[0].toUpperCase() : 'RAW1';
+        }
+
+        // Detect RAW type from filename
+        function detectRawTypeFromFilename(filename) {
+            const lower = filename.toLowerCase();
+            // 더 구체적인 패턴부터 먼저 체크 (raw12-15는 raw1보다 먼저!)
+            if (lower.includes('raw12') || lower.includes('국외') && lower.includes('신속')) return 'RAW12';
+            if (lower.includes('raw13') || lower.includes('국내') && lower.includes('신속')) return 'RAW13';
+            if (lower.includes('raw14') || lower.includes('원시')) return 'RAW14';
+            if (lower.includes('raw15') || lower.includes('정기')) return 'RAW15';
+            // RAW2.x도 RAW2보다 먼저
+            if (lower.includes('raw2.1') || lower.includes('용법')) return 'RAW2.1';
+            if (lower.includes('raw2.2') || lower.includes('효능')) return 'RAW2.2';
+            if (lower.includes('raw2.3') || lower.includes('주의사항')) return 'RAW2.3';
+            if (lower.includes('raw2.6') || lower.includes('보고') && lower.includes('시작')) return 'RAW2.6';
+            // RAW5-9
+            if (lower.includes('raw5') || lower.includes('안전성') && lower.includes('메일')) return 'RAW5.1';
+            if (lower.includes('raw6') || lower.includes('취합')) return 'RAW6.1';
+            if (lower.includes('raw7') || lower.includes('안전성') && lower.includes('변경')) return 'RAW7.1';
+            if (lower.includes('raw8') || lower.includes('임상') && lower.includes('노출')) return 'RAW8';
+            if (lower.includes('raw9') || lower.includes('문헌')) return 'RAW9';
+            // 일반 패턴들 (마지막에 체크)
+            if (lower.includes('첨부문서') || (lower.includes('raw1') && !/raw1[0-9]/.test(lower))) return 'RAW1';
+            if (lower.includes('raw3') || lower.includes('sales') || lower.includes('판매')) return 'RAW3';
+            if (lower.includes('raw4') || lower.includes('허가')) return 'RAW4';
+            // 기본값
+            return null;
+        }
+
+        // ===== PROGRESS UI =====
+
+        function showProgressModal() {
+            document.getElementById('progressModal').classList.add('show');
+            resetProgressUI();
+        }
+
+        function hideProgressModal() {
+            document.getElementById('progressModal').classList.remove('show');
+        }
+
+        function resetProgressUI() {
+            document.querySelectorAll('.step-item').forEach(item => {
+                item.classList.remove('active', 'completed', 'error');
+                item.querySelector('.step-status').textContent = '대기 중';
+            });
+            updateProgress(0);
+        }
+
+        function setStepActive(stepNum, statusText) {
+            const item = document.querySelector(`.step-item[data-step="${stepNum}"]`);
+            if (item) {
+                item.classList.add('active');
+                item.querySelector('.step-status').textContent = statusText;
+                item.querySelector('.step-icon').innerHTML = '<div class="spinner"></div>';
+            }
+        }
+
+        function setStepCompleted(stepNum) {
+            const item = document.querySelector(`.step-item[data-step="${stepNum}"]`);
+            if (item) {
+                item.classList.remove('active');
+                item.classList.add('completed');
+                item.querySelector('.step-status').textContent = '완료';
+                item.querySelector('.step-icon').innerHTML = '✓';
+            }
+        }
+
+        function markStepError(stepNum) {
+            const item = document.querySelector(`.step-item[data-step="${stepNum}"]`);
+            if (item) {
+                item.classList.remove('active');
+                item.classList.add('error');
+                item.querySelector('.step-status').textContent = '오류 발생';
+                item.querySelector('.step-icon').innerHTML = '✕';
+            }
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = Math.round(percent);
+        }
+
+        function cancelProcessing() {
+            if (confirm('처리를 취소하시겠습니까?')) {
+                processingAborted = true;
+                isProcessing = false;
+                hideProgressModal();
+                showToast('처리가 취소되었습니다', 'warning');
+            }
+        }
+
+        // Navigate to Stage 3
+        function navigateToStage3() {
+            navigateTo('P18_Review.html');
+        }
+    </script>
+</body>
+</html>

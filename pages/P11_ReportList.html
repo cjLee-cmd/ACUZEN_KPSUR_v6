@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보고서 목록 - KPSUR AGENT | ACUZEN AI</title>
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
+    <style>
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --border-light: #F3F4F6;
+            --table-header-bg: #F9FAFB;
+            --input-bg: white;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-shadow: none;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --border-light: #334155;
+            --table-header-bg: #334155;
+            --input-bg: #334155;
+        }
+
+        /* 다크모드 컴포넌트 스타일 */
+        [data-theme="dark"] .filter-section,
+        [data-theme="dark"] .table-container {
+            background: var(--card-bg);
+            box-shadow: none;
+            border: 1px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .filter-input,
+        [data-theme="dark"] .filter-select {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .filter-chip {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .filter-chip:hover {
+            border-color: #25739B;
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .btn-reset {
+            background: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .view-toggle {
+            background: var(--border-color);
+        }
+
+        [data-theme="dark"] .view-btn {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .view-btn.active {
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .reports-table th {
+            background: var(--table-header-bg);
+            color: var(--text-secondary);
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .reports-table td {
+            color: var(--text-primary);
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .reports-table tr:hover {
+            background: rgba(37, 115, 155, 0.1);
+        }
+
+        [data-theme="dark"] .page-btn {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .page-btn:hover:not(:disabled) {
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .pagination {
+            border-top-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .table-header {
+            border-bottom-color: var(--border-color);
+        }
+
+        .page-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .page-title-section h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        .btn-primary {
+            padding: var(--spacing-md) var(--spacing-xl);
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 115, 155, 0.3);
+        }
+
+        /* 필터 섹션 */
+        .filter-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: 0 1px 3px var(--card-shadow);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .filter-input, .filter-select {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            border-color: #25739B;
+            outline: none;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+        }
+
+        .filter-chip:hover {
+            border-color: #25739B;
+            color: #25739B;
+        }
+
+        .filter-chip.active {
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-filter {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .btn-apply {
+            background: #25739B;
+            color: white;
+        }
+
+        .btn-reset {
+            background: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        /* 테이블 컨테이너 */
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px var(--card-shadow);
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-lg);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .table-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--border-light);
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .view-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .view-btn.active {
+            background: var(--card-bg);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
+        }
+
+        /* 테이블 */
+        .reports-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .reports-table th {
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--table-header-bg);
+            position: sticky;
+            top: 0;
+        }
+
+        .reports-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .reports-table th.sortable:hover {
+            color: #25739B;
+        }
+
+        .sort-icon {
+            margin-left: 4px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .sort-icon.active {
+            color: #25739B;
+        }
+
+        .reports-table td {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .reports-table tr:hover {
+            background: rgba(37, 115, 155, 0.02);
+        }
+
+        .report-name {
+            font-weight: 600;
+            color: #25739B;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .report-name:hover {
+            text-decoration: underline;
+        }
+
+        .urgent-badge {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #EF4444;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-badge.draft {
+            background: rgba(156, 163, 175, 0.1);
+            color: #6B7280;
+        }
+
+        .status-badge.in-progress {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3B82F6;
+        }
+
+        .status-badge.review {
+            background: rgba(245, 158, 11, 0.1);
+            color: #F59E0B;
+        }
+
+        .status-badge.qc {
+            background: rgba(168, 85, 247, 0.1);
+            color: #A855F7;
+        }
+
+        .status-badge.completed {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10B981;
+        }
+
+        .stage-text {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(37, 115, 155, 0.1);
+        }
+
+        /* 페이지네이션 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .page-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: #25739B;
+            color: #25739B;
+        }
+
+        .page-btn.active {
+            background: #25739B;
+            color: white;
+            border-color: #25739B;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            .reports-table {
+                min-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item" onclick="navigateTo('P10_Dashboard.html')" style="cursor: pointer;">대시보드</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">보고서 목록</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content with Sidebar -->
+        <div class="app-content">
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="page-container">
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <div class="page-title-section">
+                            <h1>보고서 목록</h1>
+                            <p class="page-subtitle">전체 PSUR 보고서를 확인하고 관리합니다.</p>
+                        </div>
+
+                        <div class="header-actions">
+                            <button class="btn-primary" onclick="navigateTo('P13_NewReport.html')">
+                                <span>➕</span>
+                                <span>새 보고서 생성</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 필터 섹션 -->
+                    <div class="filter-section">
+                        <div class="filter-row" style="margin-bottom: var(--spacing-md);">
+                            <div class="filter-group">
+                                <label class="filter-label">검색</label>
+                                <input
+                                    type="text"
+                                    class="filter-input"
+                                    placeholder="보고서명, 성분명 검색..."
+                                    id="searchInput"
+                                >
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label">작성자</label>
+                                <select class="filter-select" id="authorFilter">
+                                    <option value="">전체</option>
+                                    <option value="김철수">김철수</option>
+                                    <option value="이영희">이영희</option>
+                                    <option value="박민수">박민수</option>
+                                    <option value="최지영">최지영</option>
+                                    <option value="정수빈">정수빈</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label">기간</label>
+                                <select class="filter-select" id="periodFilter">
+                                    <option value="">전체</option>
+                                    <option value="today">오늘</option>
+                                    <option value="week">최근 1주일</option>
+                                    <option value="month">최근 1개월</option>
+                                    <option value="quarter">최근 3개월</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label class="filter-label">단계</label>
+                                <select class="filter-select" id="stageFilter">
+                                    <option value="">전체</option>
+                                    <option value="2">Stage 2 - 보고서 상태</option>
+                                    <option value="3">Stage 3 - 파일 업로드</option>
+                                    <option value="4">Stage 4 - MD 변환</option>
+                                    <option value="5">Stage 5 - 데이터 추출</option>
+                                    <option value="6">Stage 6 - 템플릿 작성</option>
+                                    <option value="7">Stage 7 - 리뷰</option>
+                                    <option value="8">Stage 8 - QC 검증</option>
+                                    <option value="9">Stage 9 - 최종 출력</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="filter-row" style="margin-bottom: var(--spacing-md);">
+                            <div class="filter-group">
+                                <label class="filter-label">상태</label>
+                                <div class="filter-chips">
+                                    <div class="filter-chip active" data-status="">전체</div>
+                                    <div class="filter-chip" data-status="draft">임시저장</div>
+                                    <div class="filter-chip" data-status="in-progress">진행중</div>
+                                    <div class="filter-chip" data-status="review">리뷰중</div>
+                                    <div class="filter-chip" data-status="qc">QC대기</div>
+                                    <div class="filter-chip" data-status="completed">완료</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-row">
+                            <div class="filter-actions">
+                                <button class="btn-filter btn-apply" onclick="applyFilters()">적용</button>
+                                <button class="btn-filter btn-reset" onclick="resetFilters()">초기화</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 테이블 -->
+                    <div class="table-container">
+                        <div class="table-header">
+                            <div>
+                                <div class="table-title">전체 보고서</div>
+                                <div class="table-count" id="tableCount">총 18개 보고서</div>
+                            </div>
+
+                            <div class="table-actions">
+                                <div class="view-toggle">
+                                    <button class="view-btn active">목록</button>
+                                    <button class="view-btn">카드</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="reports-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable" onclick="sortTable('name')">
+                                        보고서명
+                                        <span class="sort-icon">↕</span>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable('ingredient')">
+                                        성분명
+                                        <span class="sort-icon">↕</span>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable('stage')">
+                                        단계
+                                        <span class="sort-icon">↕</span>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable('status')">
+                                        상태
+                                        <span class="sort-icon">↕</span>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable('author')">
+                                        작성자
+                                        <span class="sort-icon">↕</span>
+                                    </th>
+                                    <th class="sortable" onclick="sortTable('date')">
+                                        수정일
+                                        <span class="sort-icon active">↓</span>
+                                    </th>
+                                    <th>작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody">
+                                <!-- 샘플 데이터 -->
+                            </tbody>
+                        </table>
+
+                        <!-- 페이지네이션 -->
+                        <div class="pagination">
+                            <div class="pagination-info">
+                                <span id="paginationInfo">1-10 / 18개 보고서</span>
+                            </div>
+
+                            <div class="pagination-controls">
+                                <button class="page-btn" disabled>‹ 이전</button>
+                                <button class="page-btn active">1</button>
+                                <button class="page-btn">2</button>
+                                <button class="page-btn">다음 ›</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Workflow Sidebar (Right) -->
+            <aside class="workflow-sidebar">
+                <div class="workflow-header">
+                    <h3>진행 상황</h3>
+                    <div class="workflow-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-text">보고서 목록</div>
+                    </div>
+                </div>
+
+                <div class="workflow-stages">
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">🔐</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 1</div>
+                            <div class="stage-label">로그인</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📋</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 2</div>
+                            <div class="stage-label">보고서 상태</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 3</div>
+                            <div class="stage-label">파일 업로드</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">🔄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 4</div>
+                            <div class="stage-label">MD 변환</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">⚙️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 5</div>
+                            <div class="stage-label">데이터 추출</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 6</div>
+                            <div class="stage-label">템플릿 작성</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✏️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 7</div>
+                            <div class="stage-label">리뷰</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✅</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 8</div>
+                            <div class="stage-label">QC 검증</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 9</div>
+                            <div class="stage-label">최종 출력</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+                </div>
+
+                <div class="workflow-footer">
+                    <div class="medical-badge">의료용 AI 소프트웨어</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                Copyright. Power Solution., Inc. 2026.
+            </div>
+        </footer>
+    </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        // 다크모드 초기화 (페이지 로드 즉시)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
+
+    <!-- JavaScript -->
+    <script src="../components/AppLayout.js"></script>
+    <script src="../utils/layout-helper.js"></script>
+    <script>
+        // 샘플 데이터
+        const sampleReports = [
+            { id: 1, name: '코로나19백신_PSUR_2024Q4', ingredient: '토지나메란', stage: 7, status: 'review', author: '김철수', date: '2025-12-28', urgent: true },
+            { id: 2, name: '고혈압약_PSUR_2024Q4', ingredient: '암로디핀', stage: 8, status: 'qc', author: '이영희', date: '2025-12-27', urgent: true },
+            { id: 3, name: '당뇨병약_PSUR_2024Q4', ingredient: '메트포르민', stage: 5, status: 'in-progress', author: '박민수', date: '2025-12-26', urgent: false },
+            { id: 4, name: '항생제_PSUR_2024Q3', ingredient: '아목시실린', stage: 9, status: 'completed', author: '최지영', date: '2025-12-20', urgent: false },
+            { id: 5, name: '진통제_PSUR_2024Q4', ingredient: '이부프로펜', stage: 2, status: 'draft', author: '정수빈', date: '2025-12-25', urgent: false },
+            { id: 6, name: '항알레르기약_PSUR_2024Q4', ingredient: '세티리진', stage: 6, status: 'in-progress', author: '김철수', date: '2025-12-24', urgent: false },
+            { id: 7, name: '소화제_PSUR_2024Q4', ingredient: '판크레아틴', stage: 4, status: 'in-progress', author: '이영희', date: '2025-12-23', urgent: false },
+            { id: 8, name: '심혈관약_PSUR_2024Q3', ingredient: '아토르바스타틴', stage: 9, status: 'completed', author: '박민수', date: '2025-12-15', urgent: false },
+            { id: 9, name: '호흡기약_PSUR_2024Q4', ingredient: '살부타몰', stage: 7, status: 'review', author: '최지영', date: '2025-12-22', urgent: false },
+            { id: 10, name: '피부약_PSUR_2024Q4', ingredient: '하이드로코르티손', stage: 3, status: 'in-progress', author: '정수빈', date: '2025-12-21', urgent: false }
+        ];
+
+        let currentReports = [...sampleReports];
+
+        // 페이지 로드 시 초기화
+        // Wait for both DOM and globals to load
+        function initializePage() {
+            // Check if globals are loaded
+            if (!window.__GLOBALS_LOADED__) {
+                setTimeout(initializePage, 50);
+                return;
+            }
+
+            const session = loadSessionData();
+            if (session) {
+                document.querySelector('.user-name').textContent = session.userName;
+                document.querySelector('.user-role').textContent = session.userRole;
+                document.querySelector('.user-avatar').textContent = session.userName.charAt(0);
+            }
+
+            setupUserMenu();
+            setupFilterChips();
+            renderReports();
+
+            // URL 파라미터에서 필터 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            const filter = urlParams.get('filter');
+            if (filter && filter !== 'all') {
+                const chip = document.querySelector(`[data-status="${filter}"]`);
+                if (chip) {
+                    document.querySelector('.filter-chip.active').classList.remove('active');
+                    chip.classList.add('active');
+                    applyFilters();
+                }
+            }
+        }
+
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
+
+        function setupFilterChips() {
+            const chips = document.querySelectorAll('.filter-chip');
+            chips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelector('.filter-chip.active').classList.remove('active');
+                    chip.classList.add('active');
+                    applyFilters();
+                });
+            });
+        }
+
+        function renderReports() {
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '';
+
+            currentReports.forEach(report => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="report-name" onclick="navigateTo('P12_ReportDetail.html?id=${report.id}')">
+                            ${report.urgent ? '<span class="urgent-badge"></span>' : ''}
+                            ${report.name}
+                        </div>
+                    </td>
+                    <td>${report.ingredient}</td>
+                    <td><span class="stage-text">Stage ${report.stage} - ${getStageName(report.stage)}</span></td>
+                    <td><span class="status-badge ${report.status}">${getStatusText(report.status)}</span></td>
+                    <td>${report.author}</td>
+                    <td>${report.date}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="viewReport(${report.id})" title="보기">👁️</button>
+                            <button class="action-btn" onclick="editReport(${report.id})" title="편집">✏️</button>
+                            <button class="action-btn" onclick="deleteReport(${report.id})" title="삭제">🗑️</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateTableCount();
+        }
+
+        function getStageName(stage) {
+            const stages = {
+                2: '보고서 상태',
+                3: '파일 업로드',
+                4: 'MD 변환',
+                5: '데이터 추출',
+                6: '템플릿 작성',
+                7: '리뷰',
+                8: 'QC 검증',
+                9: '최종 출력'
+            };
+            return stages[stage] || '';
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'draft': '임시저장',
+                'in-progress': '진행중',
+                'review': '리뷰중',
+                'qc': 'QC대기',
+                'completed': '완료'
+            };
+            return texts[status] || status;
+        }
+
+        function updateTableCount() {
+            document.getElementById('tableCount').textContent = `총 ${currentReports.length}개 보고서`;
+            document.getElementById('paginationInfo').textContent = `1-${Math.min(10, currentReports.length)} / ${currentReports.length}개 보고서`;
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const author = document.getElementById('authorFilter').value;
+            const stage = document.getElementById('stageFilter').value;
+            const status = document.querySelector('.filter-chip.active').dataset.status;
+
+            currentReports = sampleReports.filter(report => {
+                const matchesSearch = !searchTerm ||
+                    report.name.toLowerCase().includes(searchTerm) ||
+                    report.ingredient.toLowerCase().includes(searchTerm);
+                const matchesAuthor = !author || report.author === author;
+                const matchesStage = !stage || report.stage.toString() === stage;
+                const matchesStatus = !status || report.status === status;
+
+                return matchesSearch && matchesAuthor && matchesStage && matchesStatus;
+            });
+
+            renderReports();
+            showToast('필터가 적용되었습니다.', 'info');
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('authorFilter').value = '';
+            document.getElementById('periodFilter').value = '';
+            document.getElementById('stageFilter').value = '';
+
+            document.querySelector('.filter-chip.active').classList.remove('active');
+            document.querySelector('.filter-chip[data-status=""]').classList.add('active');
+
+            currentReports = [...sampleReports];
+            renderReports();
+            showToast('필터가 초기화되었습니다.', 'info');
+        }
+
+        function sortTable(column) {
+            // 정렬 구현
+            showToast('정렬 기능은 곧 추가됩니다.', 'info');
+        }
+
+        function viewReport(id) {
+            navigateTo(`P12_ReportDetail.html?id=${id}`);
+        }
+
+        function editReport(id) {
+            navigateTo(`P12_ReportDetail.html?id=${id}&mode=edit`);
+        }
+
+        function deleteReport(id) {
+            if (confirm('이 보고서를 삭제하시겠습니까?')) {
+                showToast('보고서가 삭제되었습니다.', 'success');
+                currentReports = currentReports.filter(r => r.id !== id);
+                renderReports();
+            }
+        }
+    </script>
+    <script src="../utils/globals.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../utils/session.js"></script>
+    <script src="../utils/navigation.js"></script>
+    <script src="../js/auth.js"></script>
+</body>
+</html>

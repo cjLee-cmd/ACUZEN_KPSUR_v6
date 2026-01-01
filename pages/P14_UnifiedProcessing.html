@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPSUR - Stage 2: 통합 처리</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --bg-light: #F8FAFC;
+            --bg-dark: #1E293B;
+            --text-light: #1E293B;
+            --text-dark: #F1F5F9;
+            --border-light: #E2E8F0;
+            --border-dark: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
+            min-height: 100vh;
+        }
+
+        body.dark-mode {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { font-size: 1.5rem; font-weight: 600; }
+        .header-right { display: flex; gap: 1rem; align-items: center; }
+        .header-right button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .header-right button:hover { background: rgba(255,255,255,0.3); }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Stage Title */
+        .stage-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .stage-title h2 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+        .stage-title p { color: #64748B; }
+        body.dark-mode .stage-title p { color: #94A3B8; }
+
+        /* Two Column Layout */
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .two-column { grid-template-columns: 1fr; }
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        body.dark-mode .card { background: #0F172A; }
+
+        .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        body.dark-mode .card-header { border-color: var(--border-dark); }
+
+        .card-body { padding: 1.5rem; }
+
+        /* Dropzone */
+        .dropzone {
+            border: 2px dashed var(--border-light);
+            border-radius: 8px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+        body.dark-mode .dropzone { border-color: var(--border-dark); }
+        body.dark-mode .dropzone:hover { background: rgba(59, 130, 246, 0.1); }
+
+        .dropzone-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .dropzone-text { color: #64748B; margin-bottom: 0.5rem; }
+        .dropzone-formats { font-size: 0.875rem; color: #94A3B8; }
+
+        /* File List */
+        .file-list { margin-top: 1rem; }
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: var(--bg-light);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+        body.dark-mode .file-item { background: #1E293B; }
+
+        .file-info { display: flex; align-items: center; gap: 0.75rem; }
+        .file-icon { font-size: 1.5rem; }
+        .file-name { font-weight: 500; }
+        .file-size { font-size: 0.875rem; color: #64748B; }
+        .file-rawid {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .file-rawid.unknown { background: #94A3B8; }
+
+        .file-remove {
+            background: none;
+            border: none;
+            color: var(--error);
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+
+        /* Processing Steps */
+        .step-list { list-style: none; }
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+        body.dark-mode .step-item { border-color: var(--border-dark); }
+        .step-item:last-child { border-bottom: none; }
+
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            background: var(--bg-light);
+            color: #64748B;
+        }
+        body.dark-mode .step-icon { background: #1E293B; }
+        .step-icon.active { background: var(--primary); color: white; }
+        .step-icon.completed { background: var(--success); color: white; }
+        .step-icon.error { background: var(--error); color: white; }
+
+        .step-content { flex: 1; }
+        .step-name { font-weight: 500; }
+        .step-status { font-size: 0.875rem; color: #64748B; }
+
+        /* Progress Bar */
+        .progress-container { margin-top: 1.5rem; }
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        body.dark-mode .progress-bar { background: #1E293B; }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--success) 100%);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .progress-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748B;
+        }
+
+        /* Action Button */
+        .action-section {
+            text-align: center;
+            margin: 2rem 0;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Output Preview */
+        .output-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .output-tab {
+            padding: 0.5rem 1rem;
+            background: var(--bg-light);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        body.dark-mode .output-tab { background: #1E293B; }
+        .output-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .output-content {
+            background: var(--bg-light);
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        body.dark-mode .output-content { background: #1E293B; }
+
+        /* Navigation */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-light);
+        }
+        body.dark-mode .navigation { border-color: var(--border-dark); }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-light);
+            border: 1px solid var(--border-light);
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        body.dark-mode .btn-secondary {
+            background: #1E293B;
+            color: var(--text-dark);
+            border-color: var(--border-dark);
+        }
+        .btn-secondary:hover { border-color: var(--primary); }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-success:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Hidden file input */
+        #fileInput { display: none; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--error); }
+        .toast.info { background: var(--primary); }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>KPSUR AGENT</h1>
+        <div class="header-right">
+            <button onclick="toggleDarkMode()">🌙 다크모드</button>
+            <button onclick="navigateTo('P10_Dashboard.html')">🏠 대시보드</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Stage Title -->
+        <div class="stage-title">
+            <h2>Stage 2: 통합 처리</h2>
+            <p>파일 업로드부터 PSUR 보고서 생성까지 한 번에 처리합니다</p>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="two-column">
+            <!-- Left: File Upload -->
+            <div class="card">
+                <div class="card-header">
+                    <span>📁 파일 업로드</span>
+                    <span id="fileCount">0개 파일</span>
+                </div>
+                <div class="card-body">
+                    <!-- Dropzone -->
+                    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                        <div class="dropzone-icon">📄</div>
+                        <div class="dropzone-text">파일을 드래그하거나 클릭하여 업로드</div>
+                        <div class="dropzone-formats">지원 형식: PDF, Excel, Word, Text</div>
+                    </div>
+                    <input type="file" id="fileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.txt,.md">
+
+                    <!-- File List -->
+                    <div class="file-list" id="fileList"></div>
+                </div>
+            </div>
+
+            <!-- Right: Processing Status -->
+            <div class="card">
+                <div class="card-header">
+                    <span>⚙️ 처리 상태</span>
+                    <span id="stepStatus">대기 중</span>
+                </div>
+                <div class="card-body">
+                    <ul class="step-list">
+                        <li class="step-item" data-step="1">
+                            <div class="step-icon" id="stepIcon1">1</div>
+                            <div class="step-content">
+                                <div class="step-name">파일 검증</div>
+                                <div class="step-status" id="stepStatus1">대기 중</div>
+                            </div>
+                        </li>
+                        <li class="step-item" data-step="2">
+                            <div class="step-icon" id="stepIcon2">2</div>
+                            <div class="step-content">
+                                <div class="step-name">마크다운 변환</div>
+                                <div class="step-status" id="stepStatus2">대기 중</div>
+                            </div>
+                        </li>
+                        <li class="step-item" data-step="3">
+                            <div class="step-icon" id="stepIcon3">3</div>
+                            <div class="step-content">
+                                <div class="step-name">RAW ID 분류</div>
+                                <div class="step-status" id="stepStatus3">대기 중</div>
+                            </div>
+                        </li>
+                        <li class="step-item" data-step="4">
+                            <div class="step-icon" id="stepIcon4">4</div>
+                            <div class="step-content">
+                                <div class="step-name">마크다운 통합</div>
+                                <div class="step-status" id="stepStatus4">대기 중</div>
+                            </div>
+                        </li>
+                        <li class="step-item" data-step="5">
+                            <div class="step-icon" id="stepIcon5">5</div>
+                            <div class="step-content">
+                                <div class="step-name">PSUR 보고서 생성</div>
+                                <div class="step-status" id="stepStatus5">대기 중</div>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="action-section">
+            <button class="btn-primary" id="processBtn" onclick="startProcessing()" disabled>
+                🚀 전체 처리 시작
+            </button>
+        </div>
+
+        <!-- Output Preview -->
+        <div class="card">
+            <div class="card-header">
+                <span>📋 출력 미리보기</span>
+            </div>
+            <div class="card-body">
+                <div class="output-tabs">
+                    <button class="output-tab active" onclick="showOutputTab('combined')">통합 MD</button>
+                    <button class="output-tab" onclick="showOutputTab('sections')">섹션 목록</button>
+                    <button class="output-tab" onclick="showOutputTab('report')">전체 보고서</button>
+                </div>
+                <div class="output-content" id="outputContent">
+                    처리가 완료되면 결과가 여기에 표시됩니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="btn-secondary" onclick="navigateTo('P13_NewReport.html')">
+                ← 이전: 보고서 설정
+            </button>
+            <button class="btn-success" id="nextBtn" onclick="navigateTo('P15_SectionEditor.html')" disabled>
+                다음: 섹션 편집 →
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts -->
+    <script src="../utils/session.js"></script>
+    <script src="../utils/navigation.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/file-handler.js"></script>
+    <script src="../js/markdown-converter.js"></script>
+    <script src="../js/multi-llm-client.js"></script>
+    <script src="../js/psur-generator.js"></script>
+    <script src="../js/unified-processor.js"></script>
+
+    <script>
+        // 전역 변수
+        let processor = null;
+        let currentOutputTab = 'combined';
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initDarkMode();
+            initDropzone();
+            initProcessor();
+        });
+
+        // 다크모드 초기화
+        function initDarkMode() {
+            const isDark = localStorage.getItem('theme') === 'dark';
+            if (isDark) document.body.classList.add('dark-mode');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Processor 초기화
+        function initProcessor() {
+            processor = new window.UnifiedProcessor();
+        }
+
+        // Dropzone 초기화
+        function initDropzone() {
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+
+            // 드래그 이벤트
+            dropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropzone.classList.add('dragover');
+            });
+
+            dropzone.addEventListener('dragleave', () => {
+                dropzone.classList.remove('dragover');
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+
+            // 파일 선택 이벤트
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        // 파일 처리
+        function handleFiles(files) {
+            if (!processor) initProcessor();
+
+            const result = processor.addFiles(files);
+
+            if (result.errors.length > 0) {
+                showToast(`${result.errors.length}개 파일 오류`, 'error');
+            }
+
+            if (result.added > 0) {
+                showToast(`${result.added}개 파일 추가됨`, 'success');
+            }
+
+            renderFileList();
+            updateProcessButton();
+        }
+
+        // 파일 목록 렌더링
+        function renderFileList() {
+            const fileList = document.getElementById('fileList');
+            const files = processor.files;
+
+            fileList.innerHTML = files.map((f, i) => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <span class="file-icon">${getFileIcon(f.fileName)}</span>
+                        <div>
+                            <div class="file-name">${f.fileName}</div>
+                            <div class="file-size">${formatFileSize(f.fileSize)}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="file-rawid ${f.rawId ? '' : 'unknown'}">${f.rawId || '미분류'}</span>
+                        <button class="file-remove" onclick="removeFile(${i})">✕</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('fileCount').textContent = `${files.length}개 파일`;
+        }
+
+        // 파일 아이콘
+        function getFileIcon(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            const icons = {
+                pdf: '📕',
+                xlsx: '📗', xls: '📗',
+                docx: '📘', doc: '📘',
+                txt: '📄', md: '📄'
+            };
+            return icons[ext] || '📄';
+        }
+
+        // 파일 크기 포맷
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // 파일 제거
+        function removeFile(index) {
+            processor.removeFile(index);
+            renderFileList();
+            updateProcessButton();
+        }
+
+        // 처리 버튼 업데이트
+        function updateProcessButton() {
+            const btn = document.getElementById('processBtn');
+            btn.disabled = processor.files.length === 0;
+        }
+
+        // 처리 시작
+        async function startProcessing() {
+            if (!processor || processor.files.length === 0) {
+                showToast('처리할 파일이 없습니다', 'error');
+                return;
+            }
+
+            // API 키 확인
+            const apiKey = localStorage.getItem('GOOGLE_API_KEY');
+            if (!apiKey) {
+                showToast('API 키가 설정되지 않았습니다. 설정 페이지에서 입력하세요.', 'error');
+                return;
+            }
+
+            // UI 비활성화
+            document.getElementById('processBtn').disabled = true;
+            document.getElementById('stepStatus').textContent = '처리 중...';
+
+            try {
+                const result = await processor.processAll(
+                    // 진행 콜백
+                    (progress) => {
+                        updateStepUI(progress);
+                    },
+                    // 에러 콜백
+                    (error) => {
+                        updateStepError(error);
+                    }
+                );
+
+                if (result.success) {
+                    showToast('PSUR 보고서 생성 완료!', 'success');
+                    document.getElementById('stepStatus').textContent = '완료';
+                    document.getElementById('nextBtn').disabled = false;
+
+                    // 출력 미리보기 업데이트
+                    updateOutputPreview(result);
+                }
+
+            } catch (error) {
+                showToast(`처리 실패: ${error.message}`, 'error');
+                document.getElementById('stepStatus').textContent = '오류 발생';
+            }
+
+            document.getElementById('processBtn').disabled = false;
+        }
+
+        // Step UI 업데이트
+        function updateStepUI(progress) {
+            const stepNum = progress.stepNumber || progress.step;
+            const icon = document.getElementById(`stepIcon${stepNum}`);
+            const status = document.getElementById(`stepStatus${stepNum}`);
+
+            if (progress.completed) {
+                icon.classList.remove('active');
+                icon.classList.add('completed');
+                icon.textContent = '✓';
+                status.textContent = '완료';
+            } else if (progress.progress !== undefined) {
+                icon.classList.add('active');
+                status.textContent = progress.message || `${progress.progress}%`;
+            }
+
+            // 전체 진행률 업데이트
+            const overallProgress = ((stepNum - 1) * 20) + (progress.progress || 0) * 0.2;
+            document.getElementById('progressFill').style.width = `${Math.min(overallProgress, 100)}%`;
+            document.getElementById('progressText').textContent = `${Math.round(overallProgress)}%`;
+        }
+
+        // Step 에러 UI 업데이트
+        function updateStepError(error) {
+            const stepNum = error.stepNumber;
+            const icon = document.getElementById(`stepIcon${stepNum}`);
+            const status = document.getElementById(`stepStatus${stepNum}`);
+
+            icon.classList.remove('active');
+            icon.classList.add('error');
+            icon.textContent = '!';
+            status.textContent = `오류: ${error.error}`;
+        }
+
+        // 출력 미리보기 업데이트
+        function updateOutputPreview(result) {
+            showOutputTab(currentOutputTab, result);
+        }
+
+        // 출력 탭 전환
+        function showOutputTab(tab, result = null) {
+            currentOutputTab = tab;
+
+            // 탭 버튼 활성화
+            document.querySelectorAll('.output-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.includes(
+                    tab === 'combined' ? '통합' : tab === 'sections' ? '섹션' : '보고서'
+                ));
+            });
+
+            // 내용 표시
+            const outputContent = document.getElementById('outputContent');
+            const results = result || processor?.getResults();
+
+            if (!results) {
+                outputContent.textContent = '처리가 완료되면 결과가 여기에 표시됩니다.';
+                return;
+            }
+
+            switch (tab) {
+                case 'combined':
+                    outputContent.textContent = results.combinedMD || '통합 마크다운이 없습니다.';
+                    break;
+                case 'sections':
+                    if (results.sections) {
+                        const sectionList = Object.entries(results.sections)
+                            .map(([id, s]) => `[${id}] ${s.name}`)
+                            .join('\n');
+                        outputContent.textContent = sectionList || '섹션이 없습니다.';
+                    } else {
+                        outputContent.textContent = '섹션이 없습니다.';
+                    }
+                    break;
+                case 'report':
+                    outputContent.textContent = results.report?.content || '보고서가 없습니다.';
+                    break;
+            }
+        }
+
+        // Toast 표시
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

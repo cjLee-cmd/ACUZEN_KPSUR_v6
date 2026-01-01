@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAW4 Unit Test - CS17 Extraction</title>
+    <!-- SheetJS for Excel parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { margin-bottom: 20px; color: #333; }
+        .test-section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-section h2 { margin-bottom: 15px; color: #2563eb; }
+        .btn { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; margin-right: 10px; margin-bottom: 10px; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-success:hover { background: #15803d; }
+        .log-area { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 13px; max-height: 400px; overflow-y: auto; margin-top: 15px; white-space: pre-wrap; }
+        .result-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .result-table th, .result-table td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+        .result-table th { background: #f3f4f6; font-weight: 600; }
+        .status-pass { color: #16a34a; font-weight: bold; }
+        .status-fail { color: #dc2626; font-weight: bold; }
+        .status-pending { color: #ca8a04; }
+        .markdown-input { width: 100%; height: 200px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-family: monospace; font-size: 13px; resize: vertical; }
+        .markdown-preview { background: #fafafa; border: 1px solid #e5e7eb; padding: 15px; border-radius: 6px; max-height: 300px; overflow-y: auto; font-size: 13px; }
+        .extracted-data { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 6px; margin-top: 10px; }
+        .extracted-data pre { white-space: pre-wrap; font-size: 12px; }
+        .loading { display: none; align-items: center; gap: 10px; padding: 15px; background: #fef3c7; border-radius: 6px; margin-top: 15px; }
+        .loading.active { display: flex; }
+        .spinner { width: 20px; height: 20px; border: 2px solid #f59e0b; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .input-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .input-tab { padding: 10px 20px; border: none; background: #e5e7eb; border-radius: 6px 6px 0 0; cursor: pointer; font-weight: 500; }
+        .input-tab.active { background: #2563eb; color: white; }
+        .input-content { display: none; }
+        .input-content.active { display: block; }
+        .file-drop { border: 2px dashed #d1d5db; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .file-drop:hover { border-color: #2563eb; background: #f0f9ff; }
+        .file-drop.dragover { border-color: #2563eb; background: #dbeafe; }
+        .api-key-section { background: #fef3c7; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        .api-key-input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RAW4 Unit Test - CS17.1~CS17.6 Extraction</h1>
+
+        <div class="test-section">
+            <h2>1. API Key 설정</h2>
+            <div class="api-key-section">
+                <label><strong>Google API Key:</strong></label>
+                <input type="password" id="apiKeyInput" class="api-key-input" placeholder="Google Gemini API Key를 입력하세요">
+                <button class="btn btn-secondary" onclick="saveApiKey()" style="margin-top: 10px;">저장</button>
+                <span id="apiKeyStatus" style="margin-left: 10px;"></span>
+            </div>
+            <div style="margin-top: 15px;">
+                <label><strong>LLM Model:</strong></label>
+                <select id="modelSelect" style="padding: 8px; margin-left: 10px;">
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. RAW4 데이터 입력</h2>
+            <p style="margin-bottom: 15px; color: #6b7280;">Excel 파일을 업로드하거나 마크다운을 직접 입력하세요.</p>
+
+            <div class="input-tabs">
+                <button class="input-tab active" onclick="switchTab('file')">📁 파일 업로드</button>
+                <button class="input-tab" onclick="switchTab('paste')">📝 마크다운 붙여넣기</button>
+                <button class="input-tab" onclick="switchTab('storage')">💾 localStorage</button>
+            </div>
+
+            <div id="tab-file" class="input-content active">
+                <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()">
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;" onchange="handleFileUpload(event)">
+                    <p style="font-size: 18px; margin-bottom: 10px;">📊 Excel 파일을 드래그하거나 클릭하세요</p>
+                    <p style="color: #6b7280;">지원 형식: .xlsx, .xls</p>
+                </div>
+                <div id="fileInfo" style="margin-top: 10px; display: none;"></div>
+            </div>
+
+            <div id="tab-paste" class="input-content">
+                <textarea id="markdownInput" class="markdown-input" placeholder="RAW4 마크다운을 여기에 붙여넣으세요..."></textarea>
+                <button class="btn btn-secondary" onclick="useMarkdownInput()" style="margin-top: 10px;">마크다운 사용</button>
+            </div>
+
+            <div id="tab-storage" class="input-content">
+                <button class="btn btn-secondary" onclick="loadFromStorage()">localStorage에서 불러오기</button>
+                <div id="storageInfo" style="margin-top: 10px;"></div>
+            </div>
+
+            <div id="markdownPreview" class="markdown-preview" style="margin-top: 15px; display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. 추출 테스트 실행</h2>
+            <p><strong>Target:</strong> CS17.1~CS17.6 (허가현황)</p>
+            <p><strong>Expected:</strong> CS17.1~CS17.5는 배열, CS17.6은 문자열</p>
+            <div style="margin-top: 15px;">
+                <button class="btn btn-primary" onclick="runTest()">🚀 추출 테스트 실행</button>
+                <button class="btn btn-secondary" onclick="clearResults()">🗑️ 결과 초기화</button>
+            </div>
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <span>LLM에서 데이터 추출 중...</span>
+            </div>
+            <div id="logArea" class="log-area" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. 추출 결과</h2>
+            <table class="result-table">
+                <thead>
+                    <tr>
+                        <th>필드</th>
+                        <th>기대 타입</th>
+                        <th>실제 타입</th>
+                        <th>값 개수</th>
+                        <th>상태</th>
+                    </tr>
+                </thead>
+                <tbody id="resultTable">
+                    <tr><td colspan="5" class="status-pending">테스트를 실행하면 결과가 표시됩니다...</td></tr>
+                </tbody>
+            </table>
+            <div id="extractedData" class="extracted-data" style="display: none;">
+                <h3>추출된 데이터:</h3>
+                <pre id="extractedJson"></pre>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. 테스트 요약</h2>
+            <div id="testSummary">
+                <p class="status-pending">아직 테스트가 실행되지 않았습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            API_KEY_STORAGE: 'GOOGLE_API_KEY',
+            RAW4_TARGETS: ['CS17.1', 'CS17.2', 'CS17.3', 'CS17.4', 'CS17.5', 'CS17.6']
+        };
+
+        let raw4Markdown = null;
+        let logs = [];
+
+        // Initialize
+        window.addEventListener('load', () => {
+            // Load saved API key
+            const savedKey = localStorage.getItem(CONFIG.API_KEY_STORAGE);
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+                document.getElementById('apiKeyStatus').innerHTML = '<span style="color: green;">✅ API Key 저장됨</span>';
+            }
+
+            // Setup drag and drop
+            const dropZone = document.getElementById('fileDrop');
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('dragover');
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+        });
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                localStorage.setItem(CONFIG.API_KEY_STORAGE, key);
+                document.getElementById('apiKeyStatus').innerHTML = '<span style="color: green;">✅ 저장됨</span>';
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.input-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.input-content').forEach(c => c.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) handleFile(file);
+        }
+
+        async function handleFile(file) {
+            log(`파일 로드: ${file.name} (${(file.size/1024).toFixed(2)} KB)`);
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array', codepage: 65001 });
+
+                let markdown = `# ${file.name}\n\n`;
+
+                workbook.SheetNames.forEach((sheetName, idx) => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+                    markdown += `## Sheet: ${sheetName}\n\n`;
+
+                    if (jsonData.length > 0) {
+                        // Create markdown table
+                        const headers = jsonData[0];
+                        markdown += '| ' + headers.join(' | ') + ' |\n';
+                        markdown += '| ' + headers.map(() => '---').join(' | ') + ' |\n';
+
+                        for (let i = 1; i < jsonData.length; i++) {
+                            const row = jsonData[i].map(cell => String(cell || '').replace(/\|/g, '\\|'));
+                            markdown += '| ' + row.join(' | ') + ' |\n';
+                        }
+                        markdown += '\n';
+                    }
+                });
+
+                raw4Markdown = markdown;
+                showMarkdownPreview(file.name, markdown);
+                document.getElementById('fileInfo').innerHTML = `<span style="color: green;">✅ ${file.name} 로드 완료</span>`;
+                document.getElementById('fileInfo').style.display = 'block';
+
+                log(`Excel → Markdown 변환 완료 (${markdown.length} chars)`, 'success');
+
+            } catch (error) {
+                log(`파일 처리 오류: ${error.message}`, 'error');
+                alert('파일을 읽는 중 오류가 발생했습니다.');
+            }
+        }
+
+        function useMarkdownInput() {
+            const markdown = document.getElementById('markdownInput').value.trim();
+            if (!markdown) {
+                alert('마크다운을 입력하세요.');
+                return;
+            }
+            raw4Markdown = markdown;
+            showMarkdownPreview('직접 입력', markdown);
+            log('마크다운 입력 사용', 'success');
+        }
+
+        function loadFromStorage() {
+            const markdowns = JSON.parse(localStorage.getItem('convertedMarkdowns') || '{}');
+            const entries = Object.values(markdowns);
+            const raw4 = entries.find(item => item.rawId === 'RAW4' || item.fileName?.includes('RAW4'));
+
+            if (raw4 && raw4.markdown) {
+                raw4Markdown = raw4.markdown;
+                showMarkdownPreview(raw4.fileName || 'RAW4', raw4.markdown);
+                document.getElementById('storageInfo').innerHTML = `<span style="color: green;">✅ ${raw4.fileName || 'RAW4'} 로드 완료</span>`;
+                log(`localStorage에서 로드: ${raw4.fileName} (${raw4.markdown.length} chars)`, 'success');
+            } else {
+                document.getElementById('storageInfo').innerHTML = '<span style="color: red;">❌ RAW4 데이터를 찾을 수 없습니다.</span>';
+                log('localStorage에서 RAW4 데이터를 찾을 수 없음', 'error');
+            }
+        }
+
+        function showMarkdownPreview(name, markdown) {
+            const preview = document.getElementById('markdownPreview');
+            preview.style.display = 'block';
+            preview.innerHTML = `
+                <strong>소스:</strong> ${escapeHtml(name)}<br>
+                <strong>길이:</strong> ${markdown.length} chars<hr>
+                <pre style="white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${escapeHtml(markdown)}</pre>
+            `;
+        }
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warn' ? '⚠️' : '📝';
+            const logMessage = `[${timestamp}] ${prefix} ${message}`;
+            logs.push(logMessage);
+
+            const logArea = document.getElementById('logArea');
+            logArea.style.display = 'block';
+            logArea.textContent = logs.join('\n');
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function runTest() {
+            if (!raw4Markdown) {
+                alert('먼저 RAW4 데이터를 입력하세요.');
+                return;
+            }
+
+            const apiKey = localStorage.getItem(CONFIG.API_KEY_STORAGE);
+            if (!apiKey) {
+                alert('API Key를 설정하세요.');
+                return;
+            }
+
+            logs = [];
+            document.getElementById('loading').classList.add('active');
+            log('RAW4 추출 테스트 시작...');
+
+            try {
+                const result = await extractFromRAW4(apiKey, raw4Markdown);
+                displayResults(result);
+            } catch (error) {
+                log(`테스트 실패: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+            }
+        }
+
+        async function extractFromRAW4(apiKey, markdown) {
+            const model = document.getElementById('modelSelect').value;
+            const targets = CONFIG.RAW4_TARGETS;
+
+            log(`모델: ${model}`);
+            log(`추출 대상: ${targets.join(', ')}`);
+
+            const prompt = buildPrompt(markdown, targets);
+            log(`프롬프트 길이: ${prompt.length} chars`);
+
+            const response = await callLLM(apiKey, model, prompt);
+            log(`LLM 응답 수신 (${response.length} chars)`, 'success');
+            log(`응답 미리보기: ${response.substring(0, 500)}...`);
+
+            const parsed = parseResponse(response);
+            return parsed;
+        }
+
+        function buildPrompt(markdown, targets) {
+            return `# 데이터 추출 작업
+
+## 원본 문서 (RAW4 - 허가현황)
+${markdown}
+
+## 추출 대상 필드
+${targets.map(t => `- ${t}`).join('\n')}
+
+## 추출 지침
+
+### 중요: 배열 형태로 추출
+- CS17.1 (허가국가): 모든 허가완료 국가를 배열로 추출
+- CS17.2 (허가일): 각 국가별 최초 허가일을 배열로 추출 (CS17.1 국가 순서와 동일)
+- CS17.3 (허가품목명/브랜드명): 각 국가별 브랜드명을 배열로 추출 (CS17.1 국가 순서와 동일)
+- CS17.4 (허가권자/담당자): 각 국가별 담당자를 배열로 추출 (CS17.1 국가 순서와 동일)
+- CS17.5 (허가비고): 각 국가별 주요 비고를 배열로 추출 (CS17.1 국가 순서와 동일). 비고가 없으면 null
+- CS17.6 (허가현황서술문): 전체 허가현황을 요약한 서술문 (문자열)
+
+### 데이터 추출 원칙
+1. 허가완료 상태인 항목만 포함 (신청중, 심사중 제외)
+2. 각 국가의 최초 허가 정보를 기준으로 추출
+3. 모든 배열의 순서는 CS17.1의 국가 순서와 일치해야 함
+4. 배열의 길이는 모두 동일해야 함 (국가 수와 동일)
+5. 데이터가 없는 항목은 null로 표시
+
+## 응답 형식 (중요!)
+- 반드시 JSON 코드 블록만 출력하세요
+- 설명, 분석, 코멘트 없이 오직 JSON만 반환하세요
+
+\`\`\`json
+{
+  "CS17.1": ["국가1", "국가2", "국가3", ...],
+  "CS17.2": ["YYYY-MM-DD", "YYYY-MM-DD", "YYYY-MM-DD", ...],
+  "CS17.3": ["브랜드명1", "브랜드명2", "브랜드명3", ...],
+  "CS17.4": ["담당자1", "담당자2", "담당자3", ...],
+  "CS17.5": ["비고1", null, "비고3", ...],
+  "CS17.6": "허가현황 서술문"
+}
+\`\`\``;
+        }
+
+        async function callLLM(apiKey, model, prompt) {
+            // 모델명 매핑 (stable version 사용)
+            const modelId = model === 'gemini-2.5-pro' ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
+
+            log(`API URL: ${url.replace(apiKey, '***')}`);  // API key 숨김
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.1,
+                        maxOutputTokens: 8192
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API Error: ${response.status} - ${errorText}`);
+            }
+
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        }
+
+        function parseResponse(response) {
+            log('LLM 응답 파싱 중...');
+
+            // Extract JSON from code block
+            const jsonMatch = response.match(/```json\s*([\s\S]*?)\s*```/);
+            if (!jsonMatch) {
+                log('JSON 코드 블록을 찾을 수 없음', 'error');
+                throw new Error('JSON을 찾을 수 없습니다.');
+            }
+
+            const jsonStr = jsonMatch[1].trim();
+            log(`추출된 JSON: ${jsonStr.substring(0, 300)}...`);
+
+            try {
+                const parsed = JSON.parse(jsonStr);
+                log('JSON 파싱 성공', 'success');
+                return parsed;
+            } catch (e) {
+                log(`JSON 파싱 오류: ${e.message}`, 'error');
+                throw e;
+            }
+        }
+
+        function displayResults(data) {
+            const tbody = document.getElementById('resultTable');
+            const fields = CONFIG.RAW4_TARGETS;
+
+            let html = '';
+            let passCount = 0;
+            let failCount = 0;
+
+            // Get CS17.1 count as reference
+            const countryCount = Array.isArray(data['CS17.1']) ? data['CS17.1'].length : 0;
+            log(`기준 국가 수 (CS17.1): ${countryCount}`);
+
+            fields.forEach(field => {
+                const value = data[field];
+                const isArray = Array.isArray(value);
+                const valueCount = isArray ? value.length : (value ? 1 : 0);
+
+                // CS17.6 should be string, others should be arrays
+                const expectedType = field === 'CS17.6' ? 'string' : 'array';
+                const actualType = isArray ? 'array' : (typeof value);
+
+                let status, statusClass;
+                if (field === 'CS17.6') {
+                    status = typeof value === 'string' && value.length > 0 ? 'PASS' : 'FAIL';
+                } else {
+                    status = isArray && valueCount === countryCount ? 'PASS' : 'FAIL';
+                }
+
+                statusClass = status === 'PASS' ? 'status-pass' : 'status-fail';
+                if (status === 'PASS') passCount++; else failCount++;
+
+                // Show actual values for arrays
+                let valuePreview = '';
+                if (isArray && value.length > 0) {
+                    valuePreview = value.map((v, i) => `[${i}] ${v}`).join(', ');
+                    if (valuePreview.length > 100) valuePreview = valuePreview.substring(0, 100) + '...';
+                }
+
+                html += `
+                    <tr>
+                        <td><strong>${field}</strong></td>
+                        <td>${expectedType}</td>
+                        <td>${actualType}</td>
+                        <td>${valueCount}${field !== 'CS17.6' ? ` / ${countryCount}` : ''}</td>
+                        <td class="${statusClass}">${status}</td>
+                    </tr>
+                `;
+
+                log(`${field}: type=${actualType}, count=${valueCount}, status=${status}`);
+            });
+
+            tbody.innerHTML = html;
+
+            // Show extracted data
+            const extractedDiv = document.getElementById('extractedData');
+            extractedDiv.style.display = 'block';
+            document.getElementById('extractedJson').textContent = JSON.stringify(data, null, 2);
+
+            // Summary
+            const summary = document.getElementById('testSummary');
+            const allPass = failCount === 0;
+            summary.innerHTML = `
+                <p class="${allPass ? 'status-pass' : 'status-fail'}">
+                    ${allPass ? '✅ 모든 테스트 통과!' : `❌ ${failCount}개 테스트 실패`}
+                </p>
+                <p>통과: ${passCount} / ${fields.length}</p>
+                <p>CS17.1 국가 수: ${countryCount}</p>
+                ${countryCount > 0 ? `<p>국가 목록: ${data['CS17.1'].join(', ')}</p>` : ''}
+            `;
+
+            log(`테스트 완료: ${passCount}/${fields.length} 통과`, allPass ? 'success' : 'error');
+        }
+
+        function clearResults() {
+            logs = [];
+            raw4Markdown = null;
+            document.getElementById('logArea').style.display = 'none';
+            document.getElementById('logArea').textContent = '';
+            document.getElementById('resultTable').innerHTML = '<tr><td colspan="5" class="status-pending">테스트를 실행하면 결과가 표시됩니다...</td></tr>';
+            document.getElementById('extractedData').style.display = 'none';
+            document.getElementById('testSummary').innerHTML = '<p class="status-pending">아직 테스트가 실행되지 않았습니다.</p>';
+            document.getElementById('markdownPreview').style.display = 'none';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('storageInfo').innerHTML = '';
+            document.getElementById('markdownInput').value = '';
+        }
+    </script>
+</body>
+</html>

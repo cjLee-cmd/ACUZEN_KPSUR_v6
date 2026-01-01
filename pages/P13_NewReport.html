@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>새 보고서 생성 - KPSUR AGENT | ACUZEN AI</title>
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
+    <style>
+        .page-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .page-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* 폼 카드 */
+        .form-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: var(--spacing-xl);
+            box-shadow: 0 1px 3px var(--card-shadow);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .section-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .required {
+            color: #EF4444;
+        }
+
+        .label-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            background: rgba(37, 115, 155, 0.1);
+            color: #25739B;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: #25739B;
+            box-shadow: 0 0 0 3px rgba(37, 115, 155, 0.1);
+            outline: none;
+        }
+
+        .form-input:disabled, .form-select:disabled {
+            background: var(--section-bg);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* 약품명 선택 */
+        .drug-selector {
+            position: relative;
+        }
+
+        .drug-search-btn {
+            padding: var(--spacing-md);
+            border: 2px solid #25739B;
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: #25739B;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .drug-search-btn:hover {
+            background: rgba(37, 115, 155, 0.05);
+        }
+
+        .drug-selected {
+            background: rgba(37, 115, 155, 0.1);
+            border-color: #25739B;
+        }
+
+        /* 자동 채워진 정보 */
+        .auto-filled-section {
+            background: #F0F9FF;
+            border: 2px solid #BAE6FD;
+            border-radius: 8px;
+            padding: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .auto-filled-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .auto-filled-icon {
+            font-size: 20px;
+        }
+
+        .auto-filled-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #0369A1;
+        }
+
+        .auto-filled-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+        }
+
+        .auto-filled-item {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-sm);
+            background: var(--input-bg);
+            border-radius: 6px;
+        }
+
+        .auto-filled-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .auto-filled-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* 액션 버튼 */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--spacing-md);
+            padding-top: var(--spacing-xl);
+            border-top: 2px solid var(--border-color);
+        }
+
+        .btn {
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(37, 115, 155, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--section-bg);
+        }
+
+        /* 약품명 검색 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(7, 22, 29, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: var(--spacing-xl);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-search {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .search-input:focus {
+            border-color: #25739B;
+            outline: none;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-lg);
+        }
+
+        .drug-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .drug-item {
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--input-bg);
+        }
+
+        .drug-item:hover {
+            border-color: #25739B;
+            background: rgba(37, 115, 155, 0.05);
+        }
+
+        .drug-item-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .drug-item-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .modal-footer {
+            padding: var(--spacing-lg);
+            border-top: 1px solid var(--border-color);
+            text-align: right;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .auto-filled-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+
+            .btn-primary {
+                width: 100%;
+            }
+        }
+
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --card-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: #374151;
+            --text-secondary: #6B7280;
+            --text-muted: #9CA3AF;
+            --border-color: #E5E7EB;
+            --input-bg: white;
+            --section-bg: #F9FAFB;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --card-shadow: none;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --input-bg: #334155;
+            --section-bg: #334155;
+        }
+
+        /* 다크모드 컴포넌트 스타일 */
+        [data-theme="dark"] .page-title,
+        [data-theme="dark"] .section-title,
+        [data-theme="dark"] .form-label,
+        [data-theme="dark"] .drug-item-name,
+        [data-theme="dark"] .auto-filled-value,
+        [data-theme="dark"] .modal-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .page-description,
+        [data-theme="dark"] .form-help,
+        [data-theme="dark"] .drug-item-meta,
+        [data-theme="dark"] .auto-filled-label {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .form-card {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: #1e293b;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .form-input,
+        [data-theme="dark"] .form-select,
+        [data-theme="dark"] .form-textarea,
+        [data-theme="dark"] .search-input {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .form-input:disabled,
+        [data-theme="dark"] .form-select:disabled {
+            background: #475569;
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .section-header,
+        [data-theme="dark"] .form-actions,
+        [data-theme="dark"] .modal-header,
+        [data-theme="dark"] .modal-search,
+        [data-theme="dark"] .modal-footer {
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .auto-filled-section {
+            background: rgba(37, 115, 155, 0.15);
+            border-color: rgba(37, 115, 155, 0.4);
+        }
+
+        [data-theme="dark"] .auto-filled-title {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .auto-filled-item {
+            background: var(--input-bg);
+        }
+
+        [data-theme="dark"] .drug-search-btn {
+            background: var(--input-bg);
+            color: #60a5fa;
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .drug-search-btn:hover {
+            background: rgba(37, 115, 155, 0.2);
+        }
+
+        [data-theme="dark"] .drug-item {
+            border-color: var(--border-color);
+            background: var(--input-bg);
+        }
+
+        [data-theme="dark"] .drug-item:hover {
+            border-color: #60a5fa;
+            background: rgba(37, 115, 155, 0.15);
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .btn-secondary:hover {
+            background: #475569;
+        }
+
+        [data-theme="dark"] .label-badge {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+        }
+
+        /* LLM 선택 스타일 */
+        .llm-mode-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+        }
+
+        .llm-mode-option input {
+            display: none;
+        }
+
+        .llm-mode-card {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-lg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--card-bg);
+        }
+
+        .llm-mode-card:hover {
+            border-color: #25739B;
+            box-shadow: 0 4px 12px rgba(37, 115, 155, 0.1);
+        }
+
+        .llm-mode-option input:checked + .llm-mode-card {
+            border-color: #25739B;
+            background: rgba(37, 115, 155, 0.05);
+            box-shadow: 0 0 0 4px rgba(37, 115, 155, 0.1);
+        }
+
+        .llm-mode-icon {
+            font-size: 32px;
+        }
+
+        .llm-mode-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .llm-mode-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .llm-mode-cost {
+            font-size: 11px;
+            color: #10B981;
+            font-weight: 600;
+        }
+
+        .llm-settings-panel {
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-lg);
+            background: var(--section-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .hybrid-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .hybrid-phase {
+            flex: 1;
+            max-width: 280px;
+            text-align: center;
+        }
+
+        .phase-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .phase-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+        }
+
+        .hybrid-arrow {
+            font-size: 24px;
+            color: #25739B;
+            font-weight: 700;
+        }
+
+        .hybrid-cost-estimate,
+        .single-cost-estimate {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            font-size: 13px;
+            color: #059669;
+        }
+
+        .cost-icon {
+            font-size: 18px;
+        }
+
+        [data-theme="dark"] .llm-mode-card {
+            background: var(--input-bg);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .llm-mode-option input:checked + .llm-mode-card {
+            background: rgba(96, 165, 250, 0.1);
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+        }
+
+        [data-theme="dark"] .llm-settings-panel {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .hybrid-cost-estimate,
+        [data-theme="dark"] .single-cost-estimate {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        @media (max-width: 768px) {
+            .llm-mode-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .hybrid-flow {
+                flex-direction: column;
+            }
+
+            .hybrid-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item" onclick="navigateTo('P10_Dashboard.html')" style="cursor: pointer;">대시보드</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">새 보고서 생성</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content with Sidebar -->
+        <div class="app-content">
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="page-container">
+                    <!-- Page Header -->
+                    <div class="page-header">
+                        <h1 class="page-title">새 보고서 생성</h1>
+                        <p class="page-description">
+                            새로운 PSUR 보고서를 생성합니다. 약품명을 선택하면 관련 정보가 자동으로 입력됩니다.
+                        </p>
+                    </div>
+
+                    <!-- Form Card -->
+                    <form id="newReportForm">
+                        <div class="form-card">
+                            <!-- Section 1: 약품 선택 -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-number">1</div>
+                                    <div class="section-title">약품 선택</div>
+                                </div>
+
+                                <div class="form-row full">
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            약품명 <span class="required">*</span>
+                                            <span class="label-badge">약품 DB에서 선택</span>
+                                        </label>
+                                        <button type="button" class="drug-search-btn" onclick="openDrugSelector()">
+                                            <span id="selectedDrugName">약품명을 선택하세요</span>
+                                            <span>🔍</span>
+                                        </button>
+                                        <div class="form-help">
+                                            약품 데이터베이스에서 성분명과 브랜드명을 선택합니다. 선택 시 관련 정보가 자동으로 입력됩니다.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 자동 채워진 정보 (약품 선택 후 표시) -->
+                                <div id="autoFilledSection" class="auto-filled-section" style="display: none;">
+                                    <div class="auto-filled-header">
+                                        <span class="auto-filled-icon">✨</span>
+                                        <span class="auto-filled-title">약품 DB에서 자동으로 입력된 정보</span>
+                                    </div>
+                                    <div class="auto-filled-grid">
+                                        <div class="auto-filled-item">
+                                            <span class="auto-filled-label">CS0_성분명</span>
+                                            <span class="auto-filled-value" id="af_ingredient">-</span>
+                                        </div>
+                                        <div class="auto-filled-item">
+                                            <span class="auto-filled-label">CS1_브랜드명</span>
+                                            <span class="auto-filled-value" id="af_brand">-</span>
+                                        </div>
+                                        <div class="auto-filled-item">
+                                            <span class="auto-filled-label">CS2_회사명</span>
+                                            <span class="auto-filled-value" id="af_company">-</span>
+                                        </div>
+                                        <div class="auto-filled-item">
+                                            <span class="auto-filled-label">CS4_보고종료날짜</span>
+                                            <input type="date" class="form-input" id="af_cs4" style="width: 150px; font-size: 12px;" onchange="updateReportDates()">
+                                        </div>
+                                        <div class="auto-filled-item">
+                                            <span class="auto-filled-label">CS3_보고시작날짜</span>
+                                            <span class="auto-filled-value" id="af_cs3">-</span>
+                                            <span style="font-size: 10px; color: #6B7280;">(CS4 - CS24 자동계산)</span>
+                                        </div>
+                                        <div class="auto-filled-item">
+                                            <span class="auto-filled-label">CS5_국내허가일자</span>
+                                            <span class="auto-filled-value" id="af_approval_date">-</span>
+                                        </div>
+                                        <div class="auto-filled-item">
+                                            <span class="auto-filled-label">CS15_효능효과</span>
+                                            <span class="auto-filled-value" id="af_efficacy">-</span>
+                                        </div>
+                                        <div class="auto-filled-item">
+                                            <span class="auto-filled-label">CS16_용법용량</span>
+                                            <span class="auto-filled-value" id="af_dosage">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 2: 보고서 정보 -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-number">2</div>
+                                    <div class="section-title">보고서 정보</div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            버전넘버 (CS7) <span class="required">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            class="form-input"
+                                            id="first_approval_country"
+                                            placeholder="예: 1.0"
+                                            required
+                                        >
+                                        <div class="form-help">보고서 버전 번호를 입력하세요.</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            보고서제출일 (CS6) <span class="required">*</span>
+                                        </label>
+                                        <input
+                                            type="date"
+                                            class="form-input"
+                                            id="first_approval_date"
+                                            required
+                                        >
+                                        <div class="form-help">보고서 제출 날짜를 선택하세요.</div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            작성자 <span class="required">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            class="form-input"
+                                            id="author_name"
+                                            required
+                                        >
+                                        <div class="form-help">보고서 작성자 이름</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            작성자 직책 <span class="required">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            class="form-input"
+                                            id="author_position"
+                                            placeholder="예: 약물감시팀장"
+                                            required
+                                        >
+                                        <div class="form-help">작성자의 직책</div>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            보고주기 (CS24) <span class="required">*</span>
+                                        </label>
+                                        <select class="form-select" id="report_period" required onchange="updateReportDates()">
+                                            <option value="">선택하세요</option>
+                                            <option value="5" selected>5년</option>
+                                            <option value="3">3년</option>
+                                            <option value="1">1년</option>
+                                        </select>
+                                        <div class="form-help">보고 기간을 선택하세요. (CS3 = CS4 - CS24)</div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            유효기간 (CS13) <span class="required">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            class="form-input"
+                                            id="submitter"
+                                            placeholder="예: 36개월"
+                                            required
+                                        >
+                                        <div class="form-help">의약품 유효기간</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 3: LLM 설정 -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-number">3</div>
+                                    <div class="section-title">LLM 설정</div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            LLM 모델 선택 <span class="required">*</span>
+                                        </label>
+                                        <select class="form-select" id="llm_model" onchange="updateSelectedModelInfo()">
+                                            <optgroup label="Google (권장)">
+                                                <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview (기본, 무료)</option>
+                                                <option value="gemini-2.0-pro">Gemini 2.0 Pro (~$0.25)</option>
+                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (~$0.05)</option>
+                                            </optgroup>
+                                            <optgroup label="Claude (Anthropic)">
+                                                <option value="claude-opus-4-5">Claude Opus 4.5 - 최고 품질 (~$3.00)</option>
+                                                <option value="claude-sonnet-3-5">Claude Sonnet 3.5 (~$0.60)</option>
+                                                <option value="claude-haiku-3-5">Claude Haiku 3.5 (~$0.20)</option>
+                                            </optgroup>
+                                            <optgroup label="OpenAI">
+                                                <option value="gpt-4o">GPT-4o (~$0.80)</option>
+                                                <option value="gpt-4o-mini">GPT-4o Mini (~$0.10)</option>
+                                            </optgroup>
+                                        </select>
+                                        <div class="form-hint" id="modelInfoHint">빠르고 효율적인 최신 모델</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 4: 추가 정보 -->
+                            <div class="form-section">
+                                <div class="section-header">
+                                    <div class="section-number">4</div>
+                                    <div class="section-title">추가 정보 (선택)</div>
+                                </div>
+
+                                <div class="form-row full">
+                                    <div class="form-group">
+                                        <label class="form-label">보고서 설명</label>
+                                        <textarea
+                                            class="form-textarea"
+                                            id="report_description"
+                                            placeholder="이 보고서에 대한 간단한 설명을 입력하세요..."
+                                        ></textarea>
+                                        <div class="form-help">보고서에 대한 메모나 특이사항을 기록할 수 있습니다.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="navigateTo('P10_Dashboard.html')">
+                                    <span>취소</span>
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <span>보고서 생성</span>
+                                    <span>→</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </main>
+
+            <!-- Workflow Sidebar (Right) -->
+            <aside class="workflow-sidebar">
+                <div class="workflow-header">
+                    <h3>진행 상황</h3>
+                    <div class="workflow-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 12.5%"></div>
+                        </div>
+                        <div class="progress-text">2 / 9 단계</div>
+                    </div>
+                </div>
+
+                <div class="workflow-stages">
+                    <div class="workflow-stage completed">
+                        <div class="stage-icon">🔐</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 1</div>
+                            <div class="stage-label">로그인</div>
+                        </div>
+                        <div class="stage-status">✓</div>
+                    </div>
+
+                    <div class="workflow-stage current">
+                        <div class="stage-icon">📋</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 2</div>
+                            <div class="stage-label">보고서 상태</div>
+                        </div>
+                        <div class="stage-status">◉</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 3</div>
+                            <div class="stage-label">파일 업로드</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">🔄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 4</div>
+                            <div class="stage-label">MD 변환</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">⚙️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 5</div>
+                            <div class="stage-label">데이터 추출</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📄</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 6</div>
+                            <div class="stage-label">템플릿 작성</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✏️</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 7</div>
+                            <div class="stage-label">리뷰</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">✅</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 8</div>
+                            <div class="stage-label">QC 검증</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+
+                    <div class="workflow-stage pending">
+                        <div class="stage-icon">📤</div>
+                        <div class="stage-info">
+                            <div class="stage-name">Stage 9</div>
+                            <div class="stage-label">최종 출력</div>
+                        </div>
+                        <div class="stage-status">○</div>
+                    </div>
+                </div>
+
+                <div class="workflow-footer">
+                    <div class="medical-badge">의료용 AI 소프트웨어</div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                Copyright. Power Solution., Inc. 2026.
+            </div>
+        </footer>
+    </div>
+
+    <!-- 약품 선택 모달 -->
+    <div id="drugSelectorModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">약품 데이터베이스에서 선택</h2>
+            </div>
+
+            <div class="modal-search">
+                <input
+                    type="text"
+                    class="search-input"
+                    id="drugSearch"
+                    placeholder="성분명 또는 브랜드명으로 검색..."
+                >
+            </div>
+
+            <div class="modal-body">
+                <div class="drug-list" id="drugList">
+                    <!-- 샘플 데이터 -->
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDrugSelector()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        // 다크모드 초기화 (페이지 로드 즉시)
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
+
+    <!-- JavaScript -->
+    <script src="../utils/navigation.js"></script>
+    <script src="../utils/session.js"></script>
+    <script src="../utils/ui-helpers.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        // 약품 데이터베이스 (샘플)
+        const drugDatabase = [
+            {
+                id: 1,
+                ingredient: '토지나메란',
+                brand: '코미나티주',
+                company: '한국화이자제약',
+                report_start_date: '2021-03-05',
+                report_end_date: '2026-03-04',
+                approval_date: '2021-03-05',
+                efficacy: '16세 이상에서 코로나19 예방',
+                dosage: '0.3mL를 3주 간격으로 2회 근육주사'
+            },
+            {
+                id: 2,
+                ingredient: '암로디핀',
+                brand: '노바스크정',
+                company: '한국화이자제약',
+                report_start_date: '1997-05-20',
+                report_end_date: '2002-05-19',
+                approval_date: '1997-05-20',
+                efficacy: '고혈압, 협심증 치료',
+                dosage: '1일 1회 5mg 경구투여'
+            },
+            {
+                id: 3,
+                ingredient: '메트포르민',
+                brand: '글루코파지정',
+                company: '한국머크',
+                report_start_date: '2001-08-15',
+                report_end_date: '2006-08-14',
+                approval_date: '2001-08-15',
+                efficacy: '제2형 당뇨병 치료',
+                dosage: '1일 2-3회 500-850mg 경구투여'
+            },
+            {
+                id: 4,
+                ingredient: '아토르바스타틴',
+                brand: '리피토정',
+                company: '한국화이자제약',
+                report_start_date: '2000-01-15',
+                report_end_date: '2005-01-14',
+                approval_date: '2000-01-15',
+                efficacy: '고콜레스테롤혈증, 이상지질혈증 치료',
+                dosage: '1일 1회 10-80mg 경구투여'
+            },
+            {
+                id: 5,
+                ingredient: '에소메프라졸',
+                brand: '넥시움정',
+                company: '한국아스트라제네카',
+                report_start_date: '2002-06-10',
+                report_end_date: '2007-06-09',
+                approval_date: '2002-06-10',
+                efficacy: '위식도역류질환, 소화성궤양 치료',
+                dosage: '1일 1회 20-40mg 경구투여'
+            },
+            {
+                id: 6,
+                ingredient: '로수바스타틴',
+                brand: '크레스토정',
+                company: '한국아스트라제네카',
+                report_start_date: '2004-03-22',
+                report_end_date: '2009-03-21',
+                approval_date: '2004-03-22',
+                efficacy: '고콜레스테롤혈증, 고지혈증 치료',
+                dosage: '1일 1회 5-20mg 경구투여'
+            },
+            {
+                id: 7,
+                ingredient: '셀레콕시브',
+                brand: '쎄레브렉스캡슐',
+                company: '한국화이자제약',
+                report_start_date: '2001-11-08',
+                report_end_date: '2006-11-07',
+                approval_date: '2001-11-08',
+                efficacy: '골관절염, 류마티스관절염 치료',
+                dosage: '1일 1-2회 100-200mg 경구투여'
+            },
+            {
+                id: 8,
+                ingredient: '둘라글루타이드',
+                brand: '트루리시티주',
+                company: '한국릴리',
+                report_start_date: '2016-09-05',
+                report_end_date: '2021-09-04',
+                approval_date: '2016-09-05',
+                efficacy: '제2형 당뇨병 치료',
+                dosage: '주 1회 0.75-1.5mg 피하주사'
+            },
+            {
+                id: 9,
+                ingredient: '리바록사반',
+                brand: '자렐토정',
+                company: '바이엘코리아',
+                report_start_date: '2012-07-18',
+                report_end_date: '2017-07-17',
+                approval_date: '2012-07-18',
+                efficacy: '심부정맥혈전증 예방 및 치료',
+                dosage: '1일 1회 10-20mg 경구투여'
+            },
+            {
+                id: 10,
+                ingredient: '엠파글리플로진',
+                brand: '자디앙정',
+                company: '한국베링거인겔하임',
+                report_start_date: '2015-04-28',
+                report_end_date: '2020-04-27',
+                approval_date: '2015-04-28',
+                efficacy: '제2형 당뇨병 치료',
+                dosage: '1일 1회 10-25mg 경구투여'
+            }
+        ];
+
+        let selectedDrug = null;
+
+        // Initialize page when DOM is ready
+        function initializePage() {
+            // Check if utility functions are loaded
+            if (typeof navigateTo === 'undefined' || typeof loadSessionData === 'undefined') {
+                setTimeout(initializePage, 50);
+                return;
+            }
+
+            const session = loadSessionData();
+            if (session) {
+                document.querySelector('.user-name').textContent = session.userName;
+                document.querySelector('.user-role').textContent = session.userRole;
+                document.querySelector('.user-avatar').textContent = session.userName.charAt(0);
+
+                // 작성자 자동 입력
+                document.getElementById('author_name').value = session.userName;
+                // 작성자 직책 자동 입력
+                if (session.userPosition) {
+                    document.getElementById('author_position').value = session.userPosition;
+                }
+            }
+
+            // 버전넘버 초기값 '1.0' 자동 설정
+            const versionInput = document.getElementById('first_approval_country');
+            if (versionInput && !versionInput.value) {
+                versionInput.value = '1.0';
+            }
+
+            // setupUserMenu이 정의되어 있으면 호출 (layout-helper.js 미로드 시 스킵)
+            if (typeof setupUserMenu === 'function') {
+                setupUserMenu();
+            } else {
+                // 간단한 사용자 메뉴 토글 구현
+                const userMenuToggle = document.querySelector('.user-menu-toggle');
+                if (userMenuToggle) {
+                    userMenuToggle.addEventListener('click', () => {
+                        if (confirm('로그아웃 하시겠습니까?')) {
+                            clearSessionData();
+                            navigateTo('P01_Login.html');
+                        }
+                    });
+                }
+            }
+            setupDrugSearch();
+            setupForm();
+        }
+
+        // Start initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            initializePage();
+        }
+
+        function setupForm() {
+            const form = document.getElementById('newReportForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+
+                if (!selectedDrug) {
+                    showToast('약품을 선택해주세요.', 'warning');
+                    return;
+                }
+
+                // 폼 데이터 수집
+                const formData = {
+                    drug: selectedDrug,
+                    first_approval_country: document.getElementById('first_approval_country').value,
+                    first_approval_date: document.getElementById('first_approval_date').value,
+                    author_name: document.getElementById('author_name').value,
+                    author_position: document.getElementById('author_position').value,
+                    report_period: document.getElementById('report_period').value,
+                    submitter: document.getElementById('submitter').value,
+                    description: document.getElementById('report_description').value
+                };
+
+                showLLMLoading('새 보고서를 생성하고 있습니다...');
+
+                // 보고서 ID 생성
+                const reportId = Date.now().toString();
+
+                // LLM 설정 가져오기
+                const llmSettings = getLLMSettings();
+
+                // 사용자 입력 데이터를 CS 형식으로 매핑하여 저장
+                const userInputData = {
+                    reportId: reportId,
+                    createdAt: new Date().toISOString(),
+                    // CS 데이터 매핑 (Source-CS-Sections.md 기준)
+                    CS0: selectedDrug.ingredient,           // 성분명
+                    CS1: selectedDrug.brand,                // 브랜드명
+                    CS2: selectedDrug.company,              // 회사명
+                    CS5: selectedDrug.approval_date,        // 국내허가일자
+                    CS6: formData.first_approval_date,      // 보고서제출일
+                    CS7: formData.first_approval_country,   // 최초허가국
+                    CS13: formData.submitter,               // 제출자/유효기간
+                    CS24: formData.report_period,           // MedDRA버전/보고주기
+                    // 추가 정보 (약품DB에서 자동 입력)
+                    CS15: selectedDrug.efficacy,            // 효능효과
+                    CS16: selectedDrug.dosage,              // 용법용량
+                    // 메타 정보
+                    authorName: formData.author_name,
+                    authorPosition: formData.author_position,
+                    description: formData.description,
+                    // LLM 설정
+                    llmSettings: llmSettings
+                };
+
+                // localStorage에 저장
+                localStorage.setItem('current_report', JSON.stringify(userInputData));
+                console.log('✅ 사용자 입력 데이터 저장:', userInputData);
+
+                // 저장 완료 후 처리
+                setTimeout(() => {
+                    hideLLMLoading();
+                    showToast('보고서가 생성되었습니다.', 'success');
+
+                    // 다음 단계 (Stage 2: 통합 처리)로 이동
+                    setTimeout(() => {
+                        navigateTo(`P14_UnifiedProcessing.html?reportId=${reportId}`);
+                    }, 1000);
+                }, 1000);
+            });
+        }
+
+        function openDrugSelector() {
+            document.getElementById('drugSelectorModal').classList.add('show');
+            renderDrugList();
+        }
+
+        function closeDrugSelector() {
+            document.getElementById('drugSelectorModal').classList.remove('show');
+        }
+
+        function setupDrugSearch() {
+            const searchInput = document.getElementById('drugSearch');
+            searchInput.addEventListener('input', (e) => {
+                renderDrugList(e.target.value);
+            });
+        }
+
+        function renderDrugList(searchTerm = '') {
+            const list = document.getElementById('drugList');
+            const filtered = drugDatabase.filter(drug =>
+                drug.ingredient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                drug.brand.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            list.innerHTML = filtered.map(drug => `
+                <div class="drug-item" onclick="selectDrug(${drug.id})">
+                    <div class="drug-item-name">${drug.ingredient} (${drug.brand})</div>
+                    <div class="drug-item-meta">${drug.company} · 허가일: ${drug.approval_date}</div>
+                </div>
+            `).join('');
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #9CA3AF; padding: 40px;">검색 결과가 없습니다.</p>';
+            }
+        }
+
+        function selectDrug(drugId) {
+            selectedDrug = drugDatabase.find(d => d.id === drugId);
+
+            if (selectedDrug) {
+                // 버튼 업데이트
+                const btn = document.querySelector('.drug-search-btn');
+                btn.classList.add('drug-selected');
+                document.getElementById('selectedDrugName').textContent =
+                    `${selectedDrug.ingredient} (${selectedDrug.brand})`;
+
+                // 자동 채워진 정보 표시
+                document.getElementById('autoFilledSection').style.display = 'block';
+                document.getElementById('af_ingredient').textContent = selectedDrug.ingredient;
+                document.getElementById('af_brand').textContent = selectedDrug.brand;
+                document.getElementById('af_company').textContent = selectedDrug.company;
+                document.getElementById('af_cs4').value = selectedDrug.report_end_date;
+                document.getElementById('af_approval_date').textContent = selectedDrug.approval_date;
+                document.getElementById('af_efficacy').textContent = selectedDrug.efficacy;
+                document.getElementById('af_dosage').textContent = selectedDrug.dosage;
+
+                // CS3 자동 계산
+                updateReportDates();
+
+                // 모달 닫기
+                closeDrugSelector();
+
+                showToast('약품 정보가 자동으로 입력되었습니다.', 'success');
+            }
+        }
+
+        // 선택된 모델 정보 업데이트
+        function updateSelectedModelInfo() {
+            const modelSelect = document.getElementById('llm_model');
+            const hintDisplay = document.getElementById('modelInfoHint');
+
+            const modelInfo = {
+                'gemini-3-flash-preview': '빠르고 효율적인 최신 모델',
+                'gemini-2.0-pro': '균형 잡힌 고품질 모델',
+                'gemini-2.5-flash': '최저 비용의 경제적 모델',
+                'claude-opus-4-5': '최고 품질의 심층 분석 모델',
+                'claude-sonnet-3-5': '품질과 비용의 균형',
+                'claude-haiku-3-5': '빠른 처리 속도',
+                'gpt-4o': '고품질 범용 모델',
+                'gpt-4o-mini': '경제적인 경량 모델'
+            };
+
+            hintDisplay.textContent = modelInfo[modelSelect.value] || '';
+        }
+
+        // LLM 설정 데이터 가져오기
+        function getLLMSettings() {
+            const model = document.getElementById('llm_model').value;
+            return {
+                mode: 'single',
+                model: model
+            };
+        }
+
+        // CS3 = CS4 - CS24 계산 함수
+        function updateReportDates() {
+            const cs4Input = document.getElementById('af_cs4');
+            const cs24Select = document.getElementById('report_period');
+            const cs3Display = document.getElementById('af_cs3');
+
+            if (!cs4Input || !cs24Select || !cs3Display) return;
+
+            const cs4Value = cs4Input.value;
+            const cs24Value = parseInt(cs24Select.value) || 5; // 기본 5년
+
+            if (cs4Value) {
+                const cs4Date = new Date(cs4Value);
+                const cs3Date = new Date(cs4Date);
+                cs3Date.setFullYear(cs3Date.getFullYear() - cs24Value);
+                cs3Date.setDate(cs3Date.getDate() + 1); // 시작일은 종료일 - N년 + 1일
+
+                const cs3Formatted = cs3Date.toISOString().split('T')[0];
+                cs3Display.textContent = cs3Formatted;
+            } else {
+                cs3Display.textContent = '-';
+            }
+        }
+    </script>
+</body>
+</html>
