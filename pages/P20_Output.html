@@ -795,11 +795,26 @@
                 return reportContent;
             }
 
-            // 2. generatedSections에서 생성
-            if (generatedSections && generatedSections.length > 0) {
+            // 2. generatedSections에서 생성 (배열 또는 객체 형태 모두 지원)
+            let sectionsArray = [];
+
+            if (generatedSections) {
+                if (Array.isArray(generatedSections)) {
+                    sectionsArray = generatedSections;
+                } else if (typeof generatedSections === 'object') {
+                    // 객체인 경우 값들을 배열로 변환하고 ID 기준 정렬
+                    sectionsArray = Object.values(generatedSections).sort((a, b) => {
+                        const idA = parseInt(a.id) || 0;
+                        const idB = parseInt(b.id) || 0;
+                        return idA - idB;
+                    });
+                }
+            }
+
+            if (sectionsArray.length > 0) {
                 let html = '<h1>의약품 재심사 안전성 정기보고서</h1>\n';
 
-                generatedSections.forEach((section, index) => {
+                sectionsArray.forEach((section) => {
                     if (section && section.content) {
                         // Markdown을 HTML로 간단 변환
                         let content = section.content;
