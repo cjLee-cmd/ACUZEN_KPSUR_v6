@@ -1,10 +1,39 @@
 /**
  * QC Validator
  * 품질 검증 및 오류 확인
+ * GitHub Pages 배포용 - 전역 window 객체 사용
  */
 
-import { DateHelper } from './config.js';
-import llmClient from './llm-client.js';
+// IIFE로 감싸서 const 선언이 전역 스코프와 충돌하지 않도록 함
+(function() {
+'use strict';
+
+// 전역 의존성 fallback (config.js에서 이미 선언된 경우 재선언하지 않음)
+if (!window.DateHelper) {
+    window.DateHelper = {
+        formatYYMMDD_hhmmss: (date = new Date()) => {
+            const yy = String(date.getFullYear()).slice(-2);
+            const MM = String(date.getMonth() + 1).padStart(2, '0');
+            const DD = String(date.getDate()).padStart(2, '0');
+            const hh = String(date.getHours()).padStart(2, '0');
+            const mm = String(date.getMinutes()).padStart(2, '0');
+            const ss = String(date.getSeconds()).padStart(2, '0');
+            return `${yy}${MM}${DD}_${hh}${mm}${ss}`;
+        },
+        formatISO: (date = new Date()) => date.toISOString()
+    };
+}
+
+// llmClient fallback (llm-client.js에서 이미 선언된 경우 재선언하지 않음)
+if (!window.llmClient && !window.multiLLMClient) {
+    window.llmClient = {
+        sendMessage: async (prompt) => ({ content: 'Mock response', usage: {} })
+    };
+}
+
+// 로컬 참조 (기존 코드 호환성 유지)
+const DateHelper = window.DateHelper;
+const llmClient = window.llmClient || window.multiLLMClient;
 
 class QCValidator {
     constructor() {
@@ -92,10 +121,11 @@ ${JSON.stringify(extractedData, null, 2)}
 
         if (result.success) {
             try {
-                const jsonMatch = result.text.match(/```json\n([\s\S]*?)\n```/);
+                const responseText = result.text || result.content || '';
+                const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
                 if (jsonMatch) {
                     const validation = JSON.parse(jsonMatch[1]);
-                    this.issues.push(...validation.issues);
+                    this.issues.push(...(validation.issues || []));
                 }
             } catch (error) {
                 console.error('❌ Failed to parse QC validation result:', error.message);
@@ -149,10 +179,11 @@ ${sourceDocuments.substring(0, 3000)}
 
         if (result.success) {
             try {
-                const jsonMatch = result.text.match(/```json\n([\s\S]*?)\n```/);
+                const responseText = result.text || result.content || '';
+                const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
                 if (jsonMatch) {
                     const validation = JSON.parse(jsonMatch[1]);
-                    this.issues.push(...validation.issues);
+                    this.issues.push(...(validation.issues || []));
                 }
             } catch (error) {
                 console.error('❌ Failed to parse source validation result:', error.message);
@@ -301,10 +332,11 @@ ${sourceDocuments.substring(0, 2000)}
 
         if (result.success) {
             try {
-                const jsonMatch = result.text.match(/```json\n([\s\S]*?)\n```/);
+                const responseText = result.text || result.content || '';
+                const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
                 if (jsonMatch) {
                     const validation = JSON.parse(jsonMatch[1]);
-                    this.issues.push(...validation.issues);
+                    this.issues.push(...(validation.issues || []));
                 }
             } catch (error) {
                 console.error('❌ Failed to parse narrative validation result:', error.message);
@@ -484,4 +516,10 @@ ${sourceDocuments.substring(0, 2000)}
 // Singleton instance
 const qcValidator = new QCValidator();
 
-export default qcValidator;
+// 전역으로 내보내기 (ES6 모듈 대신 window 객체 사용)
+if (typeof window !== 'undefined') {
+    window.qcValidator = qcValidator;
+    window.QCValidator = QCValidator;
+}
+
+})(); // IIFE 종료

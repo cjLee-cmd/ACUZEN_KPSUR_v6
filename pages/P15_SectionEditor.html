@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPSUR - Stage 3: 섹션 편집</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --bg-light: #F8FAFC;
+            --bg-dark: #1E293B;
+            --text-light: #1E293B;
+            --text-dark: #F1F5F9;
+            --border-light: #E2E8F0;
+            --border-dark: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.dark-mode {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { font-size: 1.5rem; font-weight: 600; }
+        .header-right { display: flex; gap: 1rem; align-items: center; }
+        .header-right button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .header-right button:hover { background: rgba(255,255,255,0.3); }
+
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        body.dark-mode .sidebar {
+            background: #0F172A;
+            border-color: var(--border-dark);
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 600;
+        }
+        body.dark-mode .sidebar-header { border-color: var(--border-dark); }
+
+        .section-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .section-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 0.25rem;
+        }
+        .section-item:hover { background: var(--bg-light); }
+        body.dark-mode .section-item:hover { background: #1E293B; }
+        .section-item.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .section-status {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .section-status.pending { background: #94A3B8; color: white; }
+        .section-status.generated { background: var(--success); color: white; }
+        .section-status.edited { background: var(--warning); color: white; }
+
+        .section-info { flex: 1; min-width: 0; }
+        .section-id { font-weight: 600; font-size: 0.875rem; }
+        .section-name {
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Editor Area */
+        .editor-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-toolbar {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+        body.dark-mode .editor-toolbar {
+            background: #0F172A;
+            border-color: var(--border-dark);
+        }
+
+        .editor-title { font-size: 1.25rem; font-weight: 600; }
+        .editor-actions { display: flex; gap: 0.5rem; }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--text-light);
+        }
+        body.dark-mode .btn-outline {
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--primary-dark); }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover { background: #059669; }
+
+        /* Split View */
+        .split-view {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .split-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .split-panel + .split-panel {
+            border-left: 1px solid var(--border-light);
+        }
+        body.dark-mode .split-panel + .split-panel { border-color: var(--border-dark); }
+
+        .panel-header {
+            padding: 0.75rem 1rem;
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 500;
+            font-size: 0.875rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        body.dark-mode .panel-header {
+            background: #1E293B;
+            border-color: var(--border-dark);
+        }
+
+        .panel-content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: white;
+        }
+        body.dark-mode .panel-content { background: #0F172A; }
+
+        /* Markdown Source */
+        .markdown-source {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Editable Content */
+        .editable-content {
+            min-height: 100%;
+            outline: none;
+            line-height: 1.8;
+        }
+        .editable-content:focus {
+            background: rgba(59, 130, 246, 0.02);
+        }
+        .editable-content h1 { font-size: 1.5rem; margin: 1rem 0; }
+        .editable-content h2 { font-size: 1.25rem; margin: 0.75rem 0; color: var(--primary); }
+        .editable-content h3 { font-size: 1.1rem; margin: 0.5rem 0; }
+        .editable-content p { margin: 0.5rem 0; }
+        .editable-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+        .editable-content th, .editable-content td {
+            border: 1px solid var(--border-light);
+            padding: 0.5rem;
+            text-align: left;
+        }
+        body.dark-mode .editable-content th,
+        body.dark-mode .editable-content td { border-color: var(--border-dark); }
+
+        /* Footer Navigation */
+        .footer-nav {
+            padding: 1rem 2rem;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+        }
+        body.dark-mode .footer-nav {
+            background: #0F172A;
+            border-color: var(--border-dark);
+        }
+
+        .footer-info { color: #64748B; font-size: 0.875rem; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--error); }
+        .toast.info { background: var(--primary); }
+
+        /* Summary Badge */
+        .summary-badge {
+            display: flex;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+        }
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge-gray { background: rgba(148, 163, 184, 0.1); color: #64748B; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #64748B;
+        }
+        .empty-state-icon { font-size: 4rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>KPSUR AGENT</h1>
+        <div class="header-right">
+            <button onclick="toggleDarkMode()">🌙 다크모드</button>
+            <button onclick="location.href='P10_Dashboard.html'">🏠 대시보드</button>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>📑 섹션 목록</span>
+                    <div class="summary-badge" id="summaryBadge">
+                        <span class="badge badge-success">0 완료</span>
+                        <span class="badge badge-warning">0 수정</span>
+                    </div>
+                </div>
+            </div>
+            <div class="section-list" id="sectionList">
+                <!-- 섹션 목록이 여기에 렌더링됩니다 -->
+            </div>
+        </aside>
+
+        <!-- Editor Area -->
+        <main class="editor-area">
+            <div class="editor-toolbar">
+                <div class="editor-title" id="editorTitle">섹션을 선택하세요</div>
+                <div class="editor-actions">
+                    <button class="btn btn-outline" onclick="resetSection()">↺ 초기화</button>
+                    <button class="btn btn-primary" onclick="saveSection()">💾 저장</button>
+                </div>
+            </div>
+
+            <div class="split-view" id="splitView">
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-state-icon">📝</div>
+                    <h3>섹션을 선택하세요</h3>
+                    <p>왼쪽 목록에서 편집할 섹션을 선택합니다</p>
+                </div>
+
+                <!-- Split Panels (hidden initially) -->
+                <div class="split-panel" id="sourcePanel" style="display: none;">
+                    <div class="panel-header">
+                        <span>📄 마크다운 소스</span>
+                        <button class="btn btn-outline" onclick="copySource()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">복사</button>
+                    </div>
+                    <div class="panel-content">
+                        <div class="markdown-source" id="markdownSource"></div>
+                    </div>
+                </div>
+
+                <div class="split-panel" id="editorPanel" style="display: none;">
+                    <div class="panel-header">
+                        <span>✏️ 편집 가능</span>
+                        <span id="editStatus" style="font-size: 0.75rem; color: #64748B;">저장됨</span>
+                    </div>
+                    <div class="panel-content">
+                        <div class="editable-content" id="editableContent" contenteditable="true"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer Navigation -->
+    <footer class="footer-nav">
+        <button class="btn btn-outline" onclick="location.href='P14_UnifiedProcessing.html'">
+            ← 이전: 통합 처리
+        </button>
+        <div class="footer-info" id="footerInfo">
+            15개 섹션 중 0개 완료
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-outline" onclick="mergeAll()">📎 전체 병합</button>
+            <button class="btn btn-outline" onclick="exportWord()">📥 Word 내보내기</button>
+            <button class="btn btn-success" onclick="location.href='P19_QC.html'">다음: QC →</button>
+        </div>
+    </footer>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/section-editor.js"></script>
+
+    <script>
+        // 전역 변수
+        let editor = null;
+        let currentSectionId = null;
+        let isEdited = false;
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initDarkMode();
+            initEditor();
+            renderSectionList();
+            updateSummary();
+
+            // 편집 이벤트 리스너
+            document.getElementById('editableContent').addEventListener('input', function() {
+                isEdited = true;
+                document.getElementById('editStatus').textContent = '수정됨 (저장 필요)';
+                document.getElementById('editStatus').style.color = '#F59E0B';
+            });
+        });
+
+        // 다크모드
+        function initDarkMode() {
+            const isDark = localStorage.getItem('theme') === 'dark';
+            if (isDark) document.body.classList.add('dark-mode');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Editor 초기화
+        function initEditor() {
+            editor = new window.SectionEditor();
+            const loaded = editor.loadSections();
+
+            if (!loaded) {
+                showToast('생성된 섹션이 없습니다. 통합 처리를 먼저 실행하세요.', 'warning');
+            }
+        }
+
+        // 섹션 목록 렌더링
+        function renderSectionList() {
+            const sectionList = document.getElementById('sectionList');
+            const definitions = editor.getSectionDefinitions();
+
+            sectionList.innerHTML = definitions.map(def => {
+                const section = editor.getSection(def.id);
+                const status = editor.getSectionStatus(def.id);
+                const statusIcon = status === 'edited' ? '✏️' :
+                                   status === 'generated' ? '✓' : '○';
+
+                return `
+                    <div class="section-item ${currentSectionId === def.id ? 'active' : ''}"
+                         onclick="selectSection('${def.id}')">
+                        <div class="section-status ${status}">${statusIcon}</div>
+                        <div class="section-info">
+                            <div class="section-id">${def.id}</div>
+                            <div class="section-name">${def.name}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 섹션 선택
+        function selectSection(sectionId) {
+            // 저장 안 된 변경사항 확인
+            if (isEdited && currentSectionId) {
+                if (!confirm('저장되지 않은 변경사항이 있습니다. 계속하시겠습니까?')) {
+                    return;
+                }
+            }
+
+            currentSectionId = sectionId;
+            editor.setCurrentSection(sectionId);
+            isEdited = false;
+
+            // UI 업데이트
+            renderSectionList();
+            loadSectionContent();
+
+            // 패널 표시
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('sourcePanel').style.display = 'flex';
+            document.getElementById('editorPanel').style.display = 'flex';
+        }
+
+        // 섹션 내용 로드
+        function loadSectionContent() {
+            const section = editor.getCurrentSection();
+            if (!section) return;
+
+            // 타이틀 업데이트
+            document.getElementById('editorTitle').textContent =
+                `${section.id}. ${section.name}`;
+
+            // 마크다운 소스
+            document.getElementById('markdownSource').textContent = section.content || '';
+
+            // 편집 가능 영역 (HTML 변환)
+            const html = editor.markdownToHtml(section.content);
+            document.getElementById('editableContent').innerHTML = html;
+
+            // 편집 상태 초기화
+            document.getElementById('editStatus').textContent = '저장됨';
+            document.getElementById('editStatus').style.color = '#64748B';
+        }
+
+        // 섹션 저장
+        function saveSection() {
+            if (!currentSectionId) {
+                showToast('저장할 섹션이 선택되지 않았습니다', 'error');
+                return;
+            }
+
+            const html = document.getElementById('editableContent').innerHTML;
+            const markdown = editor.htmlToMarkdown(html);
+
+            editor.updateSection(currentSectionId, markdown);
+            editor.saveSection(currentSectionId);
+
+            isEdited = false;
+            document.getElementById('editStatus').textContent = '저장됨';
+            document.getElementById('editStatus').style.color = 'var(--success)';
+
+            // 마크다운 소스 업데이트
+            document.getElementById('markdownSource').textContent = markdown;
+
+            renderSectionList();
+            updateSummary();
+            showToast('섹션이 저장되었습니다', 'success');
+        }
+
+        // 섹션 초기화
+        function resetSection() {
+            if (!currentSectionId) return;
+
+            if (!confirm('이 섹션을 원본으로 초기화하시겠습니까?')) {
+                return;
+            }
+
+            editor.resetSection(currentSectionId);
+            loadSectionContent();
+            isEdited = false;
+            renderSectionList();
+            showToast('섹션이 초기화되었습니다', 'info');
+        }
+
+        // 마크다운 소스 복사
+        function copySource() {
+            const source = document.getElementById('markdownSource').textContent;
+            navigator.clipboard.writeText(source).then(() => {
+                showToast('클립보드에 복사되었습니다', 'success');
+            });
+        }
+
+        // 요약 업데이트
+        function updateSummary() {
+            const summary = editor.getSummary();
+
+            document.getElementById('summaryBadge').innerHTML = `
+                <span class="badge badge-success">${summary.generated} 완료</span>
+                <span class="badge badge-warning">${summary.edited} 수정</span>
+            `;
+
+            document.getElementById('footerInfo').textContent =
+                `15개 섹션 중 ${summary.generated}개 완료`;
+        }
+
+        // 전체 병합
+        function mergeAll() {
+            if (isEdited) {
+                if (!confirm('저장되지 않은 변경사항이 있습니다. 먼저 저장하시겠습니까?')) {
+                    return;
+                }
+                saveSection();
+            }
+
+            const merged = editor.mergeAllSections();
+            showToast('전체 보고서가 병합되었습니다', 'success');
+
+            // 다운로드 옵션
+            if (confirm('병합된 보고서를 다운로드하시겠습니까?')) {
+                downloadMerged(merged);
+            }
+        }
+
+        // 병합 결과 다운로드
+        function downloadMerged(content) {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '').substring(0, 15);
+            const filename = `PSUR_Merged_${timestamp}.md`;
+
+            const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            showToast(`${filename} 다운로드됨`, 'success');
+        }
+
+        // Word 내보내기
+        async function exportWord() {
+            if (isEdited) {
+                if (!confirm('저장되지 않은 변경사항이 있습니다. 먼저 저장하시겠습니까?')) {
+                    return;
+                }
+                saveSection();
+            }
+
+            const success = await editor.exportToWord();
+            if (success) {
+                showToast('파일이 다운로드되었습니다', 'success');
+            } else {
+                showToast('내보내기 실패', 'error');
+            }
+        }
+
+        // Toast 표시
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+    </script>
+</body>
+</html>

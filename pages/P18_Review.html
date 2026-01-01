@@ -622,6 +622,159 @@
             justify-content: flex-end;
             gap: 8px;
         }
+
+        /* 마크다운 파일 리스트 스타일 */
+        .markdown-files-section {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .markdown-files-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .markdown-files-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-files-count {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-file-item {
+            padding: 8px 10px;
+            margin-bottom: 4px;
+            background: var(--section-bg);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .markdown-file-item:hover {
+            background: #e2e8f0;
+        }
+
+        [data-theme="dark"] .markdown-file-item:hover {
+            background: #475569;
+        }
+
+        .markdown-file-icon {
+            font-size: 14px;
+        }
+
+        .markdown-file-name {
+            font-size: 11px;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .markdown-file-rawid {
+            font-size: 9px;
+            padding: 2px 6px;
+            background: #25739B;
+            color: white;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        /* 마크다운 팝업 스타일 */
+        .markdown-popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .markdown-popup-overlay.show {
+            display: flex;
+        }
+
+        .markdown-popup {
+            background: var(--card-bg);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .markdown-popup-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--section-bg);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .markdown-popup-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .markdown-popup-close {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .markdown-popup-close:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .markdown-popup-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            color: var(--text-primary);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .markdown-popup-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            background: var(--section-bg);
+            border-radius: 0 0 12px 12px;
+        }
     </style>
 </head>
 <body>
@@ -661,6 +814,12 @@
             </div>
         </header>
     </div>
+
+    <!-- 공통 스크립트 로드 -->
+    <script src="../js/config.js"></script>
+    <script src="../utils/ui-helpers.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/workflow-manager.js"></script>
 
     <!-- Dark Mode Script -->
     <script>
@@ -718,64 +877,64 @@
         </div>
     </div>
 
+    <!-- Markdown File Popup -->
+    <div id="markdownPopupOverlay" class="markdown-popup-overlay" onclick="closeMarkdownPopup(event)">
+        <div class="markdown-popup" onclick="event.stopPropagation()">
+            <div class="markdown-popup-header">
+                <div class="markdown-popup-title">
+                    <span>📄</span>
+                    <span id="markdownPopupFileName">파일명</span>
+                </div>
+                <button class="markdown-popup-close" onclick="closeMarkdownPopup()">&times;</button>
+            </div>
+            <div class="markdown-popup-content" id="markdownPopupContent">
+                <!-- 마크다운 내용이 여기에 표시됩니다 -->
+            </div>
+            <div class="markdown-popup-footer">
+                <button class="btn btn-secondary" onclick="copyPopupMarkdown()">📋 복사</button>
+                <button class="btn btn-primary" onclick="closeMarkdownPopup()">닫기</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // CONFIG - System configuration
-        const CONFIG = {
-            SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMDE0MDIsImV4cCI6MjA2NDU3NzQwMn0.LQNQJP93IjNA0PIoYj5UEfcBLgFckAbz_qJHpjlWpL0',
-            APP_NAME: 'KPSUR AGENT',
-            VERSION: '1.0.0'
-        };
+        // 전역 의존성 fallback (공통 스크립트가 로드되지 않은 경우)
+        // config.js에서 이미 선언된 경우 재선언하지 않음
+        if (!window.CONFIG) {
+            window.CONFIG = {
+                SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
+                SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMDE0MDIsImV4cCI6MjA2NDU3NzQwMn0.LQNQJP93IjNA0PIoYj5UEfcBLgFckAbz_qJHpjlWpL0',
+                APP_NAME: 'KPSUR AGENT',
+                VERSION: '1.0.0'
+            };
+        }
 
-        // Storage - localStorage wrapper
-        const Storage = {
-            get: (key) => {
-                try {
-                    const item = localStorage.getItem(key);
-                    return item ? JSON.parse(item) : null;
-                } catch (e) {
-                    console.error('Storage.get error:', e);
-                    return null;
-                }
-            },
-            set: (key, value) => {
-                try {
-                    localStorage.setItem(key, JSON.stringify(value));
-                    return true;
-                } catch (e) {
-                    console.error('Storage.set error:', e);
-                    return false;
-                }
-            },
-            remove: (key) => {
-                try {
-                    localStorage.removeItem(key);
-                    return true;
-                } catch (e) {
-                    console.error('Storage.remove error:', e);
-                    return false;
-                }
-            }
-        };
+        if (!window.Storage) {
+            window.Storage = {
+                get: (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+                set: (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } },
+                remove: (key) => { try { localStorage.removeItem(key); return true; } catch { return false; } }
+            };
+        }
 
-        // DateHelper - Date formatting utilities
-        const DateHelper = {
-            format: (date, format = 'YYYY-MM-DD') => {
-                const d = new Date(date);
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                const hours = String(d.getHours()).padStart(2, '0');
-                const minutes = String(d.getMinutes()).padStart(2, '0');
-                return format
-                    .replace('YYYY', year)
-                    .replace('MM', month)
-                    .replace('DD', day)
-                    .replace('HH', hours)
-                    .replace('mm', minutes);
-            },
-            now: () => new Date().toISOString()
-        };
+        if (!window.DateHelper) {
+            window.DateHelper = {
+                format: (date, format = 'YYYY-MM-DD') => {
+                    const d = new Date(date);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const hours = String(d.getHours()).padStart(2, '0');
+                    const minutes = String(d.getMinutes()).padStart(2, '0');
+                    return format.replace('YYYY', year).replace('MM', month).replace('DD', day).replace('HH', hours).replace('mm', minutes);
+                },
+                formatISO: (date = new Date()) => date.toISOString(),
+                now: () => new Date().toISOString()
+            };
+        }
+
+        // config.js에서 로드된 전역 객체 사용
+        // (const 재선언 금지 - 전역 스코프 충돌 방지)
 
         // AppLayout stub class
         class AppLayout {
@@ -795,33 +954,49 @@
             load: async () => ({})
         };
 
-        // authManager stub
-        const authManager = {
-            isAuthenticated: () => true,
-            getUser: () => ({ name: '관리자', role: 'Admin' })
-        };
+        // authManager fallback (auth.js에서 이미 선언된 경우 재선언하지 않음)
+        if (!window.authManager) {
+            window.authManager = {
+                isAuthenticated: () => true,
+                getUser: () => ({ name: '관리자', role: 'Admin' })
+            };
+        }
 
         // Load draft report from P17
         const draftReport = Storage.get('draftReport') || {};
         const generatedSections = draftReport.sections || {};
 
-        // Section data
+        // Load markdown files from stage2_result
+        const stage2Result = Storage.get('stage2_result') || {};
+        const markdownFilesRaw = stage2Result.markdowns || {};
+
+        // Convert markdowns object to array for easier handling
+        const markdownFiles = Object.keys(markdownFilesRaw).map(key => {
+            const file = markdownFilesRaw[key];
+            return {
+                name: file.filename || `파일_${key}`,
+                markdown: file.markdown || '',
+                rawId: file.rawType || file.rawId || ''
+            };
+        });
+
+        // Section data - PSUR/PBRER 표준 구조
         const sections = [
             { id: 'S00', number: '00', name: '표지', status: 'pending' },
-            { id: 'S01', number: '01', name: '개요', status: 'pending' },
-            { id: 'S02', number: '02', name: '국내외허가현황', status: 'pending' },
-            { id: 'S03', number: '03', name: '시판후sales데이터', status: 'pending' },
-            { id: 'S04', number: '04', name: '국내신속보고내역', status: 'pending' },
-            { id: 'S05', number: '05', name: '국내정기보고내역', status: 'pending' },
-            { id: 'S06', number: '06', name: '국내원시자료', status: 'pending' },
-            { id: 'S07', number: '07', name: '국내외안전성조치현황', status: 'pending' },
-            { id: 'S08', number: '08', name: '국내외판매중지현황', status: 'pending' },
-            { id: 'S09', number: '09', name: '해외신속보고내역', status: 'pending' },
-            { id: 'S10', number: '10', name: '해외정기보고내역', status: 'pending' },
-            { id: 'S11', number: '11', name: '해외원시자료', status: 'pending' },
-            { id: 'S12', number: '12', name: '총괄평가', status: 'pending' },
-            { id: 'S13', number: '13', name: '결론', status: 'pending' },
-            { id: 'S14', number: '14', name: '참고문헌', status: 'pending' }
+            { id: 'S01', number: '01', name: '목차', status: 'pending' },
+            { id: 'S02', number: '02', name: '약어및정의', status: 'pending' },
+            { id: 'S03', number: '03', name: '서론', status: 'pending' },
+            { id: 'S04', number: '04', name: '전세계판매허가현황', status: 'pending' },
+            { id: 'S05', number: '05', name: '안전성조치및참조정보', status: 'pending' },
+            { id: 'S06', number: '06', name: '시판후노출환자현황', status: 'pending' },
+            { id: 'S07', number: '07', name: '임상시험', status: 'pending' },
+            { id: 'S08', number: '08', name: '개별증례병력', status: 'pending' },
+            { id: 'S09', number: '09', name: '시험', status: 'pending' },
+            { id: 'S10', number: '10', name: '기타정보', status: 'pending' },
+            { id: 'S11', number: '11', name: '종합적인안전성평가', status: 'pending' },
+            { id: 'S12', number: '12', name: '결론', status: 'pending' },
+            { id: 'S13', number: '13', name: '참고문헌', status: 'pending' },
+            { id: 'S14', number: '14', name: '별첨', status: 'pending' }
         ];
 
         // Load section contents from generated sections
@@ -871,6 +1046,17 @@
                             </div>
                         </div>
                         <div id="sectionNavList"></div>
+
+                        <!-- 마크다운 변환 파일 리스트 -->
+                        <div class="markdown-files-section">
+                            <div class="markdown-files-header">
+                                <div class="markdown-files-title">📝 마크다운 변환 파일</div>
+                                <div class="markdown-files-count">
+                                    <span id="markdownFilesCount">0</span>개
+                                </div>
+                            </div>
+                            <div id="markdownFilesList"></div>
+                        </div>
                     </div>
 
                     <!-- Main Panel - Review Editor -->
@@ -969,6 +1155,7 @@
             }
 
             renderSectionNav();
+            renderMarkdownFilesList();
             selectSection(sections[0]);
             updateStats();
         }
@@ -990,6 +1177,92 @@
 
             document.getElementById('sectionNavList').innerHTML = navHtml;
         }
+
+        // Render markdown files list
+        function renderMarkdownFilesList() {
+            const listContainer = document.getElementById('markdownFilesList');
+            const countElement = document.getElementById('markdownFilesCount');
+
+            if (!listContainer) return;
+
+            if (markdownFiles.length === 0) {
+                listContainer.innerHTML = `
+                    <p style="color: var(--text-muted); font-size: 11px; text-align: center; padding: 12px;">
+                        변환된 파일이 없습니다
+                    </p>
+                `;
+                countElement.textContent = '0';
+                return;
+            }
+
+            // Get file icon based on original file type
+            const getFileIcon = (filename) => {
+                const ext = filename.split('.').pop().toLowerCase();
+                if (ext === 'pdf') return '📄';
+                if (ext === 'xlsx' || ext === 'xls') return '📊';
+                if (ext === 'docx' || ext === 'doc') return '📝';
+                return '📁';
+            };
+
+            const filesHtml = markdownFiles.map((file, index) => `
+                <div class="markdown-file-item" onclick="showMarkdownPopup(${index})" title="${file.name}">
+                    <span class="markdown-file-icon">${getFileIcon(file.name)}</span>
+                    <span class="markdown-file-name">${file.name}</span>
+                    ${file.rawId ? `<span class="markdown-file-rawid">${file.rawId}</span>` : ''}
+                </div>
+            `).join('');
+
+            listContainer.innerHTML = filesHtml;
+            countElement.textContent = markdownFiles.length;
+        }
+
+        // Show markdown popup
+        function showMarkdownPopup(fileIndex) {
+            const file = markdownFiles[fileIndex];
+            if (!file) return;
+
+            const overlay = document.getElementById('markdownPopupOverlay');
+            const fileNameEl = document.getElementById('markdownPopupFileName');
+            const contentEl = document.getElementById('markdownPopupContent');
+
+            fileNameEl.textContent = file.name;
+            contentEl.textContent = file.markdown || file.content || '마크다운 내용이 없습니다.';
+
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close markdown popup
+        function closeMarkdownPopup(event) {
+            // If called from overlay click, check if it's the overlay itself
+            if (event && event.target !== event.currentTarget) {
+                return;
+            }
+
+            const overlay = document.getElementById('markdownPopupOverlay');
+            overlay.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Copy popup markdown content
+        function copyPopupMarkdown() {
+            const content = document.getElementById('markdownPopupContent').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                showToast('마크다운이 복사되었습니다', 'success');
+            }).catch(() => {
+                showToast('복사에 실패했습니다', 'error');
+            });
+        }
+
+        // Close popup on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('markdownPopupOverlay');
+                if (overlay && overlay.classList.contains('show')) {
+                    closeMarkdownPopup();
+                }
+            }
+        });
 
         // Select section
         function selectSection(section) {

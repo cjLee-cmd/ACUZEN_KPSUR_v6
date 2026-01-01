@@ -838,13 +838,34 @@
     <!-- Header -->
     <header class="app-header">
         <div class="header-left">
-            <div class="header-logo">KPSUR AGENT</div>
+            <div class="logo">
+                <span class="logo-text">KPSUR AGENT</span>
+                <span class="logo-subtitle">ACUZEN AI</span>
+            </div>
+            <span class="deployment-badge test">테스트</span>
         </div>
+
+        <div class="header-center">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">시스템</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item active">시스템 설정</span>
+            </div>
+        </div>
+
         <div class="header-right">
-            <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+            <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
                 <span class="icon-sun">☀️</span>
                 <span class="icon-moon">🌙</span>
             </button>
+            <div class="user-menu">
+                <div class="user-avatar">사</div>
+                <div class="user-info">
+                    <div class="user-name">사용자</div>
+                    <div class="user-role">Admin</div>
+                </div>
+                <button class="user-menu-toggle">▼</button>
+            </div>
         </div>
     </header>
 

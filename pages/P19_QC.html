@@ -812,16 +812,45 @@
         <!-- Header -->
         <header class="app-header">
             <div class="header-left">
-                <div class="header-logo">KPSUR AGENT</div>
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
             </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">보고서</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">QC 검증</span>
+                </div>
+            </div>
+
             <div class="header-right">
-                <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
                     <span class="icon-sun">☀️</span>
                     <span class="icon-moon">🌙</span>
                 </button>
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
             </div>
         </header>
     </div>
+
+    <!-- 공통 스크립트 로드 -->
+    <script src="../js/config.js"></script>
+    <script src="../utils/ui-helpers.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/multi-llm-client.js"></script>
+    <script src="../js/workflow-manager.js"></script>
+    <script src="../js/qc-validator.js"></script>
 
     <!-- Dark Mode Script -->
     <script>
@@ -878,63 +907,53 @@
     </div>
 
     <script>
-        // CONFIG - System configuration
-        const CONFIG = {
-            SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMDE0MDIsImV4cCI6MjA2NDU3NzQwMn0.LQNQJP93IjNA0PIoYj5UEfcBLgFckAbz_qJHpjlWpL0',
-            APP_NAME: 'KPSUR AGENT',
-            VERSION: '1.0.0'
-        };
+        // 전역 의존성 fallback (공통 스크립트가 로드되지 않은 경우)
+        // config.js에서 이미 선언된 경우 재선언하지 않음
+        if (!window.CONFIG) {
+            window.CONFIG = {
+                SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
+                SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwMDE0MDIsImV4cCI6MjA2NDU3NzQwMn0.LQNQJP93IjNA0PIoYj5UEfcBLgFckAbz_qJHpjlWpL0',
+                APP_NAME: 'KPSUR AGENT',
+                VERSION: '1.0.0'
+            };
+        }
 
-        // Storage - localStorage wrapper
-        const Storage = {
-            get: (key) => {
-                try {
-                    const item = localStorage.getItem(key);
-                    return item ? JSON.parse(item) : null;
-                } catch (e) {
-                    console.error('Storage.get error:', e);
-                    return null;
-                }
-            },
-            set: (key, value) => {
-                try {
-                    localStorage.setItem(key, JSON.stringify(value));
-                    return true;
-                } catch (e) {
-                    console.error('Storage.set error:', e);
-                    return false;
-                }
-            },
-            remove: (key) => {
-                try {
-                    localStorage.removeItem(key);
-                    return true;
-                } catch (e) {
-                    console.error('Storage.remove error:', e);
-                    return false;
-                }
-            }
-        };
+        if (!window.Storage) {
+            window.Storage = {
+                get: (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+                set: (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } },
+                remove: (key) => { try { localStorage.removeItem(key); return true; } catch { return false; } }
+            };
+        }
 
-        // DateHelper - Date formatting utilities
-        const DateHelper = {
-            format: (date, format = 'YYYY-MM-DD') => {
-                const d = new Date(date);
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                const hours = String(d.getHours()).padStart(2, '0');
-                const minutes = String(d.getMinutes()).padStart(2, '0');
-                return format
-                    .replace('YYYY', year)
-                    .replace('MM', month)
-                    .replace('DD', day)
-                    .replace('HH', hours)
-                    .replace('mm', minutes);
-            },
-            now: () => new Date().toISOString()
-        };
+        if (!window.DateHelper) {
+            window.DateHelper = {
+                format: (date, format = 'YYYY-MM-DD') => {
+                    const d = new Date(date);
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const hours = String(d.getHours()).padStart(2, '0');
+                    const minutes = String(d.getMinutes()).padStart(2, '0');
+                    return format.replace('YYYY', year).replace('MM', month).replace('DD', day).replace('HH', hours).replace('mm', minutes);
+                },
+                formatISO: (date = new Date()) => date.toISOString(),
+                now: () => new Date().toISOString()
+            };
+        }
+
+        // qcValidator fallback (qc-validator.js에서 로드)
+        if (!window.qcValidator) {
+            window.qcValidator = {
+                runFullQC: async (draft, source, extracted) => ({ success: true, issues: [] }),
+                isPassed: () => true,
+                validate: async (data, source) => ({ success: true, issues: [] }),
+                getReport: () => ({})
+            };
+        }
+
+        // config.js에서 로드된 전역 객체 사용
+        // (const 재선언 금지 - 전역 스코프 충돌 방지)
 
         // AppLayout stub class
         class AppLayout {
@@ -948,17 +967,13 @@
             }
         }
 
-        // qcValidator stub
-        const qcValidator = {
-            validate: async (data, source) => ({ success: true, issues: [] }),
-            getReport: () => ({})
-        };
-
-        // authManager stub
-        const authManager = {
-            isAuthenticated: () => true,
-            getUser: () => ({ name: '관리자', role: 'Admin' })
-        };
+        // authManager fallback (auth.js에서 이미 선언된 경우 재선언하지 않음)
+        if (!window.authManager) {
+            window.authManager = {
+                isAuthenticated: () => true,
+                getUser: () => ({ name: '관리자', role: 'Admin' })
+            };
+        }
 
         // Load reviewed sections and source documents
         const reviewedSections = Storage.get('reviewedSections') || {};

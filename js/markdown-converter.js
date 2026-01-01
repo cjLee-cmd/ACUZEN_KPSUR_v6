@@ -3,9 +3,17 @@
  * 소스 문서를 마크다운으로 변환
  */
 
-import { DateHelper } from './config.js';
-import llmClient from './llm-client.js';
-import fileHandler from './file-handler.js';
+// DateHelper fallback (config.js에서 이미 선언된 경우 재선언하지 않음)
+if (!window.DateHelper) {
+    window.DateHelper = {
+        formatISO: () => new Date().toISOString(),
+        formatYYMMDD_hhmmss: () => {
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        }
+    };
+}
 
 class MarkdownConverter {
     constructor() {
@@ -19,16 +27,37 @@ class MarkdownConverter {
     async convertFile(file, rawId, options = {}) {
         console.log(`📝 Converting to markdown: ${file.name}`);
 
+        // 전역 모듈 참조
+        const handler = window.fileHandler;
+        const llm = window.llmClient || window.multiLLMClient;
+
         try {
             // 파일 내용 읽기
-            const fileData = await fileHandler.readFile(file);
+            let fileData;
+            if (handler && typeof handler.readFile === 'function') {
+                fileData = await handler.readFile(file);
+            } else {
+                // Fallback: 직접 파일 읽기
+                fileData = await this.fallbackReadFile(file);
+            }
 
             // LLM을 사용한 마크다운 변환
-            const result = await llmClient.convertToMarkdown(
-                fileData.text,
-                file.name,
-                rawId
-            );
+            let result;
+            if (llm && typeof llm.convertToMarkdown === 'function') {
+                result = await llm.convertToMarkdown(
+                    fileData.text,
+                    file.name,
+                    rawId
+                );
+            } else {
+                // LLM이 없으면 원본 텍스트를 그대로 마크다운으로 반환
+                result = {
+                    success: true,
+                    text: this.textToBasicMarkdown(fileData.text, file.name),
+                    duration: 0,
+                    model: 'none (direct conversion)'
+                };
+            }
 
             if (result.success) {
                 const converted = {
@@ -272,9 +301,89 @@ class MarkdownConverter {
         link.click();
         URL.revokeObjectURL(url);
     }
+
+    /**
+     * Fallback 파일 읽기 (fileHandler 없을 때)
+     */
+    async fallbackReadFile(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        // PDF
+        if (ext === 'pdf' && typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let text = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                text += content.items.map(item => item.str).join(' ') + '\n\n';
+            }
+            return { text, type: 'pdf', pages: pdf.numPages };
+        }
+
+        // Excel
+        if ((ext === 'xlsx' || ext === 'xls') && typeof XLSX !== 'undefined') {
+            const arrayBuffer = await file.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            let text = '';
+            workbook.SheetNames.forEach(sheetName => {
+                const sheet = workbook.Sheets[sheetName];
+                text += `## ${sheetName}\n\n`;
+                text += XLSX.utils.sheet_to_csv(sheet) + '\n\n';
+            });
+            return { text, type: 'excel', sheets: workbook.SheetNames.length };
+        }
+
+        // Word
+        if (ext === 'docx' && typeof mammoth !== 'undefined') {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer });
+            return { text: result.value, type: 'word' };
+        }
+
+        // Text files
+        if (ext === 'txt' || ext === 'md') {
+            const text = await file.text();
+            return { text, type: 'text' };
+        }
+
+        throw new Error(`지원하지 않는 파일 형식: ${ext}`);
+    }
+
+    /**
+     * 텍스트를 기본 마크다운으로 변환 (LLM 없을 때)
+     */
+    textToBasicMarkdown(text, fileName) {
+        const ext = fileName.split('.').pop().toLowerCase();
+        let markdown = `# ${fileName}\n\n`;
+        markdown += `> 자동 변환됨 (${new Date().toISOString()})\n\n`;
+
+        if (ext === 'xlsx' || ext === 'xls') {
+            // CSV를 마크다운 테이블로 변환
+            const lines = text.split('\n').filter(line => line.trim());
+            if (lines.length > 0) {
+                lines.forEach((line, index) => {
+                    const cells = line.split(',').map(cell => cell.trim());
+                    markdown += '| ' + cells.join(' | ') + ' |\n';
+                    if (index === 0) {
+                        markdown += '| ' + cells.map(() => '---').join(' | ') + ' |\n';
+                    }
+                });
+            }
+        } else {
+            markdown += text;
+        }
+
+        return markdown;
+    }
 }
 
 // Singleton instance
 const markdownConverter = new MarkdownConverter();
 
-export default markdownConverter;
+// 전역으로 내보내기 (ES6 모듈 대신 window 객체 사용)
+if (typeof window !== 'undefined') {
+    window.markdownConverter = markdownConverter;
+    window.MarkdownConverter = MarkdownConverter;
+}

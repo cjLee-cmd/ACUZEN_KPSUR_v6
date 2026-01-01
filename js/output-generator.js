@@ -4,6 +4,10 @@
  * docx.js 라이브러리를 사용한 실제 Word 문서 생성
  */
 
+// IIFE로 감싸서 const 선언이 전역 스코프와 충돌하지 않도록 함
+(function() {
+'use strict';
+
 // DateHelper fallback
 const DateHelper = window.DateHelper || {
     formatYYMMDD_hhmmss: () => {
@@ -16,7 +20,13 @@ const DateHelper = window.DateHelper || {
 class OutputGenerator {
     constructor() {
         this.outputHistory = this.loadHistory();
-        this.loadDocxLibrary();
+        // docx 라이브러리는 비동기로 로드 (생성자에서 에러 방지)
+        this.docxLoaded = false;
+        this.loadDocxLibrary().then(() => {
+            this.docxLoaded = true;
+        }).catch(() => {
+            console.warn('docx library not available, using HTML fallback');
+        });
     }
 
     /**
@@ -595,9 +605,13 @@ status: ${metadata.isDraft ? 'DRAFT' : 'FINAL'}
 
 // Singleton instance
 const outputGenerator = new OutputGenerator();
+console.log('✅ OutputGenerator instance created');
 
 // 전역으로 내보내기 (ES6 모듈 대신)
 if (typeof window !== 'undefined') {
     window.outputGenerator = outputGenerator;
     window.OutputGenerator = OutputGenerator;
+    console.log('✅ window.outputGenerator set to OutputGenerator instance');
 }
+
+})(); // IIFE 종료

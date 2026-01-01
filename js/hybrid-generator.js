@@ -1,11 +1,37 @@
 /**
  * Hybrid PSUR Generator
  * 2-Phase Hybrid LLM Generation (Sonnet draft → Opus refine)
- * GitHub Pages 정적 호스팅 호환
+ * GitHub Pages 정적 호스팅 호환 - 전역 window 객체 사용
  */
 
-import multiLLMClient, { HYBRID_MODES } from './multi-llm-client.js';
-import { Storage, DateHelper } from './config.js';
+// 전역 의존성 fallback (config.js에서 이미 선언된 경우 재선언하지 않음)
+if (!window.multiLLMClient) {
+    window.multiLLMClient = {
+        generateWithHybrid: async (prompt, mode) => ({ content: '', cost: 0 }),
+        getStats: () => ({ totalCalls: 0, totalTokens: 0, totalCost: 0 })
+    };
+}
+
+if (!window.HYBRID_MODES) {
+    window.HYBRID_MODES = {
+        SPEED: 'speed',
+        BALANCED: 'balanced',
+        QUALITY: 'quality'
+    };
+}
+
+if (!window.Storage) {
+    window.Storage = {
+        get: (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+        set: (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } }
+    };
+}
+
+if (!window.DateHelper) {
+    window.DateHelper = {
+        formatISO: (date = new Date()) => date.toISOString()
+    };
+}
 
 // PSUR 섹션 정의
 const PSUR_SECTIONS = [
@@ -463,5 +489,12 @@ ${section.type.includes('Table') ? `### 표 데이터\n${JSON.stringify(tableDat
 
 // Singleton export
 const hybridGenerator = new HybridGenerator();
-export default hybridGenerator;
-export { PSUR_SECTIONS };
+
+// 전역으로 내보내기 (ES6 모듈 대신 window 객체 사용)
+if (typeof window !== 'undefined') {
+    window.hybridGenerator = hybridGenerator;
+    window.HybridGenerator = HybridGenerator;
+    window.PSUR_SECTIONS = PSUR_SECTIONS;
+    // outputGenerator는 output-generator.js에서 별도로 설정됨
+    // window.outputGenerator alias 제거 - output-generator.js 우선
+}

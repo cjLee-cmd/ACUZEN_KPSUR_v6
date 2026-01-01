@@ -4,7 +4,39 @@
  * GitHub Pages 정적 호스팅 호환
  */
 
-import { CONFIG, Storage, DateHelper } from './config.js';
+// Storage fallback (config.js에서 이미 선언된 경우 재선언하지 않음)
+if (!window.Storage) {
+    window.Storage = {
+        get: (key) => {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : null;
+            } catch (e) {
+                return localStorage.getItem(key);
+            }
+        },
+        set: (key, value) => {
+            try {
+                localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+            } catch (e) {
+                console.error('Storage.set error:', e);
+            }
+        }
+    };
+}
+
+// DateHelper fallback (config.js에서 이미 선언된 경우 재선언하지 않음)
+if (!window.DateHelper) {
+    window.DateHelper = {
+        formatYYMMDD_hhmmss: () => {
+            const now = new Date();
+            return now.toISOString().replace(/[-:T]/g, '').substring(0, 14);
+        },
+        formatISO: () => new Date().toISOString()
+    };
+}
+
+// 전역 객체 참조 (config.js에서 로드된 경우 사용)
 
 // LLM 프로바이더 정의
 const LLM_PROVIDERS = {
@@ -68,24 +100,40 @@ const LLM_PROVIDERS = {
         name: 'Google Gemini',
         endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
         models: {
-            'gemini-2.5-flash': {
+            'gemini-2.5-pro': {
+                name: 'Gemini 2.5 Pro',
+                inputPrice: 1.25,
+                outputPrice: 5,
+                maxTokens: 65536,
+                quality: 'highest',
+                description: '최고 품질 - 심층 분석'
+            },
+            'gemini-2.0-flash-exp': {
                 name: 'Gemini 2.5 Flash',
                 inputPrice: 0.075,
                 outputPrice: 0.30,
-                maxTokens: 8000,
+                maxTokens: 65536,
                 quality: 'fast',
                 description: '빠른 처리 - 매우 경제적'
             },
-            'gemini-2.0-pro': {
-                name: 'Gemini 2.0 Pro',
-                inputPrice: 1.25,
-                outputPrice: 5,
-                maxTokens: 12000,
+            'gemini-2.0-flash-exp': {
+                name: 'Gemini 2.0 Flash Exp',
+                inputPrice: 0,
+                outputPrice: 0,
+                maxTokens: 8192,
+                quality: 'fast',
+                description: '실험용 - 무료'
+            },
+            'gemini-2.0-pro-exp': {
+                name: 'Gemini 2.0 Pro Exp',
+                inputPrice: 0,
+                outputPrice: 0,
+                maxTokens: 8192,
                 quality: 'high',
-                description: '균형 - 경제적'
+                description: '실험용 Pro - 무료'
             }
         },
-        defaultModel: 'gemini-2.5-flash',
+        defaultModel: 'gemini-2.0-flash-exp',
         apiKeyName: 'GOOGLE_API_KEY'
     }
 };
@@ -108,7 +156,7 @@ const HYBRID_MODES = {
     },
     'gemini-opus': {
         name: 'Gemini → Opus (초경제적)',
-        phase1: { provider: 'google', model: 'gemini-2.5-flash', description: '전체 초안' },
+        phase1: { provider: 'google', model: 'gemini-2.0-flash-exp', description: '전체 초안' },
         phase2: { provider: 'claude', model: 'claude-opus-4-5', description: '핵심 섹션 개선' },
         refineSections: [9, 10],
         estimatedSavings: 80
@@ -491,9 +539,51 @@ ${draft}
         this.dialogHistory = [];
         this.totalCost = 0;
     }
+
+    // 호환성 래퍼: sendMessage (기존 코드 호환용)
+    async sendMessage(prompt, options = {}) {
+        // 기본 provider를 google로 설정 (Gemini 사용)
+        const provider = options.provider || 'google';
+        const model = options.model || (provider === 'google' ? 'gemini-2.0-flash-exp' : undefined);
+
+        try {
+            const result = await this.generate(prompt, {
+                ...options,
+                provider,
+                model
+            });
+
+            return {
+                content: result.text,
+                success: result.success,
+                model: result.model,
+                provider: result.provider,
+                usage: result.usage,
+                cost: result.cost
+            };
+        } catch (error) {
+            console.error('LLM sendMessage error:', error);
+            return {
+                content: '',
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    // 호환성 래퍼: generateContent (llm-client.js 호환용)
+    async generateContent(prompt, options = {}) {
+        return this.sendMessage(prompt, options);
+    }
 }
 
-// Singleton export
+// Singleton instance
 const multiLLMClient = new MultiLLMClient();
-export default multiLLMClient;
-export { LLM_PROVIDERS, HYBRID_MODES };
+
+// 전역 내보내기 (ES6 모듈 대신)
+if (typeof window !== 'undefined') {
+    window.multiLLMClient = multiLLMClient;
+    window.MultiLLMClient = MultiLLMClient;
+    window.LLM_PROVIDERS = LLM_PROVIDERS;
+    window.HYBRID_MODES = HYBRID_MODES;
+}

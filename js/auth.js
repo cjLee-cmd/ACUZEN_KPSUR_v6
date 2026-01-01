@@ -3,9 +3,37 @@
  * 사용자 인증 및 세션 관리
  */
 
-import { CONFIG, Storage } from './config.js';
-import supabaseClient from './supabase-client.js';
-import env from './env.js';
+// 전역 의존성 fallback (config.js에서 이미 선언된 경우 재선언하지 않음)
+if (!window.CONFIG) {
+    window.CONFIG = {
+        PAGES: {
+            LOGIN: 'P01_Login.html',
+            DASHBOARD: 'P10_Dashboard.html',
+            SYSTEM_CHECK: 'P05_SystemCheck.html'
+        }
+    };
+}
+
+if (!window.Storage) {
+    window.Storage = {
+        get: (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+        set: (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} },
+        remove: (key) => { try { localStorage.removeItem(key); } catch {} }
+    };
+}
+
+// env fallback
+if (!window.env) {
+    window.env = {
+        getConfig: () => ({
+            features: { testAccounts: true },
+            isTest: true
+        })
+    };
+}
+
+// config.js에서 로드된 전역 객체 사용 (CONFIG, Storage)
+// (const 재선언 금지 - 전역 스코프 충돌 방지)
 
 class AuthManager {
     constructor() {
@@ -19,7 +47,7 @@ class AuthManager {
      */
     async login(email, password, rememberMe = false) {
         // 테스트 계정 (개발 모드에서만 활성화)
-        const testAccountsEnabled = env.getConfig().features.testAccounts;
+        const testAccountsEnabled = window.env.getConfig().features.testAccounts;
 
         if (testAccountsEnabled) {
             const testAccounts = {
@@ -226,4 +254,8 @@ class AuthManager {
 // Singleton instance
 const authManager = new AuthManager();
 
-export default authManager;
+// 전역으로 내보내기 (ES6 모듈 대신 window 객체 사용)
+if (typeof window !== 'undefined') {
+    window.authManager = authManager;
+    window.AuthManager = AuthManager;
+}

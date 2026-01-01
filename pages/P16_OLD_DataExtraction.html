@@ -1,0 +1,2823 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P-16 Data Extraction - KPSUR AGENT</title>
+    <link rel="stylesheet" href="../css/styles/globals.css">
+    <link rel="stylesheet" href="../css/styles/layout.css">
+    <link rel="stylesheet" href="../css/styles/components.css">
+    <style>
+        /* Override parent container constraints for full-width layout */
+        .app-content {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+
+        .main-content {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+        }
+
+        .extraction-container {
+            display: grid;
+            grid-template-columns: minmax(250px, 300px) 1fr;
+            gap: 16px;
+            padding: 16px;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* Left Panel - File List */
+        .file-list-panel {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .file-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .file-list-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #07161D;
+            margin: 0;
+        }
+
+        .file-stats {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .file-category {
+            margin-bottom: 16px;
+        }
+
+        .file-category-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #25739B;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .file-item {
+            padding: 8px;
+            margin-bottom: 4px;
+            background: #f8fafc;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+
+        .file-item:hover {
+            background: #f1f5f9;
+        }
+
+        .file-item.active {
+            background: #EBF5FF;
+            border-left: 3px solid #25739B;
+        }
+
+        .file-item.selected {
+            background: #EBF5FF;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: #07161D;
+            margin-bottom: 4px;
+        }
+
+        .file-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: #64748b;
+        }
+
+        .file-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .file-status.pending { background: #FEF3C7; color: #92400E; }
+        .file-status.extracting { background: #DBEAFE; color: #1E40AF; }
+        .file-status.completed { background: #D1FAE5; color: #065F46; }
+        .file-status.conflict { background: #FEE2E2; color: #991B1B; }
+        .file-status.error { background: #FEE2E2; color: #991B1B; }
+
+        /* Main Panel - Data Extraction */
+        .data-panel {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .data-panel-header {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .data-panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #07161D;
+            margin: 0 0 8px 0;
+        }
+
+        .extraction-warning {
+            background: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+        }
+
+        .extraction-warning-title {
+            font-weight: 600;
+            color: #92400E;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .extraction-warning-text {
+            font-size: 11px;
+            color: #92400E;
+            line-height: 1.4;
+        }
+
+        .extraction-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .llm-model-select {
+            padding: 6px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #07161D;
+            background: white;
+        }
+
+        .data-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 0 16px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-tab {
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .data-tab:hover {
+            color: #25739B;
+        }
+
+        .data-tab.active {
+            color: #25739B;
+            border-bottom-color: #25739B;
+        }
+
+        .data-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .data-section {
+            display: none;
+        }
+
+        .data-section.active {
+            display: block;
+        }
+
+        /* CS Data Grid */
+        .cs-data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .cs-data-item {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .cs-data-item.has-conflict {
+            border-color: #F59E0B;
+            background: #FFFBEB;
+        }
+
+        .cs-data-item.has-value {
+            border-color: #10B981;
+        }
+
+        .cs-data-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cs-data-value {
+            font-size: 13px;
+            color: #07161D;
+            min-height: 20px;
+            padding: 6px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .cs-data-value.empty {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .cs-data-value.editable {
+            cursor: pointer;
+        }
+
+        .cs-data-value.editable:hover {
+            border-color: #25739B;
+        }
+
+        /* CS17 테이블 스타일 */
+        .cs-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .cs-data-table th,
+        .cs-data-table td {
+            border: 1px solid #e2e8f0;
+            padding: 4px 6px;
+            text-align: left;
+        }
+
+        .cs-data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .cs-data-table td {
+            background: white;
+        }
+
+        .cs-data-table tr:hover td {
+            background: #f1f5f9;
+        }
+
+        .conflict-indicator {
+            background: #F59E0B;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .missing-indicator {
+            background: #EF4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        /* PH Data */
+        .ph-data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ph-data-item {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .ph-data-item.has-value {
+            border-color: #10B981;
+        }
+
+        .ph-data-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .ph-data-value {
+            font-size: 13px;
+            color: #07161D;
+            line-height: 1.6;
+            min-height: 60px;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            white-space: pre-wrap;
+        }
+
+        /* Table Data */
+        .table-data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .table-data-item {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-data-item.has-value {
+            border-color: #10B981;
+        }
+
+        .table-data-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .table-data-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .table-preview {
+            overflow-x: auto;
+        }
+
+        .table-preview table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .table-preview th {
+            background: #25739B;
+            color: white;
+            padding: 6px 8px;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .table-preview td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .table-preview tr:hover {
+            background: #f1f5f9;
+        }
+
+        /* Extraction Progress */
+        .extraction-progress {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .progress-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .progress-stat {
+            font-size: 12px;
+        }
+
+        .progress-stat-label {
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .progress-stat-value {
+            font-weight: 600;
+            color: #07161D;
+            font-size: 14px;
+        }
+
+        .progress-bar-container {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #25739B, #369EE1);
+            transition: width 0.3s ease;
+        }
+
+        /* Conflict Resolution Modal */
+        .conflict-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .conflict-modal.show {
+            display: flex;
+        }
+
+        .conflict-modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .conflict-modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #FEF3C7;
+        }
+
+        .conflict-modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #92400E;
+            margin: 0;
+        }
+
+        .conflict-modal-body {
+            padding: 20px;
+        }
+
+        .conflict-description {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        .conflict-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .conflict-option {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .conflict-option:hover {
+            border-color: #25739B;
+            background: #EBF5FF;
+        }
+
+        .conflict-option.selected {
+            border-color: #25739B;
+            background: #EBF5FF;
+        }
+
+        .conflict-option-source {
+            font-size: 11px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .conflict-option-value {
+            font-size: 13px;
+            color: #07161D;
+            font-weight: 500;
+        }
+
+        .conflict-modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 16px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .extraction-container {
+                grid-template-columns: minmax(220px, 280px) 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .extraction-container {
+                grid-template-columns: 1fr;
+            }
+
+            .file-list-panel {
+                max-height: 300px;
+            }
+
+            .cs-data-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .extraction-container {
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .data-panel-header {
+                padding: 12px;
+            }
+
+            .data-content {
+                padding: 12px;
+            }
+
+            .progress-stats {
+                flex-wrap: wrap;
+            }
+
+            .data-tabs {
+                padding: 0 8px;
+                overflow-x: auto;
+            }
+
+            .data-tab {
+                padding: 8px 12px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
+        }
+
+        /* Markdown Preview Popup */
+        .markdown-popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .markdown-popup-overlay.active {
+            display: flex;
+        }
+
+        .markdown-popup-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .markdown-popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .markdown-popup-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #07161D;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .markdown-popup-title .raw-id-badge {
+            background: #25739B;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+
+        .markdown-popup-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+            padding: 4px 8px;
+            line-height: 1;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .markdown-popup-close:hover {
+            background: #e2e8f0;
+            color: #07161D;
+        }
+
+        .markdown-popup-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #1e293b;
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: #fafafa;
+        }
+
+        .markdown-popup-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .markdown-popup-body::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .markdown-popup-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .markdown-popup-body::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .markdown-empty {
+            color: #94a3b8;
+            font-style: italic;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        /* 다크모드 변수 */
+        :root {
+            --page-bg: #F5F7FA;
+            --card-bg: white;
+            --text-primary: #07161D;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --section-bg: #f8fafc;
+            --input-bg: white;
+        }
+
+        [data-theme="dark"] {
+            --page-bg: #1e293b;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --section-bg: #334155;
+            --input-bg: #334155;
+        }
+
+        /* 다크모드 패널 스타일 */
+        [data-theme="dark"] .file-list-panel,
+        [data-theme="dark"] .data-panel {
+            background: transparent !important;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .file-list-header h3,
+        [data-theme="dark"] .data-panel-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .file-stats {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .file-category-title {
+            color: #60a5fa;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .file-item {
+            background: #334155;
+        }
+
+        [data-theme="dark"] .file-item:hover {
+            background: #3f4f63;
+        }
+
+        [data-theme="dark"] .file-item.active,
+        [data-theme="dark"] .file-item.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-left-color: #60a5fa;
+        }
+
+        [data-theme="dark"] .file-name {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .file-meta {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .file-status.pending {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .file-status.extracting {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .file-status.completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        [data-theme="dark"] .file-status.conflict,
+        [data-theme="dark"] .file-status.error {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .data-panel-header {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .extraction-warning {
+            background: rgba(251, 191, 36, 0.15);
+            border-left-color: #fbbf24;
+        }
+
+        [data-theme="dark"] .extraction-warning-title,
+        [data-theme="dark"] .extraction-warning-text {
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .llm-model-select {
+            background: #334155;
+            border-color: #475569;
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .data-tabs {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .data-tab {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .data-tab.active {
+            color: #60a5fa;
+            border-bottom-color: #60a5fa;
+        }
+
+        [data-theme="dark"] .data-tab:hover {
+            color: #60a5fa;
+        }
+
+        [data-theme="dark"] .data-content {
+            background: #1e293b;
+        }
+
+        [data-theme="dark"] .extraction-item {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .extraction-label {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .extraction-value {
+            background: #1e293b;
+            border-color: #475569;
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .extraction-status.extracted {
+            color: #34d399;
+        }
+
+        [data-theme="dark"] .extraction-status.pending {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .extraction-status.conflict {
+            color: #fbbf24;
+        }
+
+        [data-theme="dark"] .markdown-preview {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .markdown-content {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .conflict-modal-content {
+            background: #1e293b;
+            border: 1px solid #475569;
+        }
+
+        [data-theme="dark"] .conflict-modal-header {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .conflict-modal-title {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .conflict-description {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .conflict-option {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .conflict-option:hover {
+            border-color: #60a5fa;
+        }
+
+        [data-theme="dark"] .conflict-option.selected {
+            border-color: #60a5fa;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        [data-theme="dark"] .conflict-source {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .conflict-value {
+            color: var(--text-primary);
+        }
+
+        /* Header styles */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #25739B;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dark-mode-toggle {
+            background: var(--section-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .dark-mode-toggle:hover {
+            border-color: #25739B;
+        }
+
+        [data-theme="dark"] .dark-mode-toggle {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        .icon-sun, .icon-moon {
+            font-size: 16px;
+        }
+
+        [data-theme="light"] .icon-moon {
+            display: none;
+        }
+
+        [data-theme="dark"] .icon-sun {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout" id="app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-text">KPSUR AGENT</span>
+                    <span class="logo-subtitle">ACUZEN AI</span>
+                </div>
+                <span class="deployment-badge test">테스트</span>
+            </div>
+
+            <div class="header-center">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">보고서</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item active">데이터 추출</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">사</div>
+                    <div class="user-info">
+                        <div class="user-name">사용자</div>
+                        <div class="user-role">Author</div>
+                    </div>
+                    <button class="user-menu-toggle">▼</button>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <!-- Dark Mode Script -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+    </script>
+
+    <!-- Conflict Resolution Modal -->
+    <div id="conflictModal" class="conflict-modal">
+        <div class="conflict-modal-content">
+            <div class="conflict-modal-header">
+                <h3 class="conflict-modal-title">⚠️ 데이터 충돌 해결</h3>
+            </div>
+            <div class="conflict-modal-body">
+                <p class="conflict-description">
+                    서로 다른 소스에서 <strong id="conflictFieldName"></strong>에 대한 상이한 값이 발견되었습니다.<br>
+                    사용할 값을 선택해 주세요:
+                </p>
+                <div id="conflictOptions" class="conflict-options">
+                    <!-- Options will be populated dynamically -->
+                </div>
+            </div>
+            <div class="conflict-modal-footer">
+                <button class="btn btn-secondary" onclick="closeConflictModal()">취소</button>
+                <button class="btn btn-primary" onclick="resolveConflict()">선택한 값 적용</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Markdown Preview Popup -->
+    <div id="markdownPopup" class="markdown-popup-overlay" onclick="handleMarkdownPopupClick(event)">
+        <div class="markdown-popup-content" onclick="event.stopPropagation()">
+            <div class="markdown-popup-header">
+                <h3 class="markdown-popup-title">
+                    <span>📄</span>
+                    <span id="markdownPopupFileName">파일명</span>
+                    <span class="raw-id-badge" id="markdownPopupRawId">RAW1</span>
+                </h3>
+                <button class="markdown-popup-close" onclick="closeMarkdownPopup()">&times;</button>
+            </div>
+            <div class="markdown-popup-body" id="markdownPopupBody">
+                <!-- Markdown content will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Core JS 모듈 로드 (전역 스크립트) -->
+    <script src="../utils/globals.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/file-handler.js"></script>
+    <script src="../js/file-storage.js"></script>
+    <script src="../js/markdown-converter.js"></script>
+    <script src="../js/multi-llm-client.js"></script>
+    <script src="../js/workflow-manager.js"></script>
+    <script src="../js/cost-tracker.js"></script>
+    <script src="../js/psur-generator.js"></script>
+
+    <script>
+        // 다크모드 초기화 (IIFE) - 페이지 로드 전 테마 적용
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+
+        // 다크모드 토글 함수
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // 전역 모듈 참조
+        const multiLLMClient = window.multiLLMClient;
+        const workflowManager = window.workflowManager;
+        const fileStorage = window.fileStorage;
+        const Storage = window.Storage || {
+            get: (key) => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } },
+            set: (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }
+        };
+
+        // CONFIG - System configuration (fallback if not loaded from config.js)
+        const CONFIG = window.CONFIG || {
+            SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
+            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8',
+            LLM: {
+                DEFAULT_MODEL: 'gemini-2.5-flash',
+                MODELS: {
+                    FLASH: 'gemini-2.5-flash',
+                    PRO: 'gemini-2.5-pro'
+                },
+                API_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models'
+            },
+            STORAGE_KEYS: {
+                GOOGLE_API_KEY: 'GOOGLE_API_KEY',
+                SESSION: 'session',
+                CURRENT_REPORT: 'current_report',
+                LAST_STAGE: 'last_stage'
+            },
+            PAGES: {
+                LOGIN: 'P01_Login.html',
+                DASHBOARD: 'P10_Dashboard.html',
+                SETTINGS: 'P91_Settings.html'
+            }
+        };
+
+        // Storage Helper
+        const Storage = {
+            get(key) {
+                try {
+                    const value = localStorage.getItem(key);
+                    return value ? JSON.parse(value) : null;
+                } catch (e) {
+                    console.error(`Error reading from localStorage (${key}):`, e);
+                    return null;
+                }
+            },
+            set(key, value) {
+                try {
+                    localStorage.setItem(key, JSON.stringify(value));
+                    return true;
+                } catch (e) {
+                    console.error(`Error writing to localStorage (${key}):`, e);
+                    return false;
+                }
+            },
+            remove(key) {
+                try {
+                    localStorage.removeItem(key);
+                    return true;
+                } catch (e) {
+                    console.error(`Error removing from localStorage (${key}):`, e);
+                    return false;
+                }
+            }
+        };
+
+        // DateHelper - Date formatting utilities
+        const DateHelper = {
+            now() {
+                return new Date();
+            },
+            formatYYMMDD_hhmmss(date = new Date()) {
+                const yy = String(date.getFullYear()).slice(-2);
+                const MM = String(date.getMonth() + 1).padStart(2, '0');
+                const DD = String(date.getDate()).padStart(2, '0');
+                const hh = String(date.getHours()).padStart(2, '0');
+                const mm = String(date.getMinutes()).padStart(2, '0');
+                const ss = String(date.getSeconds()).padStart(2, '0');
+                return `${yy}${MM}${DD}_${hh}${mm}${ss}`;
+            },
+            formatISO(date = new Date()) {
+                return date.toISOString();
+            }
+        };
+
+        // DataExtractor stub - minimal implementation for page to function
+        const dataExtractor = {
+            extractedData: { CS: {}, PH: {}, Table: {} },
+            conflicts: [],
+            dataDefinitions: { CS: {}, PH: {}, Table: {} },
+            definitionsLoaded: false,
+
+            // 데이터 정의 파일 로드 (Ref/*.md 파일)
+            async loadDataDefinitions() {
+                if (this.definitionsLoaded) {
+                    return true;
+                }
+
+                console.log('📚 Loading data definitions from Ref/*.md files...');
+
+                const definitionFiles = [
+                    { type: 'CS', path: '../Ref/01_CSData_Definition.md' },
+                    { type: 'PH', path: '../Ref/02_PHData_Definition.md' },
+                    { type: 'Table', path: '../Ref/03_TableData_Definition.md' }
+                ];
+
+                for (const file of definitionFiles) {
+                    try {
+                        const response = await fetch(file.path);
+                        if (response.ok) {
+                            const markdown = await response.text();
+                            this.parseDefinitionMarkdown(markdown, file.type);
+                            console.log(`✅ Loaded ${file.type} definitions`);
+                        } else {
+                            console.warn(`⚠️ Could not load ${file.path}: ${response.status}`);
+                        }
+                    } catch (error) {
+                        console.error(`❌ Error loading ${file.path}:`, error);
+                    }
+                }
+
+                this.definitionsLoaded = true;
+                console.log('📚 Data definitions loaded:', {
+                    CS: Object.keys(this.dataDefinitions.CS).length,
+                    PH: Object.keys(this.dataDefinitions.PH).length,
+                    Table: Object.keys(this.dataDefinitions.Table).length
+                });
+
+                return true;
+            },
+
+            // 마크다운 정의 파일 파싱
+            parseDefinitionMarkdown(markdown, type) {
+                // ### N. [변수ID_변수명] 패턴 매칭
+                const sectionRegex = /### \d+\. \[([^\]]+)\]([\s\S]*?)(?=### \d+\. \[|---\s*$|$)/g;
+                let match;
+
+                while ((match = sectionRegex.exec(markdown)) !== null) {
+                    const fullId = match[1];  // 예: CS0_성분명, PH4_원시자료서술문, 표2_연도별판매량
+                    const content = match[2];
+
+                    // Variable ID 추출
+                    const idMatch = fullId.match(/^(CS\d+(?:\.\d+)?|PH\d+|표\d+)/);
+                    if (!idMatch) continue;
+
+                    let variableId = idMatch[1];
+                    // 표X -> TX 변환
+                    if (variableId.startsWith('표')) {
+                        variableId = 'T' + variableId.substring(1);
+                    }
+
+                    // Variable Name 추출
+                    const nameMatch = content.match(/\*\*Variable Name:\*\*\s*(.+)/);
+                    const name = nameMatch ? nameMatch[1].trim() : fullId.split('_').slice(1).join('_');
+
+                    // Data Source 추출
+                    const sourceMatch = content.match(/\*\*Data Source:\*\*\s*(.+)/);
+                    const source = sourceMatch ? sourceMatch[1].trim() : '';
+
+                    // 데이터 추출 방법 추출
+                    const methodMatch = content.match(/#### 데이터 추출 방법[\s\S]*?> \*\*\[지침\]\*\*\s*([\s\S]*?)(?=####|$)/);
+                    let method = '';
+                    if (methodMatch) {
+                        method = methodMatch[1].trim()
+                            .replace(/> \*\*\[지침\]\*\*/g, '\n')
+                            .replace(/\n+/g, ' ')
+                            .trim();
+                    }
+
+                    // 추가 지침 추출
+                    const additionalMatch = content.match(/#### 추가 지침[\s\S]*?> \*\*\[지침\]\*\*\s*([\s\S]*?)(?=####|$)/);
+                    if (additionalMatch && !method) {
+                        method = additionalMatch[1].trim()
+                            .replace(/> \*\*\[지침\]\*\*/g, '\n')
+                            .replace(/\n+/g, ' ')
+                            .trim();
+                    }
+
+                    // 예시 추출
+                    const exampleMatch = content.match(/#### 예시[\s\S]*?1\.\s*`([^`]+)`/);
+                    const example = exampleMatch ? exampleMatch[1] : '';
+
+                    // 정의 저장
+                    this.dataDefinitions[type][variableId] = {
+                        name: name,
+                        source: source,
+                        method: method.substring(0, 500),  // 너무 긴 경우 자르기
+                        example: example.substring(0, 300)
+                    };
+                }
+            },
+
+            // 로드된 정의에서 필드 정보 가져오기
+            getFieldDefinition(fieldId) {
+                // CS, PH, Table 순서로 검색
+                if (fieldId.startsWith('CS')) {
+                    return this.dataDefinitions.CS[fieldId];
+                } else if (fieldId.startsWith('PH')) {
+                    return this.dataDefinitions.PH[fieldId];
+                } else if (fieldId.startsWith('T')) {
+                    return this.dataDefinitions.Table[fieldId];
+                }
+                return null;
+            },
+
+            async extractFromMarkdown(markdownContent, rawId, dataDefinitions) {
+                // 먼저 데이터 정의 로드
+                await this.loadDataDefinitions();
+                console.log(`📊 Extracting data from RAW ID: ${rawId}`);
+
+                const apiKey = Storage.get(CONFIG.STORAGE_KEYS.GOOGLE_API_KEY);
+                if (!apiKey) {
+                    console.error('❌ API key not found');
+                    return { success: false, error: 'API key not found' };
+                }
+
+                const model = document.getElementById('llmModel').value || CONFIG.LLM.DEFAULT_MODEL;
+                const modelName = model === 'pro' ? 'gemini-2.5-pro-preview-06-05' : 'gemini-2.5-flash';
+                const url = `${CONFIG.LLM.API_ENDPOINT}/${modelName}:generateContent?key=${apiKey}`;
+
+                // RAW ID별 추출 대상 정의
+                const extractionTargets = this.getExtractionTargets(rawId);
+                if (!extractionTargets || extractionTargets.length === 0) {
+                    console.log(`⏭️ No extraction targets for RAW ID: ${rawId}`);
+                    return { success: true, csData: {}, phData: {}, tableData: {}, extractedAt: DateHelper.formatISO() };
+                }
+
+                const prompt = this.buildExtractionPrompt(markdownContent, rawId, extractionTargets);
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    console.log(`✅ LLM response for ${rawId}:`, text.substring(0, 200));
+
+                    const extracted = this.parseExtractionResponse(text, rawId);
+                    return {
+                        success: true,
+                        csData: extracted.csData || {},
+                        phData: extracted.phData || {},
+                        tableData: extracted.tableData || {},
+                        extractedAt: DateHelper.formatISO()
+                    };
+                } catch (error) {
+                    console.error(`❌ Extraction API error for ${rawId}:`, error);
+                    return { success: false, error: error.message };
+                }
+            },
+
+            getExtractionTargets(rawId) {
+                // RAW ID별 추출 대상 매핑 (Source-CS-Sections.md 기준)
+                const targetMap = {
+                    'RAW1': ['CS15', 'CS16', 'CS20'],  // 최신첨부문서: 효능효과, 용법용량, 1일투여량
+                    'RAW2.1': ['CS16', 'CS20'],  // 용법용량, 1일투여량
+                    'RAW2.2': ['CS15'],  // 효능효과
+                    'RAW2.3': [],  // 사용상의주의사항 - CS56.7에서 사용
+                    'RAW2.6': [],  // 보고시작시점 사용상의주의사항 - CS56.4에서 사용
+                    'RAW3': ['CS19', 'CS19.1', 'CS19.2', 'CS19.3', 'T2'],  // 시판후sales데이터
+                    'RAW4': ['CS17.1', 'CS17.2', 'CS17.3', 'CS17.4', 'CS17.5', 'CS17.6'],  // 허가현황 (CS17.1~CS17.6만 추출, 테이블 제외)
+                    'RAW5': ['CS55'],  // 안전성조치허가메일
+                    'RAW5.1': ['CS55'],  // 안전성조치허가메일
+                    'RAW6': ['CS55'],  // 안전성조치허가메일_취합본
+                    'RAW6.1': ['CS55'],  // 안전성조치허가메일_취합본
+                    'RAW7': ['CS56', 'CS56.1', 'CS56.2', 'CS56.3', 'CS56.4', 'CS56.5', 'CS56.6', 'CS56.7'],  // 안전성정보변경
+                    'RAW7.1': ['CS56', 'CS56.1'],  // 안전성정보변경_복수항목
+                    'RAW7.2': ['CS56', 'CS56.1'],  // 안전성정보변경
+                    'RAW7.3': ['CS56', 'CS56.1'],  // 안전성정보변경_용법용량
+                    'RAW7.4': ['CS56', 'CS56.1'],  // 안전성정보변경_표형식복수항목
+                    'RAW8': ['CS18'],  // 임상노출데이터
+                    'RAW9': ['PH9'],  // 문헌자료
+                    'RAW12': ['CS25.1', 'CS25.2', 'CS25.3', 'CS25.4', 'CS33', 'T5'],  // 국외신속보고LineListing
+                    'RAW13': ['CS25.1', 'CS25.2', 'CS25.3', 'CS25.4', 'CS33', 'T5'],  // 국내신속보고LineListing
+                    'RAW14': ['CS28', 'CS29', 'CS30', 'PH4', 'PH5', 'T7'],  // 원시자료LineListing
+                    'RAW15': ['CS34', 'PH6', 'T6']   // 정기보고LineListing
+                };
+                return targetMap[rawId] || [];
+            },
+
+            buildExtractionPrompt(content, rawId, targets) {
+                // 로드된 데이터 정의 사용 (Ref/*.md 파일 기반)
+                // 대상 필드별 상세 정보 구성 (로드된 정의에서 가져옴)
+                const targetDetails = targets.map(t => {
+                    const def = this.getFieldDefinition(t);
+                    if (def && (def.name || def.source || def.method)) {
+                        let detail = `### ${t}: ${def.name || t}`;
+                        if (def.source) detail += `\n- **데이터 소스**: ${def.source}`;
+                        if (def.method) detail += `\n- **추출 방법**: ${def.method}`;
+                        if (def.example) detail += `\n- **예시 출력**: ${def.example}`;
+                        return detail;
+                    } else {
+                        // Fallback: 기본 설명
+                        const fallbackDescriptions = this.getFallbackDescriptions();
+                        return `### ${t}: ${fallbackDescriptions[t] || t}`;
+                    }
+                }).join('\n\n');
+
+                return `당신은 한국 PSUR(주기적 안전성 보고서) 작성을 위해 의약품 문서에서 데이터를 추출하는 전문가입니다.
+
+## 추출 원칙
+1. **절대 데이터를 생성하지 마세요** - 문서에 명시적으로 존재하는 정보만 추출
+2. **데이터가 없으면 null 반환** - 추측하거나 유사한 데이터로 대체 금지
+3. **정확한 수치/날짜 추출** - count나 계산은 2중 검증 필요
+
+## 문서 정보
+- **RAW ID**: ${rawId}
+- **문서 유형**: ${this.getRawDescription(rawId)}
+
+## 추출 대상 필드 상세 (데이터 정의 파일 기준)
+
+${targetDetails}
+
+## 문서 내용
+\`\`\`
+${content.substring(0, 8000)}
+\`\`\`
+
+## 응답 형식 (중요!)
+- 반드시 JSON 코드 블록만 출력하세요
+- 설명, 분석, 코멘트 없이 오직 JSON만 반환하세요
+- 아래 형식을 정확히 따르세요:
+
+\`\`\`json
+{
+${targets.map(t => `  "${t}": "추출된 값 또는 null"`).join(',\n')}
+}
+\`\`\``;
+            },
+
+            // Fallback 설명 (정의 파일에 없는 필드용)
+            getFallbackDescriptions() {
+                return {
+                    'CS0': '성분명 (유효성분명)',
+                    'CS1': '브랜드명 (제품명)',
+                    'CS2': '회사명 (판매사/제조사)',
+                    'CS3': '보고시작날짜 (CS4에서 5년 전)',
+                    'CS4': '보고종료날짜',
+                    'CS5': '국내허가일자 (YYYY-MM-DD 형식)',
+                    'CS6': '보고서제출일',
+                    'CS7': '버전넘버',
+                    'CS8': '버전날짜 (CS4와 동일)',
+                    'CS9': '목차',
+                    'CS10': '표목차',
+                    'CS11': '별첨목차',
+                    'CS12': '약어표',
+                    'CS13': '유효기간',
+                    'CS14': '신청기한 (CS13에서 6개월 전)',
+                    'CS15': '효능효과',
+                    'CS16': '용법용량',
+                    'CS17': '전세계허가현황표',
+                    'CS18': '임상노출',
+                    'CS19': '시판후노출count시작날짜',
+                    'CS19.1': '시판후노출count종료날짜',
+                    'CS19.2': '시판후판매연도별판매량',
+                    'CS19.3': '시판후판매량합계',
+                    'CS20': '1일사용량',
+                    'CS21': '환자1명당사용량 (연간)',
+                    'CS22': '연평균판매량',
+                    'CS23': '연평균환자노출',
+                    'CS24': 'MedDRA버전',
+                    'CS25.1': '신속보고일자',
+                    'CS25.2': '신속보고관리번호',
+                    'CS25.3': '신속보고이상사례명',
+                    'CS25.4': '신속보고비고',
+                    'CS28': '원시총환자수',
+                    'CS29': '원시총이상사례수',
+                    'CS30': '원시중대한사례수',
+                    'CS31': '원시자료신청일',
+                    'CS32': '전체보고건수 (CS33+CS34)',
+                    'CS33': '신속보고건수',
+                    'CS34': '정기보고건수',
+                    'CS35': '전체이상사례건수',
+                    'CS36': '중대한이상사례건수',
+                    'CS37': '비중대이상사례건수',
+                    'CS53': '문헌DB명',
+                    'CS55': '안전성조치서술문',
+                    'CS56': '참고정보의변경서술문',
+                    'CS56.1': '허가사항변경일',
+                    'CS56.2': '기존효능효과',
+                    'CS56.3': '기존용량용법',
+                    'CS56.4': '기존사용상의주의사항',
+                    'CS56.5': '최신효능효과',
+                    'CS56.6': '최신용법용량',
+                    'CS56.7': '최신사용상주의사항',
+                    'CS57': '참고문헌목록',
+                    'PH4': '원시자료서술문',
+                    'PH5': '원시자료서술문2',
+                    'PH6': '개별증례분석문',
+                    'PH7': '새로분석된의뢰의시험',
+                    'PH8': '시작또는진행중시험',
+                    'PH9': '문헌에발표된안전성',
+                    'PH10': '유효성관련정보',
+                    'PH11': '총괄평가문',
+                    'PH12': '결론',
+                    'T1': '표1_전세계판매허가현황',
+                    'T2': '표2_연도별판매량',
+                    'T3': '표3_연평균환자노출',
+                    'T5': '표5_신속보고내역',
+                    'T6': '표6_정기보고내역',
+                    'T7': '표7_원시자료내역',
+                    'T8': '표8_모든이상사례건수',
+                    'T9': '표9_SOC별건수'
+                };
+            },
+
+            // 기존 하드코딩된 정의 (레거시 호환용 - 사용하지 않음)
+            _legacyFieldDefinitions: {
+                    // === CS 데이터 ===
+                    'CS15': {
+                        name: '효능효과',
+                        source: '[RAW1.1_최신첨부문서] OR [RAW2.2_효능효과]',
+                        method: '효능효과 섹션을 찾아 추출. 분량이 너무 길다면 중요부분을 위주로 요약.',
+                        example: '"중등도에서 중증의 알츠하이머병 치료"'
+                    },
+                    'CS16': {
+                        name: '용법용량',
+                        source: '[RAW1.1_최신첨부문서] OR [RAW2.1_용법용량]',
+                        method: '용법용량 부분을 참고. 분량이 너무 길다면 중요부분을 위주로 요약.',
+                        example: '"1일 1회 5mg으로 시작하여 4주 간격으로 5mg씩 증량, 유지용량 1일 20mg(10mg씩 1일 2회)"'
+                    },
+                    'CS17': {
+                        name: '전세계허가현황표',
+                        source: '[RAW4_허가현황]',
+                        method: '허가된 국가/지역, 허가일, 품목명, 허가권자, 비고를 표 형태로 추출. 한 국가에서 여러번 허가난 경우 날짜순 정렬.',
+                        example: '[{"국가": "한국", "허가일": "2021-03-05", "품목명": "코미나티주", "허가권자": "한국화이자", "비고": "긴급사용승인"}]'
+                    },
+                    'CS17.1': {
+                        name: '허가 국가',
+                        source: '[RAW4_허가현황]',
+                        method: '한국어로 국가명 표기',
+                        example: '"대한민국", "미국", "유럽연합"'
+                    },
+                    'CS17.2': {
+                        name: '허가일',
+                        source: '[RAW4_허가현황]',
+                        method: 'YYYY-MM-DD 형식. 용량추가로 여러번 허가시 날짜 옆에 괄호로 용량 표기.',
+                        example: '"2021-03-05 (100mg)", "2022-01-10 (200mg 추가)"'
+                    },
+                    'CS17.3': {
+                        name: '허가품목명',
+                        source: '[RAW4_허가현황]',
+                        method: 'RAW 데이터에 명시된 명칭 그대로 사용. ® 또는 ™ 마크는 위첨자로 표기.',
+                        example: '"Remsima®", "코미나티주"'
+                    },
+                    'CS17.4': {
+                        name: '허가권자',
+                        source: '[RAW4_허가현황]',
+                        method: 'RAW 데이터에 명시된 명칭 그대로 사용',
+                        example: '"한국화이자제약(주)", "Pfizer Inc."'
+                    },
+                    'CS17.5': {
+                        name: '허가 비고',
+                        source: '[RAW4_허가현황]',
+                        method: 'RAW 데이터의 전반적인 정보를 보고 맥락을 고려하여 추출',
+                        example: '"긴급사용승인", "용량 추가", "적응증 추가"'
+                    },
+                    'CS17.6': {
+                        name: '허가현황서술문',
+                        source: '[RAW4_허가현황] OR [CS17_전세계허가현황표]',
+                        method: '허가국가 5개 초과시 "총 XX개국" 형태로 요약',
+                        example: '"글리빅사(메만틴염산염)의 품목허가일은 2018-11-10이고, 총 15개국에서 허가를 득하였다."'
+                    },
+                    'CS18': {
+                        name: '임상노출',
+                        source: '[RAW8_임상노출데이터]',
+                        method: '보고기간 중 종료된 임상시험 파악. 시험의약품, 위약, 활성대조약 각각의 대상자 수 파악. 가능하면 연령/성별/인종 하위그룹별 데이터.',
+                        example: '[{"시험명": "COV001", "종료일": "2021-11-28", "시험군": 500, "대조군": 250}]'
+                    },
+                    'CS19': {
+                        name: '시판후노출count시작날짜',
+                        source: '[RAW3_시판후sales데이터]',
+                        method: 'sales팀 데이터 주기(월별/분기별) 확인 후, 보고시작날짜에 가장 가까운 월의 1일',
+                        example: '"2017-01-01"'
+                    },
+                    'CS19.1': {
+                        name: '시판후노출count종료날짜',
+                        source: '[RAW3_시판후sales데이터]',
+                        method: '보고종료날짜에 가장 가까운 월의 말일',
+                        example: '"2022-07-31"'
+                    },
+                    'CS19.2': {
+                        name: '연도별판매량',
+                        source: '[RAW3_시판후sales데이터]',
+                        method: '연도별 판매량 집계. 용법용량에 따라 단위(정, 바이알 등) 결정',
+                        example: '{"2020년": "150,000정", "2021년": "180,000정", "2022년(1~7월)": "95,000정"}'
+                    },
+                    'CS19.3': {
+                        name: '총판매량합계',
+                        source: '[CS19.2_시판후판매연도별판매량]',
+                        method: '연도별 판매량 합계',
+                        example: '"425,000정"'
+                    },
+                    'CS20': {
+                        name: '1일사용량',
+                        source: '[RAW1.1_최신첨부문서] OR [RAW2.1_용법용량]',
+                        method: '용법용량에서 1일 투여량 추출. 단위는 용법용량에 맞춤(정, 바이알 등)',
+                        example: '"1일 20mg (10mg × 2회)"'
+                    },
+                    'CS55': {
+                        name: '안전성조치서술문',
+                        source: '[RAW5_안전성조치허가팀메일] OR [RAW6_안전성조치허가팀메일_취합본]',
+                        method: `반드시 다음 4가지 항목을 찾아 서술:
+1. 어떤 국가의 어떤 규제당국이
+2. 어떤 안전성조치가 취해졌는가 (예: DHPC 배포, RMP 업데이트, PI 변경)
+3. 어떤 안전성 문제에 대해서 (예: 혈소판감소증, 길랭-바레증후군, 모세혈관누출증후군)
+4. 조치 요청일자가 있다면 포함`,
+                        example: '"EMA 및 MHRA에서 Vaxzevria 관련 안전성 리뷰 결과, SmPC 4.4항에 혈소판감소 동반/비동반 뇌정맥동혈전증(CVST) 경고 추가를 요구하였다."'
+                    },
+                    'CS56': {
+                        name: '참고정보의변경서술문',
+                        source: '[RAW7_안전성정보변경]',
+                        method: `용법용량, 효능효과, 사용상주의사항 변경 확인. 서술문에 포함할 내용:
+1. 변경 날짜
+2. 변경된 섹션 제목 및 번호
+3. 변경내용 요약`,
+                        example: '"2022년 1월 6일, 7. 임부/수유부에 대한 투여 섹션에 임신부 백신 접종 관련 최신 안전성 데이터가 반영되었다."'
+                    },
+                    'CS56.1': {
+                        name: '허가사항변경일',
+                        source: '[RAW7_안전성정보변경]',
+                        method: '단일 날짜: YYYY년 MM월 DD일. 복수: 날짜(변경내용요약) 형태',
+                        example: '"2022년1월 2일(용법용량 변경), 2024년 1월 2일(사용상의 주의사항 변경)"'
+                    },
+                    'CS28': {
+                        name: '원시총환자수',
+                        source: '[Raw14_원시자료LineListing]',
+                        method: 'Case번호(부서접수번호) 중복 제거 후 count. 환자수 = 고유 Case 수',
+                        example: '5'
+                    },
+                    'CS29': {
+                        name: '원시총이상사례수',
+                        source: '[Raw14_원시자료LineListing]',
+                        method: 'Event 시트에서 MedDRA PT Term 개수 count',
+                        example: '9'
+                    },
+                    'CS30': {
+                        name: '원시중대한사례수',
+                        source: '[Raw14_원시자료LineListing]',
+                        method: 'Seriousness=Yes인 event만 count. Event seriousness와 Case seriousness 모두 있으면 Event seriousness 우선',
+                        example: '4'
+                    },
+                    'CS33': {
+                        name: '신속보고총사례수',
+                        source: '[RAW12_국외신속보고LineListing]+[RAW13_국내신속보고LineListing]',
+                        method: '신속보고 LineListing들을 합쳐서 이상사례 개수 count',
+                        example: '15'
+                    },
+                    'CS34': {
+                        name: '정기보고총사례수',
+                        source: '[RAW15_정기보고LineListing]',
+                        method: 'Event 시트에서 이상사례 개수 count',
+                        example: '5'
+                    },
+                    'CS25.1': {
+                        name: '신속보고일자',
+                        source: '[RAW12] 또는 [RAW13]',
+                        method: '보고일자 컬럼에서 추출',
+                        example: '["2024-11-26", "2024-08-13", "2024-04-09"]'
+                    },
+                    'CS25.2': {
+                        name: '신속관리번호',
+                        source: '[RAW12] 또는 [RAW13]',
+                        method: '관리번호 컬럼에서 추출',
+                        example: '["DW-US-20301111", "DW-US-20301112"]'
+                    },
+                    // PH 데이터
+                    'PH4': {
+                        name: '원시자료 기반 서술문',
+                        source: '[Raw14_원시자료LineListing]',
+                        method: 'CS28, CS29, CS30을 활용하여 서술',
+                        example: '"표7 원시자료LineListing에 따르면, 총 5건의 고유 증례에서 9건의 이상사례가 보고되었으며, 이 중 4건은 중대한 이상사례였습니다."'
+                    },
+                    'PH9': {
+                        name: '문헌 검색 결과 서술',
+                        source: '[RAW9_문헌자료]',
+                        method: '문헌검색 수행 여부 및 결과 기술. 검색 DB, 검색어, 결과 건수 포함',
+                        example: '"Pubmed, Koreamed에서 성분명+이상사례 키워드로 검색한 결과, 관련 문헌 0건 확인됨"'
+                    },
+                    // Table 데이터
+                    'T1': {
+                        name: '표1_전세계판매허가현황',
+                        source: '[RAW4_허가현황]',
+                        method: 'CS17.1~CS17.5 데이터로 표 구성',
+                        example: '[{"국가": "한국", "허가일": "2021-03-05", "품목명": "코미나티주", "허가권자": "한국화이자", "비고": ""}]'
+                    },
+                    'T2': {
+                        name: '표2_연도별판매량',
+                        source: '[RAW3_시판후sales데이터]',
+                        method: '연도, 판매량 표 형태로 추출',
+                        example: '[{"연도": "2020년", "판매량": "150,000정"}, {"연도": "2021년", "판매량": "180,000정"}]'
+                    },
+                    'T5': {
+                        name: '표5_신속보고LineListing',
+                        source: '[RAW12]+[RAW13]',
+                        method: '신속보고 목록을 표 형태로',
+                        example: '[{"보고일": "2024-11-26", "관리번호": "DW-US-20301111", "이상사례명": "두통", "비고": ""}]'
+                    },
+                    'T6': {
+                        name: '표6_정기보고LineListing',
+                        source: '[RAW15]',
+                        method: '정기보고 목록을 표 형태로',
+                        example: '[{"보고일": "2024-10-15", "관리번호": "DW-KR-10001", "이상사례명": "오심", "비고": ""}]'
+                    },
+                    'T7': {
+                        name: '표7_원시자료LineListing',
+                        source: '[RAW14]',
+                        method: '원시자료 목록을 표 형태로',
+                        example: '[{"Case번호": "KAERS-001", "PT명": "두통", "중대성": "No"}, {"Case번호": "KAERS-001", "PT명": "오심", "중대성": "Yes"}]'
+                    }
+                },
+
+            getRawDescription(rawId) {
+                const descriptions = {
+                    'RAW1': '최신첨부문서 (효능효과, 용법용량, 사용상주의사항 포함)',
+                    'RAW2.1': '용법용량 전문',
+                    'RAW2.2': '효능효과 전문',
+                    'RAW2.3': '사용상주의사항 전문',
+                    'RAW2.6': '보고시작시점 사용상주의사항',
+                    'RAW3': '시판후 sales 데이터 (연도별 판매량)',
+                    'RAW4': '전세계 허가현황',
+                    'RAW5': '안전성조치 허가팀메일',
+                    'RAW6': '안전성조치 허가팀메일 취합본',
+                    'RAW7': '안전성정보 변경사항',
+                    'RAW7.1': '안전성정보 변경사항 (복수항목)',
+                    'RAW7.3': '안전성정보 변경사항 (용법용량)',
+                    'RAW7.4': '안전성정보 변경사항 (표형식 복수항목)',
+                    'RAW8': '임상노출 데이터 (임상시험 정보)',
+                    'RAW9': '문헌자료 (문헌검색 결과)',
+                    'RAW12': '국외 신속보고 Line Listing',
+                    'RAW13': '국내 신속보고 Line Listing',
+                    'RAW14': '원시자료 Line Listing',
+                    'RAW15': '정기보고 Line Listing'
+                };
+                return descriptions[rawId] || rawId;
+            },
+
+            parseExtractionResponse(text, rawId) {
+                const result = { csData: {}, phData: {}, tableData: {} };
+
+                try {
+                    // 1. 완전한 마크다운 코드 블록에서 JSON 추출 시도
+                    let jsonStr = null;
+                    const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+                    if (codeBlockMatch) {
+                        jsonStr = codeBlockMatch[1].trim();
+                    }
+
+                    // 2. 코드 블록이 없으면 truncated 코드 블록 시도 (닫는 ``` 없음)
+                    if (!jsonStr) {
+                        const truncatedMatch = text.match(/```(?:json)?\s*([\s\S]*)/);
+                        if (truncatedMatch) {
+                            jsonStr = truncatedMatch[1].trim();
+                        }
+                    }
+
+                    // 3. 코드 블록이 없으면 일반 JSON 블록 추출
+                    if (!jsonStr) {
+                        const jsonMatch = text.match(/\{[\s\S]*\}/);
+                        if (jsonMatch) {
+                            jsonStr = jsonMatch[0];
+                        }
+                    }
+
+                    if (!jsonStr) {
+                        console.warn('⚠️ No JSON found in response for', rawId);
+                        return result;
+                    }
+
+                    // JSON 파싱 시도, 실패 시 부분 파싱
+                    let parsed;
+                    try {
+                        parsed = JSON.parse(jsonStr);
+                    } catch (parseError) {
+                        // Truncated JSON 복구 시도: 불완전한 JSON 수정
+                        console.warn(`⚠️ Attempting to repair truncated JSON for ${rawId}`);
+                        let repairedJson = jsonStr;
+
+                        // 1. 불완전한 키-값 쌍 제거 (예: "key": nul, "key": tru, "key": "incomplete)
+                        repairedJson = repairedJson.replace(/,?\s*"[^"]*"\s*:\s*(?:nul|tru|fal|"[^"]*)?$/g, '');
+
+                        // 2. 마지막으로 완전한 값 찾기 (쉼표로 끝나는 키-값 쌍)
+                        const lastCommaPatterns = ['"},', 'null,', 'true,', 'false,', '},', '],'];
+                        let lastValidPos = -1;
+                        lastCommaPatterns.forEach(pattern => {
+                            const pos = repairedJson.lastIndexOf(pattern);
+                            if (pos > lastValidPos) {
+                                lastValidPos = pos + pattern.length - 1; // 쉼표 위치
+                            }
+                        });
+
+                        // 3. 완전한 값 위치까지 자르기 (쉼표 제거)
+                        if (lastValidPos > 0) {
+                            repairedJson = repairedJson.substring(0, lastValidPos);
+                        }
+
+                        // 4. 열린 괄호 수 계산 및 닫기
+                        const openBraces = (repairedJson.match(/\{/g) || []).length;
+                        const closeBraces = (repairedJson.match(/\}/g) || []).length;
+                        const openBrackets = (repairedJson.match(/\[/g) || []).length;
+                        const closeBrackets = (repairedJson.match(/\]/g) || []).length;
+
+                        for (let i = 0; i < openBrackets - closeBrackets; i++) {
+                            repairedJson += ']';
+                        }
+                        for (let i = 0; i < openBraces - closeBraces; i++) {
+                            repairedJson += '}';
+                        }
+
+                        try {
+                            parsed = JSON.parse(repairedJson);
+                            console.log(`✅ Repaired JSON for ${rawId}:`, Object.keys(parsed));
+                        } catch (e2) {
+                            throw parseError; // 원래 에러 던지기
+                        }
+                    }
+
+                    Object.keys(parsed).forEach(key => {
+                        const value = parsed[key];
+                        if (value && value !== 'null' && value !== null) {
+                            if (key.startsWith('CS')) {
+                                result.csData[key] = { value: value, source: rawId };
+                            } else if (key.startsWith('PH')) {
+                                result.phData[key] = { value: value, source: rawId };
+                            } else if (key.startsWith('T') && /^T\d+/.test(key)) {
+                                // Table 데이터 (T1-T9)
+                                result.tableData[key] = { value: value, source: rawId };
+                            }
+                        }
+                    });
+
+                    console.log(`✅ Parsed extraction for ${rawId}:`, result);
+                } catch (e) {
+                    console.error('❌ JSON parse error:', e.message, 'Raw:', text.substring(0, 500));
+                }
+
+                return result;
+            },
+
+            mergeExtractedData(extractionResults) {
+                console.log('📊 Merging extracted data...');
+                const merged = { csData: {}, phData: {}, tableData: {} };
+                this.conflicts = [];
+
+                extractionResults.forEach(result => {
+                    // Merge CS Data
+                    Object.keys(result.csData || {}).forEach(key => {
+                        if (!merged.csData[key]) {
+                            merged.csData[key] = result.csData[key];
+                        } else if (merged.csData[key].value !== result.csData[key].value) {
+                            // 충돌 발생
+                            this.conflicts.push({
+                                field: key,
+                                options: [
+                                    { value: merged.csData[key].value, source: merged.csData[key].source },
+                                    { value: result.csData[key].value, source: result.csData[key].source }
+                                ]
+                            });
+                        }
+                    });
+
+                    // Merge PH Data
+                    Object.keys(result.phData || {}).forEach(key => {
+                        if (!merged.phData[key]) {
+                            merged.phData[key] = result.phData[key];
+                        }
+                    });
+
+                    // Merge Table Data
+                    Object.keys(result.tableData || {}).forEach(key => {
+                        if (!merged.tableData[key]) {
+                            merged.tableData[key] = result.tableData[key];
+                        }
+                    });
+                });
+
+                // CS17 자동 생성 (CS17.1~CS17.5 병렬 배열에서)
+                this.generateCS17FromParallelArrays(merged);
+
+                console.log('✅ Merged data:', merged);
+                return merged;
+            },
+
+            getConflictData() {
+                return this.conflicts;
+            },
+
+            // CS17 자동 생성: CS17.1~CS17.5 병렬 배열에서 객체 배열로 변환
+            generateCS17FromParallelArrays(merged) {
+                const cs171 = merged.csData['CS17.1'];
+                const cs172 = merged.csData['CS17.2'];
+                const cs173 = merged.csData['CS17.3'];
+                const cs174 = merged.csData['CS17.4'];
+                const cs175 = merged.csData['CS17.5'];
+
+                // CS17.1이 배열인 경우에만 처리
+                if (cs171 && Array.isArray(cs171.value) && cs171.value.length > 0) {
+                    const tableArray = cs171.value.map((country, i) => ({
+                        국가: country,
+                        허가일: cs172?.value?.[i] || null,
+                        품목명: cs173?.value?.[i] || null,
+                        허가권자: cs174?.value?.[i] || null,
+                        비고: Array.isArray(cs175?.value) ? cs175.value[i] : null
+                    }));
+
+                    merged.csData['CS17'] = {
+                        value: tableArray,
+                        source: 'auto-generated'
+                    };
+
+                    console.log('✅ CS17 자동 생성 완료:', tableArray.length, '개 행');
+                }
+            }
+        };
+
+        // AuthManager stub - minimal implementation
+        const authManager = {
+            getCurrentUser() {
+                const session = Storage.get(CONFIG.STORAGE_KEYS.SESSION);
+                return session ? session.user : null;
+            },
+
+            checkSession() {
+                const session = Storage.get(CONFIG.STORAGE_KEYS.SESSION);
+                if (!session) {
+                    return { authenticated: false };
+                }
+                return {
+                    authenticated: true,
+                    user: session.user,
+                    session: session
+                };
+            },
+
+            redirectToLogin() {
+                window.location.href = CONFIG.PAGES.LOGIN;
+            }
+        };
+
+        // AppLayout stub - simple layout wrapper without ES6 modules
+        class AppLayout {
+            constructor(options = {}) {
+                this.currentStage = options.currentStage || 0;
+                this.reportName = options.reportName || '';
+            }
+
+            render(content) {
+                // Load session data for user info
+                const session = Storage.get('session') || {};
+                const userName = session.userName || '사용자';
+                const userRole = session.userRole || 'Author';
+                const userInitial = userName.charAt(0);
+
+                // Render full layout with header
+                return `
+                    <div class="app-layout">
+                        <!-- Header -->
+                        <header class="app-header">
+                            <div class="header-left">
+                                <div class="logo">
+                                    <span class="logo-text">KPSUR AGENT</span>
+                                    <span class="logo-subtitle">ACUZEN AI</span>
+                                </div>
+                                <span class="deployment-badge test">테스트</span>
+                            </div>
+
+                            <div class="header-center">
+                                <div class="breadcrumb">
+                                    <span class="breadcrumb-item" onclick="navigateTo('P10_Dashboard.html')" style="cursor: pointer;">대시보드</span>
+                                    <span class="breadcrumb-separator">/</span>
+                                    <span class="breadcrumb-item">보고서</span>
+                                    <span class="breadcrumb-separator">/</span>
+                                    <span class="breadcrumb-item active">데이터 추출</span>
+                                </div>
+                            </div>
+
+                            <div class="header-right">
+                                <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="다크모드 전환">
+                                    <span class="icon-sun">☀️</span>
+                                    <span class="icon-moon">🌙</span>
+                                </button>
+                                <div class="user-menu">
+                                    <div class="user-avatar">${userInitial}</div>
+                                    <div class="user-info">
+                                        <div class="user-name">${userName}</div>
+                                        <div class="user-role">${userRole}</div>
+                                    </div>
+                                    <button class="user-menu-toggle">▼</button>
+                                </div>
+                            </div>
+                        </header>
+
+                        ${content}
+                    </div>
+                `;
+            }
+        }
+
+        // Load converted markdown files from localStorage
+        const convertedMarkdowns = Storage.get('convertedMarkdowns') || [];
+        const markdownFiles = convertedMarkdowns.map((file, index) => {
+            const category = ['RAW12', 'RAW14', 'RAW15'].includes(file.rawId) ? 'lineListing' : 'required';
+            return {
+                id: index + 1,
+                rawId: file.rawId,
+                name: file.fileName.replace(/\.(pdf|xlsx|docx|txt)$/i, '.md'),
+                markdown: file.markdown,
+                category: category,
+                status: 'pending'
+            };
+        });
+
+        // CS Data template (Source-CS-Sections.md 기준 - 60개)
+        const csDataTemplate = [
+            // 사용자입력 필드 (00_표지, 03_서론 등)
+            { id: 'CS0', label: 'CS0_성분명', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS1', label: 'CS1_브랜드명', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS2', label: 'CS2_회사명', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS3', label: 'CS3_보고시작날짜', value: '', source: 'calculated', hasConflict: false },  // CS4 - 5년
+            { id: 'CS4', label: 'CS4_보고종료날짜', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS5', label: 'CS5_국내허가일자', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS6', label: 'CS6_보고서제출일', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS7', label: 'CS7_버전넘버', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS8', label: 'CS8_버전날짜', value: '', source: 'calculated', hasConflict: false },  // CS4와 동일
+            // 목차 관련 (생성문서전반)
+            { id: 'CS9', label: 'CS9_목차', value: '', source: 'auto_generated', hasConflict: false },
+            { id: 'CS10', label: 'CS10_표목차', value: '', source: 'auto_generated', hasConflict: false },
+            { id: 'CS11', label: 'CS11_별첨목차', value: '', source: 'auto_generated', hasConflict: false },
+            { id: 'CS12', label: 'CS12_약어표', value: '', source: 'auto_generated', hasConflict: false },
+            // 서론 관련
+            { id: 'CS13', label: 'CS13_유효기간', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS14', label: 'CS14_신청기한', value: '', source: 'calculated', hasConflict: false },  // CS13 - 6개월
+            { id: 'CS15', label: 'CS15_효능효과', value: '', source: 'RAW1/RAW2.2', hasConflict: false },
+            { id: 'CS16', label: 'CS16_용법용량', value: '', source: 'RAW1/RAW2.1', hasConflict: false },
+            // 허가현황 (RAW4)
+            { id: 'CS17', label: 'CS17_전세계허가현황표', value: '', source: 'RAW4', hasConflict: false },
+            { id: 'CS17.1', label: 'CS17.1_허가국가', value: '', source: 'RAW4', hasConflict: false },
+            { id: 'CS17.2', label: 'CS17.2_허가일', value: '', source: 'RAW4', hasConflict: false },
+            { id: 'CS17.3', label: 'CS17.3_허가품목명', value: '', source: 'RAW4', hasConflict: false },
+            { id: 'CS17.4', label: 'CS17.4_허가권자', value: '', source: 'RAW4', hasConflict: false },
+            { id: 'CS17.5', label: 'CS17.5_허가비고', value: '', source: 'RAW4', hasConflict: false },
+            { id: 'CS17.6', label: 'CS17.6_허가현황서술문', value: '', source: 'RAW4', hasConflict: false },
+            // 임상시험 (RAW8)
+            { id: 'CS18', label: 'CS18_임상노출', value: '', source: 'RAW8', hasConflict: false },
+            // 환자노출 (RAW3)
+            { id: 'CS19', label: 'CS19_시판후노출count시작날짜', value: '', source: 'RAW3', hasConflict: false },
+            { id: 'CS19.1', label: 'CS19.1_시판후노출count종료날짜', value: '', source: 'RAW3', hasConflict: false },
+            { id: 'CS19.2', label: 'CS19.2_시판후판매연도별판매량', value: '', source: 'RAW3', hasConflict: false },
+            { id: 'CS19.3', label: 'CS19.3_시판후판매량합계', value: '', source: 'calculated', hasConflict: false },
+            { id: 'CS20', label: 'CS20_1일사용량', value: '', source: 'RAW1/RAW2.1', hasConflict: false },
+            { id: 'CS21', label: 'CS21_환자1명당사용량', value: '', source: 'calculated', hasConflict: false },  // CS20 × 365
+            { id: 'CS22', label: 'CS22_연평균판매량', value: '', source: 'calculated', hasConflict: false },
+            { id: 'CS23', label: 'CS23_연평균환자노출', value: '', source: 'calculated', hasConflict: false },  // CS22 / CS21
+            // 개별증례병력
+            { id: 'CS24', label: 'CS24_MedDRA버전', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS25.1', label: 'CS25.1_신속보고일자', value: '', source: 'RAW12/RAW13', hasConflict: false },
+            { id: 'CS25.2', label: 'CS25.2_신속보고관리번호', value: '', source: 'RAW12/RAW13', hasConflict: false },
+            { id: 'CS25.3', label: 'CS25.3_신속보고이상사례명', value: '', source: 'RAW12/RAW13', hasConflict: false },
+            { id: 'CS25.4', label: 'CS25.4_신속보고비고', value: '', source: 'RAW12/RAW13', hasConflict: false },
+            { id: 'CS28', label: 'CS28_원시총환자수', value: '', source: 'RAW14', hasConflict: false },
+            { id: 'CS29', label: 'CS29_원시총이상사례수', value: '', source: 'RAW14', hasConflict: false },
+            { id: 'CS30', label: 'CS30_원시중대한사례수', value: '', source: 'RAW14', hasConflict: false },
+            { id: 'CS31', label: 'CS31_원시자료신청일', value: '', source: 'user_input', hasConflict: false },
+            { id: 'CS32', label: 'CS32_전체보고건수', value: '', source: 'calculated', hasConflict: false },  // CS33 + CS34
+            { id: 'CS33', label: 'CS33_신속보고건수', value: '', source: 'RAW12/RAW13', hasConflict: false },
+            { id: 'CS34', label: 'CS34_정기보고건수', value: '', source: 'RAW15', hasConflict: false },
+            { id: 'CS35', label: 'CS35_전체이상사례건수', value: '', source: 'calculated', hasConflict: false },  // CS33 + CS34 + CS29
+            { id: 'CS36', label: 'CS36_중대한이상사례건수', value: '', source: 'RAW12/13/14/15', hasConflict: false },
+            { id: 'CS37', label: 'CS37_비중대이상사례건수', value: '', source: 'RAW12/13/14/15', hasConflict: false },
+            // 문헌
+            { id: 'CS53', label: 'CS53_문헌DB명', value: '', source: 'user_input', hasConflict: false },
+            // 안전성조치 (RAW5/RAW6)
+            { id: 'CS55', label: 'CS55_안전성조치서술문', value: '', source: 'RAW5/RAW6', hasConflict: false },
+            // 안전성정보변경 (RAW7)
+            { id: 'CS56', label: 'CS56_참고정보의변경서술문', value: '', source: 'RAW7', hasConflict: false },
+            { id: 'CS56.1', label: 'CS56.1_허가사항변경일', value: '', source: 'RAW7', hasConflict: false },
+            { id: 'CS56.2', label: 'CS56.2_기존효능효과', value: '', source: 'RAW7', hasConflict: false },
+            { id: 'CS56.3', label: 'CS56.3_기존용량용법', value: '', source: 'RAW7', hasConflict: false },
+            { id: 'CS56.4', label: 'CS56.4_기존사용상의주의사항', value: '', source: 'RAW7', hasConflict: false },
+            { id: 'CS56.5', label: 'CS56.5_최신효능효과', value: '', source: 'RAW7', hasConflict: false },
+            { id: 'CS56.6', label: 'CS56.6_최신용법용량', value: '', source: 'RAW7', hasConflict: false },
+            { id: 'CS56.7', label: 'CS56.7_최신사용상주의사항', value: '', source: 'RAW7', hasConflict: false },
+            // 참고문헌
+            { id: 'CS57', label: 'CS57_참고문헌목록', value: '', source: 'auto_generated', hasConflict: false }
+        ];
+
+        // PH Data template (Source-CS-Sections.md 기준 - 9개 서술문)
+        const phDataTemplate = [
+            { id: 'PH4', label: 'PH4_원시자료기반서술문', value: '', source: 'RAW14/T7' },  // 표7, CS28, CS29, CS30 활용
+            { id: 'PH5', label: 'PH5_원시자료간단요약', value: '', source: 'RAW14/T7' },
+            { id: 'PH6', label: 'PH6_개별증례분석서술', value: '', source: 'RAW12/13/14/15' },  // 모든 LL 통합
+            { id: 'PH7', label: 'PH7_새로분석된시험서술', value: '', source: 'auto_generated' },
+            { id: 'PH8', label: 'PH8_시작진행중시험서술', value: '', source: 'auto_generated' },
+            { id: 'PH9', label: 'PH9_문헌검색결과서술', value: '', source: 'RAW9' },  // CS53 DB 활용
+            { id: 'PH10', label: 'PH10_유효성관련이상사례분석', value: '', source: 'RAW12/13/14/15' },
+            { id: 'PH11', label: 'PH11_전체데이터종합평가', value: '', source: 'auto_generated' },
+            { id: 'PH12', label: 'PH12_유익성위해성평가결론', value: '', source: 'auto_generated' }
+        ];
+
+        // Table Data template (Source-CS-Sections.md 기준 - 9개 표)
+        const tableDataTemplate = [
+            { id: 'T1', label: '표1_전세계판매허가현황', hasData: false, rows: [], source: 'RAW4' },  // CS17.1~CS17.5
+            { id: 'T2', label: '표2_연도별판매량', hasData: false, rows: [], source: 'RAW3' },  // CS19.1 × CS19.2
+            { id: 'T3', label: '표3_환자노출계산표', hasData: false, rows: [], source: 'calculated' },  // CS20, CS21, CS22, CS23
+            { id: 'T4', label: '표4_증례분류', hasData: false, rows: [], source: 'fixed_template' },  // 고정 템플릿
+            { id: 'T5', label: '표5_신속보고LineListing', hasData: false, rows: [], source: 'RAW12/RAW13' },  // 순번, 보고일자, 관리번호, 이상사례명, 비고
+            { id: 'T6', label: '표6_정기보고LineListing', hasData: false, rows: [], source: 'RAW15' },
+            { id: 'T7', label: '표7_원시자료LineListing', hasData: false, rows: [], source: 'RAW14' },
+            { id: 'T8', label: '표8_Seriousness분류', hasData: false, rows: [], source: 'RAW12/13/14/15' },  // CS35, CS36, CS37
+            { id: 'T9', label: '표9_MedDRA_SOC_PT피벗', hasData: false, rows: [], source: 'RAW12/13/14/15' }
+        ];
+
+        let selectedFile = null;
+        let currentTab = 'cs';
+        let csData = JSON.parse(JSON.stringify(csDataTemplate));
+        let phData = JSON.parse(JSON.stringify(phDataTemplate));
+        let tableData = JSON.parse(JSON.stringify(tableDataTemplate));
+        let conflictData = null;
+
+        // Initialize the page
+        function init() {
+            const layout = new AppLayout({
+                currentStage: 5,
+                reportName: 'testPill_1'
+            });
+
+            const content = `
+                <div class="app-content">
+                <main class="main-content">
+                <div class="extraction-container">
+                    <!-- Left Panel - File List -->
+                    <div class="file-list-panel">
+                        <div class="file-list-header">
+                            <h3>📄 마크다운 파일</h3>
+                            <div class="file-stats">
+                                <span id="completedCount">0</span>/<span id="totalCount">${markdownFiles.length}</span>
+                            </div>
+                        </div>
+
+                        <div class="file-category">
+                            <div class="file-category-title">필수 문서</div>
+                            <div id="requiredFiles"></div>
+                        </div>
+
+                        <div class="file-category">
+                            <div class="file-category-title">Line Listing</div>
+                            <div id="lineListingFiles"></div>
+                        </div>
+                    </div>
+
+                    <!-- Main Panel - Data Extraction -->
+                    <div class="data-panel">
+                        <div class="data-panel-header">
+                            <h2 class="data-panel-title">📊 데이터 추출 (Stage 5)</h2>
+
+                            <div class="extraction-warning">
+                                <div class="extraction-warning-title">⚠️ 데이터 추출 원칙</div>
+                                <div class="extraction-warning-text">
+                                    <strong>1. 절대 데이터를 생성하지 않습니다</strong> - 데이터가 없으면 사용자에게 요청<br>
+                                    <strong>2. 충돌 데이터는 임의로 선택하지 않습니다</strong> - 모든 옵션을 사용자에게 제시
+                                </div>
+                            </div>
+
+                            <div class="extraction-progress">
+                                <div class="progress-stats">
+                                    <div class="progress-stat">
+                                        <div class="progress-stat-label">CS 데이터</div>
+                                        <div class="progress-stat-value"><span id="csExtracted">0</span>/${csDataTemplate.length}</div>
+                                    </div>
+                                    <div class="progress-stat">
+                                        <div class="progress-stat-label">PH 데이터</div>
+                                        <div class="progress-stat-value"><span id="phExtracted">0</span>/${phDataTemplate.length}</div>
+                                    </div>
+                                    <div class="progress-stat">
+                                        <div class="progress-stat-label">표 데이터</div>
+                                        <div class="progress-stat-value"><span id="tableExtracted">0</span>/${tableDataTemplate.length}</div>
+                                    </div>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div class="extraction-controls">
+                                <select class="llm-model-select" id="llmModel">
+                                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (빠름)</option>
+                                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (정확)</option>
+                                </select>
+                                <button class="btn btn-primary magic-effect" onclick="startExtraction()">
+                                    ✨ AI 데이터 추출 시작
+                                </button>
+                                <button class="btn btn-secondary" onclick="exportData()">
+                                    💾 데이터 저장
+                                </button>
+                                <button class="btn btn-primary" onclick="generatePSURReport()" id="generatePsurBtn" style="background: linear-gradient(135deg, #059669 0%, #10B981 100%);">
+                                    📄 PSUR 보고서 생성
+                                </button>
+                                <button class="btn btn-success" onclick="proceedToNext()">
+                                    다음 단계 →
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="data-tabs">
+                            <button class="data-tab active" onclick="switchTab('cs')">CS 데이터 (52)</button>
+                            <button class="data-tab" onclick="switchTab('ph')">PH 데이터 (9)</button>
+                            <button class="data-tab" onclick="switchTab('table')">표 데이터 (9)</button>
+                        </div>
+
+                        <div class="data-content">
+                            <!-- CS Data Section -->
+                            <div id="csSection" class="data-section active">
+                                <div class="cs-data-grid" id="csDataGrid"></div>
+                            </div>
+
+                            <!-- PH Data Section -->
+                            <div id="phSection" class="data-section">
+                                <div class="ph-data-list" id="phDataList"></div>
+                            </div>
+
+                            <!-- Table Data Section -->
+                            <div id="tableSection" class="data-section">
+                                <div class="table-data-list" id="tableDataList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </main>
+                </div>
+
+                <!-- Footer -->
+                <footer class="app-footer">
+                    <div class="footer-content">
+                        Copyright. Power Solution., Inc. 2026.
+                    </div>
+                </footer>
+            `;
+
+            const appElement = document.getElementById('app');
+            const header = appElement.querySelector('.app-header');
+            if (header) {
+                header.insertAdjacentHTML('afterend', layout.render(content));
+            } else {
+                appElement.innerHTML = layout.render(content);
+            }
+
+            // 사용자 입력 데이터 로드 (P13에서 저장한 데이터)
+            loadUserInputData();
+
+            renderFileList();
+            renderCSData();
+            renderPHData();
+            renderTableData();
+            updateStats();
+        }
+
+        // 사용자 입력 데이터 로드 (P13_NewReport에서 저장한 데이터)
+        function loadUserInputData() {
+            try {
+                const savedData = localStorage.getItem('current_report');
+                if (!savedData) {
+                    console.log('ℹ️ 저장된 사용자 입력 데이터 없음');
+                    return;
+                }
+
+                const userInput = JSON.parse(savedData);
+                console.log('📥 사용자 입력 데이터 로드:', userInput);
+
+                // CS 데이터에 사용자 입력 값 채우기 (01_CSData_Definition.md 기준)
+                const userInputFields = ['CS0', 'CS1', 'CS2', 'CS4', 'CS5', 'CS6', 'CS7', 'CS13', 'CS24', 'CS31', 'CS53'];
+
+                userInputFields.forEach(fieldId => {
+                    if (userInput[fieldId]) {
+                        const csItem = csData.find(item => item.id === fieldId);
+                        if (csItem) {
+                            csItem.value = userInput[fieldId];
+                            csItem.source = 'user_input';
+                            console.log(`  ✅ ${fieldId}: ${userInput[fieldId]}`);
+                        }
+                    }
+                });
+
+                // 추가 메타 정보 저장 (나중에 필요할 수 있음)
+                window.currentReportMeta = {
+                    reportId: userInput.reportId,
+                    createdAt: userInput.createdAt,
+                    authorName: userInput.authorName,
+                    authorPosition: userInput.authorPosition,
+                    description: userInput.description
+                };
+
+                console.log('✅ 사용자 입력 데이터 로드 완료');
+
+            } catch (e) {
+                console.error('❌ 사용자 입력 데이터 로드 실패:', e);
+            }
+        }
+
+        // Render file list
+        function renderFileList() {
+            const requiredFiles = markdownFiles.filter(f => f.category === 'required');
+            const lineListingFiles = markdownFiles.filter(f => f.category === 'lineListing');
+
+            document.getElementById('requiredFiles').innerHTML = requiredFiles.map(file => `
+                <div class="file-item ${selectedFile?.id === file.id ? 'selected' : ''}" onclick="showMarkdownPopup(${file.id})">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-meta">
+                        <span>${file.rawId}</span>
+                        <span class="file-status ${file.status}">${getStatusLabel(file.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('lineListingFiles').innerHTML = lineListingFiles.map(file => `
+                <div class="file-item ${selectedFile?.id === file.id ? 'selected' : ''}" onclick="showMarkdownPopup(${file.id})">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-meta">
+                        <span>${file.rawId}</span>
+                        <span class="file-status ${file.status}">${getStatusLabel(file.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                'pending': '대기',
+                'extracting': '추출 중',
+                'completed': '완료',
+                'conflict': '충돌',
+                'error': '오류'
+            };
+            return labels[status] || status;
+        }
+
+        // 데이터 값 포맷팅 (배열, 객체 처리)
+        function formatDataValue(value) {
+            try {
+                if (value === null || value === undefined) {
+                    return '데이터 없음';
+                }
+
+                // CS17 같은 객체 배열인 경우 테이블로 표시
+                if (Array.isArray(value) && value.length > 0) {
+                    const firstItem = value[0];
+                    if (firstItem != null && typeof firstItem === 'object' && !Array.isArray(firstItem)) {
+                        const headers = Object.keys(firstItem);
+                        if (headers.length > 0) {
+                            let table = '<table class="cs-data-table"><thead><tr>';
+                            headers.forEach(h => table += `<th>${h}</th>`);
+                            table += '</tr></thead><tbody>';
+                            value.forEach(row => {
+                                if (row != null) {
+                                    table += '<tr>';
+                                    headers.forEach(h => table += `<td>${row[h] ?? '-'}</td>`);
+                                    table += '</tr>';
+                                }
+                            });
+                            table += '</tbody></table>';
+                            return table;
+                        }
+                    }
+                    // 일반 배열인 경우 (CS17.1 등)
+                    return value.map(v => v ?? '-').join(', ');
+                }
+
+                // 일반 값
+                return String(value);
+            } catch (e) {
+                console.error('formatDataValue error:', e, value);
+                return String(value);
+            }
+        }
+
+        // Render CS Data
+        function renderCSData() {
+            const grid = document.getElementById('csDataGrid');
+            grid.innerHTML = csData.map(item => `
+                <div class="cs-data-item ${item.value ? 'has-value' : ''} ${item.hasConflict ? 'has-conflict' : ''}">
+                    <div class="cs-data-label">
+                        ${item.label}
+                        ${item.hasConflict ? '<span class="conflict-indicator" onclick="showConflict(\'' + item.id + '\')">충돌</span>' : ''}
+                        ${!item.value && !item.hasConflict ? '<span class="missing-indicator">미확보</span>' : ''}
+                    </div>
+                    <div class="cs-data-value ${item.value ? '' : 'empty'} editable" onclick="editCSData('${item.id}')">
+                        ${formatDataValue(item.value)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render PH Data
+        function renderPHData() {
+            const list = document.getElementById('phDataList');
+            list.innerHTML = phData.map(item => `
+                <div class="ph-data-item ${item.value ? 'has-value' : ''}">
+                    <div class="ph-data-label">${item.label}</div>
+                    <div class="ph-data-value ${item.value ? '' : 'empty'}">
+                        ${item.value || '서술문 데이터 없음'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Table Data
+        function renderTableData() {
+            const list = document.getElementById('tableDataList');
+            list.innerHTML = tableData.map(item => `
+                <div class="table-data-item ${item.hasData ? 'has-value' : ''}">
+                    <div class="table-data-header">
+                        <div class="table-data-label">${item.label}</div>
+                        <span class="file-status ${item.hasData ? 'completed' : 'pending'}">
+                            ${item.hasData ? '완료' : '대기'}
+                        </span>
+                    </div>
+                    <div class="table-preview">
+                        ${item.hasData ? renderTablePreview(item) : '<p style="color: #94a3b8; font-size: 12px;">표 데이터 없음</p>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTablePreview(table) {
+            if (!table.rows || table.rows.length === 0) return '<p>데이터 없음</p>';
+
+            const headers = Object.keys(table.rows[0]);
+            return `
+                <table>
+                    <thead>
+                        <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>
+                        ${table.rows.slice(0, 3).map(row => `
+                            <tr>${headers.map(h => `<td>${row[h]}</td>`).join('')}</tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${table.rows.length > 3 ? `<p style="font-size: 11px; color: #64748b; margin-top: 4px;">+ ${table.rows.length - 3}개 행 더보기</p>` : ''}
+            `;
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.data-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.data-section').forEach(s => s.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Section').classList.add('active');
+        }
+
+        // File selection
+        function selectFile(fileId) {
+            selectedFile = markdownFiles.find(f => f.id === fileId);
+            renderFileList();
+        }
+
+        // Show markdown popup
+        function showMarkdownPopup(fileId) {
+            const file = markdownFiles.find(f => f.id === fileId);
+            if (!file) return;
+
+            document.getElementById('markdownPopupFileName').textContent = file.name;
+            document.getElementById('markdownPopupRawId').textContent = file.rawId;
+
+            const body = document.getElementById('markdownPopupBody');
+            if (file.markdown && file.markdown.trim()) {
+                body.textContent = file.markdown;
+                body.classList.remove('markdown-empty');
+            } else {
+                body.innerHTML = '<div class="markdown-empty">마크다운 내용이 없습니다.</div>';
+            }
+
+            document.getElementById('markdownPopup').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close markdown popup
+        function closeMarkdownPopup() {
+            document.getElementById('markdownPopup').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Handle click on popup overlay (close when clicking outside)
+        function handleMarkdownPopupClick(event) {
+            if (event.target.id === 'markdownPopup') {
+                closeMarkdownPopup();
+            }
+        }
+
+        // Start extraction
+        async function startExtraction() {
+            const model = document.getElementById('llmModel').value;
+            showLLMLoading(`${model}를 사용하여 데이터를 추출하고 있습니다...`);
+
+            const extractionResults = [];
+            const totalFiles = markdownFiles.length;
+            let currentIndex = 0;
+
+            for (const file of markdownFiles) {
+                currentIndex++;
+                updateLLMProgress(currentIndex, totalFiles, file.name);
+                file.status = 'extracting';
+                renderFileList();
+
+                try {
+                    // Extract data from markdown using dataExtractor
+                    const result = await dataExtractor.extractFromMarkdown(
+                        file.markdown,
+                        file.rawId
+                    );
+
+                    if (result.success) {
+                        extractionResults.push({
+                            rawId: file.rawId,
+                            fileName: file.name,
+                            csData: result.csData || {},
+                            phData: result.phData || {},
+                            tableData: result.tableData || {},
+                            extractedAt: result.extractedAt
+                        });
+
+                        file.status = 'completed';
+                    } else {
+                        file.status = 'error';
+                        console.error(`Extraction failed for ${file.name}:`, result.error);
+                    }
+                } catch (error) {
+                    console.error(`Extraction error for ${file.name}:`, error);
+                    file.status = 'error';
+                }
+
+                renderFileList();
+                updateStats();
+            }
+
+            // Merge all extracted data
+            const mergedData = dataExtractor.mergeExtractedData(extractionResults);
+
+            // Update CS Data
+            Object.keys(mergedData.csData || {}).forEach(key => {
+                const csItem = csData.find(d => d.id === key);
+                if (csItem && mergedData.csData[key]) {
+                    csItem.value = mergedData.csData[key].value;
+                    csItem.source = mergedData.csData[key].source;
+                }
+            });
+
+            // Update PH Data
+            Object.keys(mergedData.phData || {}).forEach(key => {
+                const phItem = phData.find(d => d.id === key);
+                if (phItem && mergedData.phData[key]) {
+                    phItem.value = mergedData.phData[key].value;
+                    phItem.source = mergedData.phData[key].source;
+                }
+            });
+
+            // Update Table Data
+            Object.keys(mergedData.tableData || {}).forEach(key => {
+                const tableItem = tableData.find(d => d.id === key);
+                if (tableItem && mergedData.tableData[key]) {
+                    tableItem.hasData = true;
+                    tableItem.rows = mergedData.tableData[key].rows || [];
+                }
+            });
+
+            // Handle conflicts
+            const conflicts = dataExtractor.getConflictData();
+            if (conflicts && conflicts.length > 0) {
+                conflicts.forEach(conflict => {
+                    const csItem = csData.find(d => d.id === conflict.field);
+                    if (csItem) {
+                        csItem.hasConflict = true;
+                        csItem.conflictOptions = conflict.options;
+                    }
+                });
+            }
+
+            // Save extracted data to localStorage
+            Storage.set('extractedData', {
+                csData: mergedData.csData,
+                phData: mergedData.phData,
+                tableData: mergedData.tableData,
+                extractedAt: DateHelper.formatISO()
+            });
+
+            hideLLMLoading();
+            renderCSData();
+            renderPHData();
+            renderTableData();
+
+            const conflictCount = conflicts ? conflicts.length : 0;
+            if (conflictCount > 0) {
+                showToast(`데이터 추출이 완료되었습니다. ${conflictCount}개의 충돌 데이터를 확인해주세요.`, 'warning');
+            } else {
+                showToast('데이터 추출이 완료되었습니다.', 'success');
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            const completedFiles = markdownFiles.filter(f => f.status === 'completed').length;
+            const csExtracted = csData.filter(d => d.value && !d.hasConflict).length;
+            const phExtracted = phData.filter(d => d.value).length;
+            const tableExtracted = tableData.filter(d => d.hasData).length;
+
+            document.getElementById('completedCount').textContent = completedFiles;
+            document.getElementById('totalCount').textContent = markdownFiles.length;
+            document.getElementById('csExtracted').textContent = csExtracted;
+            document.getElementById('phExtracted').textContent = phExtracted;
+            document.getElementById('tableExtracted').textContent = tableExtracted;
+
+            const totalData = csDataTemplate.length + phDataTemplate.length + tableDataTemplate.length;
+            const extractedData = csExtracted + phExtracted + tableExtracted;
+            const progressPercent = (extractedData / totalData) * 100;
+            document.getElementById('progressBar').style.width = progressPercent + '%';
+        }
+
+        // Show conflict modal
+        function showConflict(csId) {
+            const item = csData.find(d => d.id === csId);
+            if (!item || !item.hasConflict) return;
+
+            conflictData = item;
+            document.getElementById('conflictFieldName').textContent = item.label;
+
+            const optionsHtml = item.conflictOptions.map((opt, idx) => `
+                <div class="conflict-option" onclick="selectConflictOption(${idx})">
+                    <div class="conflict-option-source">📄 ${opt.source} (${opt.date})</div>
+                    <div class="conflict-option-value">${opt.value}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('conflictOptions').innerHTML = optionsHtml;
+            document.getElementById('conflictModal').classList.add('show');
+        }
+
+        function selectConflictOption(index) {
+            document.querySelectorAll('.conflict-option').forEach((opt, idx) => {
+                if (idx === index) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+        }
+
+        function closeConflictModal() {
+            document.getElementById('conflictModal').classList.remove('show');
+            conflictData = null;
+        }
+
+        function resolveConflict() {
+            const selectedOption = document.querySelector('.conflict-option.selected');
+            if (!selectedOption) {
+                showToast('옵션을 선택해주세요', 'error');
+                return;
+            }
+
+            const selectedIndex = Array.from(document.querySelectorAll('.conflict-option')).indexOf(selectedOption);
+            const selectedValue = conflictData.conflictOptions[selectedIndex];
+
+            conflictData.value = selectedValue.value;
+            conflictData.source = selectedValue.source;
+            conflictData.hasConflict = false;
+            delete conflictData.conflictOptions;
+
+            closeConflictModal();
+            renderCSData();
+            updateStats();
+            showToast('충돌이 해결되었습니다', 'success');
+        }
+
+        // Edit CS Data
+        function editCSData(csId) {
+            const item = csData.find(d => d.id === csId);
+            const newValue = prompt(`${item.label} 값을 입력하세요:`, item.value);
+
+            if (newValue !== null) {
+                item.value = newValue;
+                item.source = 'manual_edit';
+                renderCSData();
+                updateStats();
+            }
+        }
+
+        // Export data
+        function exportData() {
+            const exportData = {
+                csData: csData,
+                phData: phData,
+                tableData: tableData,
+                timestamp: new Date().toISOString()
+            };
+
+            // In real implementation, this would save to file
+            console.log('Exporting data:', exportData);
+            showToast('데이터가 저장되었습니다', 'success');
+        }
+
+        // PSUR 보고서 생성 (LLM 호출)
+        async function generatePSURReport() {
+            // API 키 확인
+            const apiKey = Storage.get(CONFIG.STORAGE_KEYS.GOOGLE_API_KEY);
+            if (!apiKey) {
+                showToast('API 키가 설정되지 않았습니다. 설정 페이지에서 API 키를 입력해주세요.', 'error');
+                return;
+            }
+
+            // PSURGenerator 초기화
+            if (!window.PSURGenerator) {
+                showToast('PSUR Generator 모듈이 로드되지 않았습니다.', 'error');
+                return;
+            }
+
+            window.PSURGenerator.apiKey = apiKey;
+
+            // 변환된 마크다운 로드
+            const convertedMarkdowns = Storage.get('convertedMarkdowns') || [];
+            if (convertedMarkdowns.length === 0) {
+                showToast('변환된 마크다운 파일이 없습니다. P15에서 마크다운 변환을 먼저 수행해주세요.', 'error');
+                return;
+            }
+
+            // 로딩 표시
+            showLLMLoading('PSUR 보고서 생성 중... (최대 2분 소요)');
+
+            try {
+                // PSUR 보고서 생성
+                const result = await window.PSURGenerator.generateFullReport({
+                    convertedMarkdowns: convertedMarkdowns,
+                    useTestData: true,  // 테스트 데이터 사용
+                    onProgress: (progress) => {
+                        console.log('[PSUR Generation]', progress.step, progress.message);
+                        updateLLMProgress(0, 100, progress.message);
+                    }
+                });
+
+                hideLLMLoading();
+
+                if (result.success) {
+                    const report = result.report;
+                    showToast(`PSUR 보고서 생성 완료! (${report.duration}초 소요)`, 'success');
+                    console.log('[PSUR Report Generated]', report);
+
+                    // 보고서 다운로드 확인
+                    if (confirm(`PSUR 보고서 생성이 완료되었습니다.\n- 소요 시간: ${report.duration}초\n- 원본 파일: ${report.sourceFiles}개\n\n보고서를 다운로드 하시겠습니까?`)) {
+                        window.PSURGenerator.downloadReport();
+                    }
+                } else {
+                    showToast(`PSUR 생성 실패: ${result.error}`, 'error');
+                    console.error('[PSUR Generation Failed]', result.error);
+                }
+
+            } catch (error) {
+                hideLLMLoading();
+                showToast(`오류 발생: ${error.message}`, 'error');
+                console.error('[PSUR Generation Error]', error);
+            }
+        }
+
+        // Proceed to next stage
+        function proceedToNext() {
+            const missingCS = csData.filter(d => !d.value).length;
+            const conflicts = csData.filter(d => d.hasConflict).length;
+
+            if (missingCS > 0 || conflicts > 0) {
+                showToast(`미확보 데이터 ${missingCS}개, 충돌 ${conflicts}개를 먼저 해결해주세요`, 'error');
+                return;
+            }
+
+            // Ensure extracted data is saved
+            Storage.set('extractedData', {
+                csData: Object.fromEntries(csData.map(d => [d.id, { value: d.value, source: d.source }])),
+                phData: Object.fromEntries(phData.map(d => [d.id, { value: d.value, source: d.source }])),
+                tableData: Object.fromEntries(tableData.map(d => [d.id, { hasData: d.hasData, rows: d.rows }])),
+                extractedAt: DateHelper.formatISO()
+            });
+
+            const reportId = new URLSearchParams(window.location.search).get('reportId') || Date.now().toString();
+            window.location.href = `P17_TemplateWriting.html?reportId=${reportId}`;
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

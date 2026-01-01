@@ -3,6 +3,10 @@
  * GitHub Pages 배포용 - API 키는 localStorage에서 관리
  */
 
+// IIFE로 감싸서 const 선언이 전역 스코프와 충돌하지 않도록 함
+(function() {
+'use strict';
+
 const CONFIG = {
     // Supabase 설정 (공개 정보 - GitHub Pages에서 사용 가능)
     SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
@@ -13,7 +17,7 @@ const CONFIG = {
         DEFAULT_MODEL: 'gemini-2.0-flash-exp',
         MODELS: {
             FLASH: 'gemini-2.0-flash-exp',
-            PRO: 'gemini-2.0-pro-exp'
+            PRO: 'gemini-1.5-pro'
         },
         API_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models'
     },
@@ -39,39 +43,55 @@ const CONFIG = {
         'RAW15': '정기보고LineListing'
     },
 
-    // 워크플로우 단계
+    // 워크플로우 단계 (신규 5-Stage 구조)
     STAGES: {
         LOGIN: 0,
-        REPORT_STATUS: 1,
-        FILE_UPLOAD: 2,
-        MARKDOWN_CONVERSION: 3,
-        DATA_EXTRACTION: 4,
-        TEMPLATE_WRITING: 5,
-        REVIEW: 6,
-        QC: 7,
-        OUTPUT: 8
+        STAGE1_USER_INPUT: 1,    // 사용자 입력 데이터
+        STAGE2_RAW_PROCESSING: 2, // Raw Data 처리 (LLM 자동 처리)
+        STAGE3_REVIEW: 3,         // 결과 보기 및 편집
+        STAGE4_QC: 4,             // QC 검증
+        STAGE5_OUTPUT: 5          // 워드 출력
     },
 
     // 페이지 라우팅
     PAGES: {
+        // 인증
         LOGIN: 'P01_Login.html',
         SIGNUP: 'P02_Signup.html',
         PASSWORD_RESET: 'P03_PasswordReset.html',
         PASSWORD_CHANGE: 'P04_PasswordChange.html',
         SYSTEM_CHECK: 'P05_SystemCheck.html',
+
+        // 대시보드
         DASHBOARD: 'P10_Dashboard.html',
         REPORT_LIST: 'P11_ReportList.html',
         REPORT_DETAIL: 'P12_ReportDetail.html',
+
+        // Stage 1: 사용자 입력
+        STAGE1_USER_INPUT: 'P13_NewReport.html',
+
+        // Stage 2: Raw Data 처리 (통합)
+        STAGE2_PROCESSING: 'P14_Stage2_Processing.html',
+
+        // Stage 3: 결과 보기 및 편집
+        STAGE3_REVIEW: 'P18_Review.html',
+
+        // Stage 4: QC 검증
+        STAGE4_QC: 'P19_QC.html',
+
+        // Stage 5: 출력
+        STAGE5_OUTPUT: 'P20_Output.html',
+
+        // 관리
+        SYSTEM_TEST: 'P90_SystemTest.html',
+        SETTINGS: 'P91_Settings.html',
+
+        // Legacy (하위 호환)
         NEW_REPORT: 'P13_NewReport.html',
-        FILE_UPLOAD: 'P14_FileUpload.html',
-        MARKDOWN_CONVERSION: 'P15_MarkdownConversion.html',
-        DATA_EXTRACTION: 'P16_DataExtraction.html',
-        TEMPLATE_WRITING: 'P17_TemplateWriting.html',
+        FILE_UPLOAD: 'P14_Stage2_Processing.html',
         REVIEW: 'P18_Review.html',
         QC: 'P19_QC.html',
-        OUTPUT: 'P20_Output.html',
-        SYSTEM_TEST: 'P90_SystemTest.html',
-        SETTINGS: 'P91_Settings.html'
+        OUTPUT: 'P20_Output.html'
     }
 };
 
@@ -80,7 +100,13 @@ const Storage = {
     get(key) {
         try {
             const value = localStorage.getItem(key);
-            return value ? JSON.parse(value) : null;
+            if (!value) return null;
+            // Try JSON parse first, fallback to raw string (for API keys, etc.)
+            try {
+                return JSON.parse(value);
+            } catch {
+                return value; // Return raw string if not valid JSON
+            }
         } catch (e) {
             console.error(`Error reading from localStorage (${key}):`, e);
             return null;
@@ -139,5 +165,11 @@ const DateHelper = {
     }
 };
 
-// Export for ES6 modules
-export { CONFIG, Storage, DateHelper };
+// 전역으로 내보내기 (ES6 모듈 대신 window 객체 사용)
+if (typeof window !== 'undefined') {
+    window.CONFIG = CONFIG;
+    window.Storage = Storage;
+    window.DateHelper = DateHelper;
+}
+
+})(); // IIFE 종료

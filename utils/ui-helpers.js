@@ -3,6 +3,7 @@
  * UI 컴포넌트 유틸리티 (Toast, Loading)
  *
  * 출처: P91_Settings.html에서 추출
+ * GitHub Pages 배포용 - 전역 window 객체 사용
  */
 
 // Toast 카운터 (다중 Toast 지원)
@@ -31,11 +32,11 @@ function ensureToastContainer() {
 /**
  * Toast 알림 표시
  * @param {string} message - 표시할 메시지
- * @param {string} type - 'success', 'error', 'warning' 중 하나
+ * @param {string} type - 'success', 'error', 'warning', 'info' 중 하나
  * @param {number} duration - 표시 시간 (ms, 기본: 5000)
  * @returns {string} Toast ID
  */
-export function showToast(message, type = 'success', duration = 5000) {
+function showToast(message, type = 'success', duration = 5000) {
     ensureToastContainer();
 
     const container = document.getElementById('toast-container');
@@ -61,11 +62,12 @@ export function showToast(message, type = 'success', duration = 5000) {
         cursor: 'pointer'
     });
 
-    // 타입별 색상
+    // 타입별 색상 (info 포함)
     const colors = {
         success: { bg: '#ECFDF5', text: '#065F46', border: '#6EE7B7' },
         error: { bg: '#FEF2F2', text: '#991B1B', border: '#FCA5A5' },
-        warning: { bg: '#FEF3C7', text: '#92400E', border: '#FDE047' }
+        warning: { bg: '#FEF3C7', text: '#92400E', border: '#FDE047' },
+        info: { bg: '#EBF5FF', text: '#1E40AF', border: '#93C5FD' }
     };
 
     const color = colors[type] || colors.success;
@@ -97,7 +99,7 @@ export function showToast(message, type = 'success', duration = 5000) {
  * Toast 숨김
  * @param {string} toastId - Toast ID
  */
-export function hideToast(toastId) {
+function hideToast(toastId) {
     const toast = document.getElementById(toastId);
     if (toast) {
         toast.style.animation = 'slideOut 0.3s ease-in';
@@ -110,7 +112,7 @@ export function hideToast(toastId) {
 /**
  * 모든 Toast 제거
  */
-export function clearAllToasts() {
+function clearAllToasts() {
     const container = document.getElementById('toast-container');
     if (container) {
         container.innerHTML = '';
@@ -121,7 +123,7 @@ export function clearAllToasts() {
  * LLM 로딩 오버레이 표시
  * @param {string} message - 로딩 메시지
  */
-export function showLLMLoading(message = '처리 중...') {
+function showLLMLoading(message = '처리 중...') {
     // 기존 오버레이 제거
     hideLLMLoading();
 
@@ -215,7 +217,7 @@ export function showLLMLoading(message = '처리 중...') {
 /**
  * LLM 로딩 오버레이 숨김
  */
-export function hideLLMLoading() {
+function hideLLMLoading() {
     const overlay = document.getElementById('llm-loading-overlay');
     if (overlay) {
         overlay.remove();
@@ -226,7 +228,7 @@ export function hideLLMLoading() {
  * LLM 로딩 메시지 업데이트
  * @param {string} message - 새 메시지
  */
-export function updateLLMLoadingMessage(message) {
+function updateLLMLoadingMessage(message) {
     const text = document.getElementById('llm-loading-text');
     if (text) {
         text.textContent = message;
@@ -237,13 +239,25 @@ export function updateLLMLoadingMessage(message) {
  * 간단한 로딩 오버레이 표시 (showLoading 별칭)
  * @param {string} message - 로딩 메시지
  */
-export function showLoading(message = '처리 중...') {
+function showLoading(message = '처리 중...') {
     showLLMLoading(message);
 }
 
 /**
  * 간단한 로딩 오버레이 숨김 (hideLoading 별칭)
  */
-export function hideLoading() {
+function hideLoading() {
     hideLLMLoading();
+}
+
+// 전역으로 내보내기 (ES6 모듈 대신 window 객체 사용)
+if (typeof window !== 'undefined') {
+    window.showToast = showToast;
+    window.hideToast = hideToast;
+    window.clearAllToasts = clearAllToasts;
+    window.showLLMLoading = showLLMLoading;
+    window.hideLLMLoading = hideLLMLoading;
+    window.updateLLMLoadingMessage = updateLLMLoadingMessage;
+    window.showLoading = showLoading;
+    window.hideLoading = hideLoading;
 }
