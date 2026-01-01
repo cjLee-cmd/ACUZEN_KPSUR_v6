@@ -1320,7 +1320,21 @@
                 versionInput.value = '1.0';
             }
 
-            setupUserMenu();
+            // setupUserMenu이 정의되어 있으면 호출 (layout-helper.js 미로드 시 스킵)
+            if (typeof setupUserMenu === 'function') {
+                setupUserMenu();
+            } else {
+                // 간단한 사용자 메뉴 토글 구현
+                const userMenuToggle = document.querySelector('.user-menu-toggle');
+                if (userMenuToggle) {
+                    userMenuToggle.addEventListener('click', () => {
+                        if (confirm('로그아웃 하시겠습니까?')) {
+                            clearSessionData();
+                            navigateTo('P01_Login.html');
+                        }
+                    });
+                }
+            }
             setupDrugSearch();
             setupForm();
         }
