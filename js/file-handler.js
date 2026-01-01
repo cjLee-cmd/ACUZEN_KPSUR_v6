@@ -126,57 +126,77 @@ class FileHandler {
     }
 
     /**
-     * PDF 파일 읽기 (PDF.js 사용, OCR fallback 지원)
+     * PDF 파일 읽기 (PDF.js 텍스트 추출 → 품질 검증 → OCR fallback)
+     *
+     * 처리 순서:
+     * 1. PDF.js로 텍스트 추출 시도
+     * 2. 추출된 텍스트 품질 검증 (길이 + 한글 비율)
+     * 3. 품질 불충분 시 OCR 시도 (Tesseract.js)
+     * 4. 최종 결과 반환
      */
     async readPDF(file) {
         const arrayBuffer = await file.arrayBuffer();
         let pdf = null;
+        let extractedText = '';
+        let pageCount = 0;
 
-        // PDF.js가 로드되었는지 확인
+        // Step 1: PDF.js 텍스트 추출 시도
         if (typeof pdfjsLib !== 'undefined') {
             try {
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-                pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                let fullText = '';
+                // CMap 설정 (한글 폰트 지원)
+                pdf = await pdfjsLib.getDocument({
+                    data: arrayBuffer,
+                    cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                    cMapPacked: true
+                }).promise;
 
-                for (let i = 1; i <= pdf.numPages; i++) {
+                pageCount = pdf.numPages;
+                console.log(`📄 PDF loaded: ${file.name} (${pageCount} pages)`);
+
+                for (let i = 1; i <= pageCount; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
                     const pageText = textContent.items.map(item => item.str).join(' ');
-                    fullText += pageText + '\n\n';
+                    extractedText += pageText + '\n\n';
                 }
-
-                // 텍스트가 충분히 추출되었으면 반환
-                if (fullText.trim().length > 50) {
-                    return {
-                        text: fullText,
-                        fileName: file.name,
-                        fileType: 'pdf',
-                        pageCount: pdf.numPages,
-                        method: 'text'
-                    };
-                }
-
-                // 텍스트가 부족하면 OCR 시도
-                console.log(`⚠️ PDF text extraction insufficient (${fullText.trim().length} chars), trying OCR...`);
 
             } catch (pdfError) {
-                console.warn('PDF parsing error:', pdfError.message);
+                console.warn(`⚠️ PDF.js parsing error: ${pdfError.message}`);
             }
         }
 
-        // OCR fallback (Tesseract.js)
+        // Step 2: 텍스트 품질 검증
+        const textQuality = this.evaluateTextQuality(extractedText);
+        console.log(`📊 Text quality: ${textQuality.score}/100 (length: ${textQuality.length}, korean: ${textQuality.koreanRatio}%)`);
+
+        // Step 3: 품질이 충분하면 텍스트 반환
+        if (textQuality.score >= 60) {
+            console.log(`✅ PDF text extraction successful: ${file.name}`);
+            return {
+                text: extractedText,
+                fileName: file.name,
+                fileType: 'pdf',
+                pageCount: pageCount,
+                method: 'text',
+                quality: textQuality.score
+            };
+        }
+
+        // Step 4: 품질 부족 시 OCR 시도
+        console.log(`⚠️ Text quality insufficient (${textQuality.score}/100), trying OCR...`);
+
         if (typeof Tesseract !== 'undefined' && pdf) {
             try {
                 console.log(`🔍 Starting OCR for: ${file.name}`);
                 let ocrText = '';
 
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    console.log(`🔄 OCR page ${i}/${pdf.numPages}...`);
+                for (let i = 1; i <= pageCount; i++) {
+                    console.log(`🔄 OCR page ${i}/${pageCount}...`);
                     const page = await pdf.getPage(i);
 
-                    // 페이지를 캔버스로 렌더링
+                    // 페이지를 캔버스로 렌더링 (고해상도)
                     const viewport = page.getViewport({ scale: 2.0 });
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
@@ -188,7 +208,7 @@ class FileHandler {
                         viewport: viewport
                     }).promise;
 
-                    // OCR 수행
+                    // Tesseract OCR 수행
                     const result = await Tesseract.recognize(canvas, 'kor+eng', {
                         logger: m => {
                             if (m.status === 'recognizing text') {
@@ -201,32 +221,115 @@ class FileHandler {
                     ocrText += result.data.text.trim();
                     ocrText += '\n';
 
-                    // 캔버스 정리
+                    // 캔버스 메모리 해제
                     canvas.width = 0;
                     canvas.height = 0;
                 }
 
-                console.log(`✅ OCR complete for: ${file.name}`);
-                return {
-                    text: ocrText.trim(),
-                    fileName: file.name,
-                    fileType: 'pdf',
-                    pageCount: pdf.numPages,
-                    method: 'ocr'
-                };
+                // OCR 결과 품질 검증
+                const ocrQuality = this.evaluateTextQuality(ocrText);
+                console.log(`📊 OCR quality: ${ocrQuality.score}/100`);
+
+                // OCR이 더 좋으면 OCR 결과 사용
+                if (ocrQuality.score > textQuality.score) {
+                    console.log(`✅ OCR complete (better quality): ${file.name}`);
+                    return {
+                        text: ocrText.trim(),
+                        fileName: file.name,
+                        fileType: 'pdf',
+                        pageCount: pageCount,
+                        method: 'ocr',
+                        quality: ocrQuality.score
+                    };
+                }
 
             } catch (ocrError) {
-                console.error('❌ OCR failed:', ocrError.message);
+                console.error(`❌ OCR failed: ${ocrError.message}`);
             }
+        } else if (typeof Tesseract === 'undefined') {
+            console.warn('⚠️ Tesseract.js not loaded - OCR unavailable');
+        } else if (!pdf) {
+            console.warn('⚠️ PDF not loaded - OCR unavailable');
         }
 
-        console.warn('⚠️ PDF text extraction failed, returning placeholder');
+        // Step 5: 최선의 결과 반환 (텍스트 추출 결과라도 반환)
+        if (extractedText.trim().length > 0) {
+            console.log(`⚠️ Returning low-quality text extraction: ${file.name}`);
+            return {
+                text: extractedText,
+                fileName: file.name,
+                fileType: 'pdf',
+                pageCount: pageCount,
+                method: 'text-lowquality',
+                quality: textQuality.score
+            };
+        }
+
+        // 완전 실패
+        console.error(`❌ PDF text extraction failed: ${file.name}`);
         return {
-            text: `[PDF 파일: ${file.name}] - 텍스트 추출 실패 (이미지 기반 PDF일 수 있음)`,
+            text: `[PDF 파일: ${file.name}] - 텍스트 추출 실패. 이미지 기반 PDF이거나 손상된 파일일 수 있습니다.`,
             fileName: file.name,
             fileType: 'pdf',
-            arrayBuffer: arrayBuffer,
-            method: 'failed'
+            pageCount: pageCount,
+            method: 'failed',
+            quality: 0
+        };
+    }
+
+    /**
+     * 텍스트 품질 평가 (0-100 점수)
+     * - 길이, 한글 비율, 의미있는 문자 비율 기반
+     */
+    evaluateTextQuality(text) {
+        if (!text || text.trim().length === 0) {
+            return { score: 0, length: 0, koreanRatio: 0 };
+        }
+
+        const cleanText = text.trim();
+        const length = cleanText.length;
+
+        // 한글 문자 비율 계산
+        const koreanChars = (cleanText.match(/[가-힣]/g) || []).length;
+        const koreanRatio = Math.round((koreanChars / length) * 100);
+
+        // 영문/숫자 비율 계산
+        const alphaNumChars = (cleanText.match(/[a-zA-Z0-9]/g) || []).length;
+        const alphaNumRatio = Math.round((alphaNumChars / length) * 100);
+
+        // 의미있는 문자 비율 (한글 + 영문/숫자 + 공백 + 구두점)
+        const meaningfulChars = (cleanText.match(/[가-힣a-zA-Z0-9\s.,!?;:'"()-]/g) || []).length;
+        const meaningfulRatio = Math.round((meaningfulChars / length) * 100);
+
+        // 점수 계산
+        let score = 0;
+
+        // 길이 점수 (최대 30점)
+        if (length >= 500) score += 30;
+        else if (length >= 200) score += 20;
+        else if (length >= 100) score += 15;
+        else if (length >= 50) score += 10;
+        else score += Math.round(length / 5);
+
+        // 한글/영문 비율 점수 (최대 40점)
+        const languageRatio = koreanRatio + alphaNumRatio;
+        if (languageRatio >= 60) score += 40;
+        else if (languageRatio >= 40) score += 30;
+        else if (languageRatio >= 20) score += 20;
+        else score += Math.round(languageRatio / 2);
+
+        // 의미있는 문자 비율 점수 (최대 30점)
+        if (meaningfulRatio >= 80) score += 30;
+        else if (meaningfulRatio >= 60) score += 20;
+        else if (meaningfulRatio >= 40) score += 10;
+        else score += Math.round(meaningfulRatio / 4);
+
+        return {
+            score: Math.min(100, score),
+            length: length,
+            koreanRatio: koreanRatio,
+            alphaNumRatio: alphaNumRatio,
+            meaningfulRatio: meaningfulRatio
         };
     }
 

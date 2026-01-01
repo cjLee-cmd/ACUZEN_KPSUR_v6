@@ -304,22 +304,75 @@ class MarkdownConverter {
 
     /**
      * Fallback 파일 읽기 (fileHandler 없을 때)
+     * PDF는 텍스트 추출 → 품질 검증 → OCR fallback 순서로 처리
      */
     async fallbackReadFile(file) {
         const ext = file.name.split('.').pop().toLowerCase();
 
-        // PDF
+        // PDF - 텍스트 추출 후 품질 검증, 필요시 OCR
         if (ext === 'pdf' && typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
             const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+            // CMap 설정 (한글 폰트 지원)
+            const pdf = await pdfjsLib.getDocument({
+                data: arrayBuffer,
+                cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                cMapPacked: true
+            }).promise;
+
+            // 텍스트 추출
             let text = '';
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const content = await page.getTextContent();
                 text += content.items.map(item => item.str).join(' ') + '\n\n';
             }
-            return { text, type: 'pdf', pages: pdf.numPages };
+
+            // 텍스트 품질 검증 (한글 비율 기준)
+            const koreanChars = (text.match(/[가-힣]/g) || []).length;
+            const totalChars = text.trim().length;
+            const koreanRatio = totalChars > 0 ? (koreanChars / totalChars) * 100 : 0;
+            const hasEnoughText = totalChars >= 100 && (koreanRatio >= 10 || text.match(/[a-zA-Z]/g)?.length > 50);
+
+            // 품질 충분하면 텍스트 반환
+            if (hasEnoughText) {
+                console.log(`✅ PDF text extraction: ${file.name} (${totalChars} chars, ${koreanRatio.toFixed(1)}% Korean)`);
+                return { text, type: 'pdf', pages: pdf.numPages, method: 'text' };
+            }
+
+            // 품질 부족 + Tesseract 사용 가능하면 OCR
+            if (typeof Tesseract !== 'undefined') {
+                console.log(`⚠️ Text quality low, trying OCR: ${file.name}`);
+                let ocrText = '';
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const viewport = page.getViewport({ scale: 2.0 });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                    const result = await Tesseract.recognize(canvas, 'kor+eng');
+                    ocrText += result.data.text.trim() + '\n\n';
+
+                    canvas.width = 0;
+                    canvas.height = 0;
+                }
+
+                // OCR 결과가 더 좋으면 사용
+                const ocrKorean = (ocrText.match(/[가-힣]/g) || []).length;
+                if (ocrKorean > koreanChars || ocrText.trim().length > totalChars) {
+                    console.log(`✅ OCR complete: ${file.name}`);
+                    return { text: ocrText, type: 'pdf', pages: pdf.numPages, method: 'ocr' };
+                }
+            }
+
+            // 최선의 결과 반환
+            return { text, type: 'pdf', pages: pdf.numPages, method: totalChars > 0 ? 'text-lowquality' : 'failed' };
         }
 
         // Excel

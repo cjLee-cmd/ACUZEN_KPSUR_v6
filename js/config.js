@@ -13,7 +13,7 @@ const CONFIG = {
         DEFAULT_MODEL: 'gemini-3-flash-preview',
         MODELS: {
             FLASH: 'gemini-3-flash-preview',
-            PRO: 'gemini-3-pro-preview'
+            PRO: 'gemini-2.0-pro-exp'
         },
         API_ENDPOINT: 'https://generativelanguage.googleapis.com/v1beta/models'
     },

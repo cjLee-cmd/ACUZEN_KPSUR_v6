@@ -131,6 +131,14 @@ const LLM_PROVIDERS = {
                 maxTokens: 65536,
                 quality: 'fast',
                 description: 'Flash - 빠르고 효율적'
+            },
+            'gemini-3-flash-preview': {
+                name: 'Gemini 3 Flash Preview',
+                inputPrice: 0,
+                outputPrice: 0,
+                maxTokens: 65536,
+                quality: 'fast',
+                description: 'Gemini 3 Flash Preview - 최신 모델'
             }
         },
         defaultModel: 'gemini-3-flash-preview',
@@ -544,7 +552,7 @@ ${draft}
     async sendMessage(prompt, options = {}) {
         // 기본 provider를 google로 설정 (Gemini 사용)
         const provider = options.provider || 'google';
-        const model = options.model || (provider === 'google' ? 'gemini-2.0-flash-exp' : undefined);
+        const model = options.model || (provider === 'google' ? 'gemini-3-flash-preview' : undefined);
 
         try {
             const result = await this.generate(prompt, {
