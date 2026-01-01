@@ -70,19 +70,26 @@ class AuthManager {
 
             if (testAccount && testAccount.password === password) {
             // 테스트 계정 로그인 성공
+            // session.js 형식에 맞춤 (email, userName, userRole, userId, timestamp)
             const sessionData = {
-                user: {
-                    id: testAccount.id,
-                    email: email,
-                    name: testAccount.name,
-                    role: testAccount.role
-                },
+                userId: testAccount.id,
+                email: email,
+                userName: testAccount.name,
+                userRole: testAccount.role,
                 loginTime: new Date().toISOString(),
                 rememberMe: rememberMe,
-                type: 'test'
+                type: 'test',
+                timestamp: Date.now()
+            };
+            // 기존 호환성을 위한 user 객체
+            const userObj = {
+                id: testAccount.id,
+                email: email,
+                name: testAccount.name,
+                role: testAccount.role
             };
 
-            this.currentUser = sessionData.user;
+            this.currentUser = userObj;
             this.currentSession = sessionData;
             Storage.set(CONFIG.STORAGE_KEYS.SESSION, sessionData);
 
@@ -100,19 +107,26 @@ class AuthManager {
         const result = await supabaseClient.signInWithPassword(email, password);
 
         if (result.success) {
+            // session.js 형식에 맞춤 (email, userName, userRole, userId, timestamp)
             const sessionData = {
-                user: {
-                    id: result.user.id,
-                    email: result.user.email,
-                    name: result.user.user_metadata?.name || email,
-                    role: result.user.user_metadata?.role || 'Author'
-                },
+                userId: result.user.id,
+                email: result.user.email,
+                userName: result.user.user_metadata?.name || email,
+                userRole: result.user.user_metadata?.role || 'Author',
                 loginTime: new Date().toISOString(),
                 rememberMe: rememberMe,
-                type: 'supabase'
+                type: 'supabase',
+                timestamp: Date.now()
+            };
+            // 기존 호환성을 위한 user 객체
+            const userObj = {
+                id: result.user.id,
+                email: result.user.email,
+                name: result.user.user_metadata?.name || email,
+                role: result.user.user_metadata?.role || 'Author'
             };
 
-            this.currentUser = sessionData.user;
+            this.currentUser = userObj;
             this.currentSession = sessionData;
             Storage.set(CONFIG.STORAGE_KEYS.SESSION, sessionData);
 
