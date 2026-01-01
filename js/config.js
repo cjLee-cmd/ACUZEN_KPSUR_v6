@@ -21,7 +21,7 @@ const CONFIG = {
     // 로컬 저장 키
     STORAGE_KEYS: {
         GOOGLE_API_KEY: 'GOOGLE_API_KEY',
-        SESSION: 'session',
+        SESSION: 'kpsur_session',
         CURRENT_REPORT: 'current_report',
         LAST_STAGE: 'last_stage'
     },

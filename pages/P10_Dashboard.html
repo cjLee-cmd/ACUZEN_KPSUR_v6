@@ -541,46 +541,11 @@
                                     </tr>
                                 </thead>
                                 <tbody id="reportsTableBody">
-                                    <!-- 샘플 데이터 -->
+                                    <!-- DB에서 로드됨 -->
                                     <tr>
-                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">코로나19백신_PSUR_2024Q4</span></td>
-                                        <td>토지나메란</td>
-                                        <td><span class="stage-indicator">Stage 7 - 리뷰</span></td>
-                                        <td><span class="status-badge review">리뷰중</span></td>
-                                        <td>김철수</td>
-                                        <td>2025-12-28</td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">고혈압약_PSUR_2024Q4</span></td>
-                                        <td>암로디핀</td>
-                                        <td><span class="stage-indicator">Stage 8 - QC 검증</span></td>
-                                        <td><span class="status-badge qc">QC대기</span></td>
-                                        <td>이영희</td>
-                                        <td>2025-12-27</td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">당뇨병약_PSUR_2024Q4</span></td>
-                                        <td>메트포르민</td>
-                                        <td><span class="stage-indicator">Stage 5 - 데이터 추출</span></td>
-                                        <td><span class="status-badge in-progress">진행중</span></td>
-                                        <td>박민수</td>
-                                        <td>2025-12-26</td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">항생제_PSUR_2024Q3</span></td>
-                                        <td>아목시실린</td>
-                                        <td><span class="stage-indicator">Stage 9 - 최종 출력</span></td>
-                                        <td><span class="status-badge completed">완료</span></td>
-                                        <td>최지영</td>
-                                        <td>2025-12-20</td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html')">진통제_PSUR_2024Q4</span></td>
-                                        <td>이부프로펜</td>
-                                        <td><span class="stage-indicator">Stage 2 - 보고서 상태</span></td>
-                                        <td><span class="status-badge draft">임시저장</span></td>
-                                        <td>정수빈</td>
-                                        <td>2025-12-25</td>
+                                        <td colspan="6" style="text-align: center; padding: 20px; color: #6B7280;">
+                                            데이터 로딩 중...
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -791,6 +756,44 @@
         }, 100);
     </script>
     <script>
+        // Set globals loaded flag (utils scripts loaded above)
+        window.__GLOBALS_LOADED__ = true;
+
+        // Inline setupUserMenu (layout-helper.js is ES6 module)
+        function setupUserMenu() {
+            try {
+                const userMenuToggle = document.querySelector('.user-menu-toggle');
+                const userMenu = document.querySelector('.user-menu');
+                if (!userMenuToggle || !userMenu) return;
+
+                userMenuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    let dropdown = document.querySelector('.user-menu-dropdown');
+                    if (!dropdown) {
+                        dropdown = document.createElement('div');
+                        dropdown.className = 'user-menu-dropdown';
+                        dropdown.style.cssText = 'position:absolute;top:100%;right:0;margin-top:8px;background:#fff;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:180px;z-index:1000;';
+                        dropdown.innerHTML = '<div style="padding:8px 0;"><a href="P91_Settings.html" style="display:block;padding:10px 16px;color:#374151;text-decoration:none;">설정</a><a href="#" onclick="clearSessionData();window.location.href=\'P01_Login.html\'" style="display:block;padding:10px 16px;color:#EF4444;text-decoration:none;">로그아웃</a></div>';
+                        userMenu.appendChild(dropdown);
+                    }
+                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                });
+
+                document.addEventListener('click', (e) => {
+                    const dropdown = document.querySelector('.user-menu-dropdown');
+                    if (dropdown && !userMenu.contains(e.target)) dropdown.style.display = 'none';
+                });
+            } catch (error) {
+                console.error('setupUserMenu error:', error);
+            }
+        }
+
+        // Inline updateDeploymentMode
+        function updateDeploymentMode(mode) {
+            const badge = document.querySelector('.deployment-badge');
+            if (badge) badge.textContent = mode === 'production' ? '운영' : '테스트';
+        }
+
         // Wait for both DOM and globals to load
         function initializePage() {
             // Check if globals are loaded
@@ -854,12 +857,85 @@
             navigateTo('P13_NewReport.html');
         }
 
-        function loadDashboardStats() {
-            // 실제로는 API 호출하여 통계 데이터 가져오기
-            // 여기서는 샘플 데이터 사용
+        async function loadDashboardStats() {
+            // Supabase에서 보고서 데이터 로드
+            await loadReportsFromDB();
+        }
 
-            // 통계 업데이트는 이미 HTML에 하드코딩되어 있음
-            // 실제 구현 시 API 결과로 업데이트
+        async function loadReportsFromDB() {
+            const SUPABASE_URL = CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
+            const SUPABASE_KEY = CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8';
+
+            try {
+                // reports와 products, users를 조인하여 가져오기
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/reports?select=id,report_name,status,current_stage,user_inputs,updated_at,products(product_name,ingredient_name),users(name)&order=updated_at.desc&limit=10`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const reports = await response.json();
+                renderReportsTable(reports);
+
+            } catch (error) {
+                console.error('보고서 로드 실패:', error);
+                renderReportsTable([]);
+            }
+        }
+
+        function renderReportsTable(reports) {
+            const tbody = document.getElementById('reportsTableBody');
+
+            if (!reports || reports.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px; color: #6B7280;">
+                            등록된 보고서가 없습니다.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const stageNames = {
+                1: '로그인', 2: '보고서 상태', 3: '파일 업로드', 4: 'MD 변환',
+                5: '데이터 추출', 6: '템플릿 작성', 7: '리뷰', 8: 'QC 검증', 9: '최종 출력'
+            };
+
+            const statusMap = {
+                'Draft': { class: 'draft', label: '임시저장' },
+                'InReview': { class: 'review', label: '리뷰중' },
+                'QC': { class: 'qc', label: 'QC대기' },
+                'Completed': { class: 'completed', label: '완료' }
+            };
+
+            tbody.innerHTML = reports.map(report => {
+                const ingredientName = report.user_inputs?.CS0_성분명 || report.products?.ingredient_name || '-';
+                const authorName = report.users?.name || '-';
+                const stage = report.current_stage || 1;
+                const stageName = stageNames[stage] || '알 수 없음';
+                const status = statusMap[report.status] || { class: 'draft', label: report.status };
+                const updatedAt = report.updated_at ? new Date(report.updated_at).toISOString().split('T')[0] : '-';
+
+                return `
+                    <tr>
+                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html?id=${report.id}')">${report.report_name}</span></td>
+                        <td>${ingredientName}</td>
+                        <td><span class="stage-indicator">Stage ${stage} - ${stageName}</span></td>
+                        <td><span class="status-badge ${status.class}">${status.label}</span></td>
+                        <td>${authorName}</td>
+                        <td>${updatedAt}</td>
+                    </tr>
+                `;
+            }).join('');
         }
     </script>
 </body>
