@@ -1341,6 +1341,13 @@
 
             hideLLMLoading();
             qcInProgress = false;
+
+            // Update UI
+            renderValidationCategories();
+            const completedItems = validationCategories.reduce((sum, cat) =>
+                sum + cat.items.filter(item => item.status === 'passed' || item.status === 'failed').length, 0
+            );
+            updateProgress(completedItems, getTotalValidationItems());
             renderIssues();
             updateStats();
             updateFooterMessage();
