@@ -125,7 +125,13 @@ ${JSON.stringify(extractedData, null, 2)}
                 const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
                 if (jsonMatch) {
                     const validation = JSON.parse(jsonMatch[1]);
-                    this.issues.push(...(validation.issues || []));
+                    const normalizedIssues = (validation.issues || []).map(issue => ({
+                        ...issue,
+                        location: issue.location || issue.field || '데이터 일관성 검증',
+                        source: issue.source || 'extractedData',
+                        timestamp: issue.timestamp || new Date().toISOString()
+                    }));
+                    this.issues.push(...normalizedIssues);
                 }
             } catch (error) {
                 console.error('❌ Failed to parse QC validation result:', error.message);
@@ -183,7 +189,13 @@ ${sourceDocuments.substring(0, 3000)}
                 const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
                 if (jsonMatch) {
                     const validation = JSON.parse(jsonMatch[1]);
-                    this.issues.push(...(validation.issues || []));
+                    const normalizedIssues = (validation.issues || []).map(issue => ({
+                        ...issue,
+                        location: issue.location || issue.section || '소스 문서 대조',
+                        source: issue.source || 'sourceDocuments',
+                        timestamp: issue.timestamp || new Date().toISOString()
+                    }));
+                    this.issues.push(...normalizedIssues);
                 }
             } catch (error) {
                 console.error('❌ Failed to parse source validation result:', error.message);
@@ -219,7 +231,10 @@ ${sourceDocuments.substring(0, 3000)}
                     severity: 'medium',
                     expected: expected,
                     actual: actual,
-                    description: `표 번호 순서 오류: 표${expected}이 예상되지만 표${actual}이 발견됨`
+                    description: `표 번호 순서 오류: 표${expected}이 예상되지만 표${actual}이 발견됨`,
+                    location: `표${actual}`,
+                    source: 'draftReport',
+                    timestamp: new Date().toISOString()
                 });
             }
         }
@@ -237,7 +252,10 @@ ${sourceDocuments.substring(0, 3000)}
                     type: 'table_duplicate',
                     severity: 'high',
                     tableNumber: num,
-                    description: `중복된 표 번호: 표${num}`
+                    description: `중복된 표 번호: 표${num}`,
+                    location: `표${num}`,
+                    source: 'draftReport',
+                    timestamp: new Date().toISOString()
                 });
             });
         }
@@ -266,7 +284,10 @@ ${sourceDocuments.substring(0, 3000)}
                     type: 'missing_section',
                     severity: 'high',
                     section: section,
-                    description: `필수 섹션 누락: ${section}`
+                    description: `필수 섹션 누락: ${section}`,
+                    location: section,
+                    source: 'draftReport',
+                    timestamp: new Date().toISOString()
                 });
             }
         });
@@ -280,7 +301,10 @@ ${sourceDocuments.substring(0, 3000)}
                 type: 'empty_section',
                 severity: 'medium',
                 section: match[1],
-                description: `빈 섹션: ${match[1]}`
+                description: `빈 섹션: ${match[1]}`,
+                location: match[1],
+                source: 'draftReport',
+                timestamp: new Date().toISOString()
             });
         });
 
@@ -336,7 +360,13 @@ ${sourceDocuments.substring(0, 2000)}
                 const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
                 if (jsonMatch) {
                     const validation = JSON.parse(jsonMatch[1]);
-                    this.issues.push(...(validation.issues || []));
+                    const normalizedIssues = (validation.issues || []).map(issue => ({
+                        ...issue,
+                        location: issue.location || issue.section || '서술문 검증',
+                        source: issue.source || 'draftReport',
+                        timestamp: issue.timestamp || new Date().toISOString()
+                    }));
+                    this.issues.push(...normalizedIssues);
                 }
             } catch (error) {
                 console.error('❌ Failed to parse narrative validation result:', error.message);
