@@ -156,6 +156,58 @@ function setDeploymentMode(mode) {
     }
 }
 
+/**
+ * 네비게이션 보안 체크 (리프레시 감지)
+ * 페이지 리프레시 시 로그인 페이지로 리다이렉트
+ * @returns {boolean} true: 정상 네비게이션, false: 리프레시로 인한 리다이렉트
+ */
+function checkNavigationSecurity() {
+    try {
+        const currentPage = window.location.pathname;
+
+        // 로그인 페이지는 체크 제외
+        if (currentPage.includes('P01_Login') || currentPage.includes('index.html') || currentPage.endsWith('/')) {
+            return true;
+        }
+
+        // 네비게이션 플래그 확인
+        const validNavigation = sessionStorage.getItem('kpsur_valid_navigation');
+
+        if (validNavigation === 'true') {
+            // 정상 네비게이션 - 플래그 제거 (다음 리프레시 감지용)
+            sessionStorage.removeItem('kpsur_valid_navigation');
+            return true;
+        }
+
+        // 플래그 없음 = 리프레시 또는 직접 URL 접근
+        console.warn('Security: Page refresh detected. Redirecting to login.');
+
+        // 세션 클리어
+        clearSessionData();
+
+        // 로그인 페이지로 리다이렉트
+        const basePath = window.location.pathname.split('/pages/')[0];
+        window.location.href = `${basePath}/pages/P01_Login.html`;
+        return false;
+
+    } catch (error) {
+        console.error('checkNavigationSecurity error:', error);
+        return true; // 에러 시 통과
+    }
+}
+
+/**
+ * 네비게이션 플래그 설정 (외부에서 수동 호출용)
+ * 로그인 성공 후 호출하여 다음 페이지 이동 허용
+ */
+function setNavigationFlag() {
+    try {
+        sessionStorage.setItem('kpsur_valid_navigation', 'true');
+    } catch (error) {
+        console.error('setNavigationFlag error:', error);
+    }
+}
+
 // 전역으로 내보내기 (window 객체)
 if (typeof window !== 'undefined') {
     window.loadSessionData = loadSessionData;
@@ -166,4 +218,11 @@ if (typeof window !== 'undefined') {
     window.updateSessionData = updateSessionData;
     window.getDeploymentMode = getDeploymentMode;
     window.setDeploymentMode = setDeploymentMode;
+    window.checkNavigationSecurity = checkNavigationSecurity;
+    window.setNavigationFlag = setNavigationFlag;
+
+    // 페이지 로드 시 자동 보안 체크 (리프레시 감지)
+    document.addEventListener('DOMContentLoaded', () => {
+        checkNavigationSecurity();
+    });
 }

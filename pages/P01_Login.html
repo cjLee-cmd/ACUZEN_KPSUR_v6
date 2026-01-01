@@ -483,6 +483,11 @@
                 if (result.success) {
                     showAlert('로그인 성공! 시스템 점검 중...', 'success');
 
+                    // 네비게이션 플래그 설정 (리프레시 보안용)
+                    if (typeof setNavigationFlag === 'function') {
+                        setNavigationFlag();
+                    }
+
                     // 시스템 체크 페이지로 이동
                     setTimeout(() => {
                         window.location.href = window.CONFIG.PAGES.SYSTEM_CHECK;

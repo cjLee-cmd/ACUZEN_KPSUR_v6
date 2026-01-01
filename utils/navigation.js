@@ -14,6 +14,9 @@ function navigateTo(page) {
     }
 
     try {
+        // 네비게이션 플래그 설정 (리프레시 감지용)
+        sessionStorage.setItem('kpsur_valid_navigation', 'true');
+
         // 현재 경로에서 /pages/ 이전 경로 추출
         const basePath = window.location.pathname.split('/pages/')[0];
         const targetPath = `${basePath}/pages/${page}`;
@@ -23,6 +26,7 @@ function navigateTo(page) {
     } catch (error) {
         console.error('Navigation error:', error);
         // Fallback: 상대 경로로 이동 시도
+        sessionStorage.setItem('kpsur_valid_navigation', 'true');
         window.location.href = page;
     }
 }
