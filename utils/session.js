@@ -10,7 +10,7 @@ const SESSION_TIMEOUT = 8 * 60 * 60 * 1000; // 8시간
  * 세션 데이터 로드
  * @returns {Object|null} 세션 데이터 또는 null
  */
-export function loadSessionData() {
+function loadSessionData() {
     try {
         const sessionStr = localStorage.getItem(SESSION_KEY);
         if (!sessionStr) {
@@ -43,7 +43,7 @@ export function loadSessionData() {
  * @param {Object} data - 저장할 세션 데이터
  * @returns {boolean} 성공 여부
  */
-export function saveSessionData(data) {
+function saveSessionData(data) {
     try {
         if (!data || typeof data !== 'object') {
             console.warn('saveSessionData: data must be an object');
@@ -67,7 +67,7 @@ export function saveSessionData(data) {
 /**
  * 세션 데이터 삭제
  */
-export function clearSessionData() {
+function clearSessionData() {
     try {
         localStorage.removeItem(SESSION_KEY);
     } catch (error) {
@@ -79,7 +79,7 @@ export function clearSessionData() {
  * 로그인 상태 확인
  * @returns {boolean} 로그인 여부
  */
-export function isAuthenticated() {
+function isAuthenticated() {
     const session = loadSessionData();
     return session !== null && session.email && session.userName;
 }
@@ -88,7 +88,7 @@ export function isAuthenticated() {
  * 현재 사용자 정보 가져오기
  * @returns {Object|null} 사용자 정보
  */
-export function getCurrentUser() {
+function getCurrentUser() {
     const session = loadSessionData();
     if (!session) {
         return null;
@@ -107,7 +107,7 @@ export function getCurrentUser() {
  * @param {Object} updates - 업데이트할 데이터
  * @returns {boolean} 성공 여부
  */
-export function updateSessionData(updates) {
+function updateSessionData(updates) {
     try {
         const currentSession = loadSessionData();
         if (!currentSession) {
@@ -131,7 +131,7 @@ export function updateSessionData(updates) {
  * 배포 모드 가져오기
  * @returns {string} 'test' 또는 'production'
  */
-export function getDeploymentMode() {
+function getDeploymentMode() {
     try {
         return localStorage.getItem('deploymentMode') || 'test';
     } catch (error) {
@@ -144,7 +144,7 @@ export function getDeploymentMode() {
  * 배포 모드 설정
  * @param {string} mode - 'test' 또는 'production'
  */
-export function setDeploymentMode(mode) {
+function setDeploymentMode(mode) {
     try {
         if (mode !== 'test' && mode !== 'production') {
             console.warn('Invalid deployment mode:', mode);
@@ -154,4 +154,16 @@ export function setDeploymentMode(mode) {
     } catch (error) {
         console.error('setDeploymentMode error:', error);
     }
+}
+
+// 전역으로 내보내기 (window 객체)
+if (typeof window !== 'undefined') {
+    window.loadSessionData = loadSessionData;
+    window.saveSessionData = saveSessionData;
+    window.clearSessionData = clearSessionData;
+    window.isAuthenticated = isAuthenticated;
+    window.getCurrentUser = getCurrentUser;
+    window.updateSessionData = updateSessionData;
+    window.getDeploymentMode = getDeploymentMode;
+    window.setDeploymentMode = setDeploymentMode;
 }

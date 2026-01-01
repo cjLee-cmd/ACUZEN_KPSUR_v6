@@ -7,7 +7,7 @@
  * 페이지 이동 (세션 보존)
  * @param {string} page - 이동할 페이지 파일명 (예: 'P10_Dashboard.html')
  */
-export function navigateTo(page) {
+function navigateTo(page) {
     if (!page) {
         console.warn('navigateTo: page parameter is required');
         return;
@@ -31,7 +31,7 @@ export function navigateTo(page) {
  * 현재 페이지명 반환
  * @returns {string} 현재 페이지 파일명 (예: 'P10_Dashboard.html')
  */
-export function getCurrentPage() {
+function getCurrentPage() {
     try {
         const pathname = window.location.pathname;
         const pageName = pathname.split('/').pop();
@@ -46,7 +46,7 @@ export function getCurrentPage() {
  * URL 파라미터 파싱
  * @returns {Object} URL 파라미터 객체
  */
-export function getUrlParams() {
+function getUrlParams() {
     try {
         const params = {};
         const searchParams = new URLSearchParams(window.location.search);
@@ -67,7 +67,7 @@ export function getUrlParams() {
  * @param {string} key - 파라미터 키
  * @returns {string|null} 파라미터 값
  */
-export function getUrlParam(key) {
+function getUrlParam(key) {
     try {
         const searchParams = new URLSearchParams(window.location.search);
         return searchParams.get(key);
@@ -75,4 +75,12 @@ export function getUrlParam(key) {
         console.error('getUrlParam error:', error);
         return null;
     }
+}
+
+// 전역으로 내보내기 (window 객체)
+if (typeof window !== 'undefined') {
+    window.navigateTo = navigateTo;
+    window.getCurrentPage = getCurrentPage;
+    window.getUrlParams = getUrlParams;
+    window.getUrlParam = getUrlParam;
 }
