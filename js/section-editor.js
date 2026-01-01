@@ -334,8 +334,11 @@ class SectionEditor {
     markdownToHtml(markdown) {
         if (!markdown) return '';
 
+        // 테이블 변환 먼저 처리
+        let html = this.convertTables(markdown);
+
         // 간단한 마크다운 → HTML 변환
-        let html = markdown
+        html = html
             // 헤더
             .replace(/^### (.*)$/gm, '<h3>$1</h3>')
             .replace(/^## (.*)$/gm, '<h2>$1</h2>')
@@ -348,6 +351,51 @@ class SectionEditor {
             .replace(/\n/g, '<br>');
 
         return `<p>${html}</p>`;
+    }
+
+    /**
+     * 마크다운 테이블을 HTML 테이블로 변환
+     */
+    convertTables(markdown) {
+        // 테이블 패턴: | col1 | col2 | 형식의 연속된 줄
+        const tableRegex = /(?:^|\n)((?:\|[^\n]+\|\n?)+)/g;
+
+        return markdown.replace(tableRegex, (match, tableBlock) => {
+            const lines = tableBlock.trim().split('\n').filter(line => line.trim());
+            if (lines.length < 2) return match;
+
+            // 구분선 확인 (|---|---|---| 형태)
+            const separatorIndex = lines.findIndex(line => /^\|[\s\-:|]+\|$/.test(line.trim()) && line.includes('---'));
+            if (separatorIndex === -1) return match;
+
+            let tableHtml = '<table class="md-table">';
+
+            // 헤더 행
+            if (separatorIndex > 0) {
+                tableHtml += '<thead><tr>';
+                const headerCells = lines[0].split('|').filter(cell => cell.trim() !== '');
+                headerCells.forEach(cell => {
+                    tableHtml += `<th>${cell.trim()}</th>`;
+                });
+                tableHtml += '</tr></thead>';
+            }
+
+            // 바디 행
+            tableHtml += '<tbody>';
+            for (let i = separatorIndex + 1; i < lines.length; i++) {
+                const cells = lines[i].split('|').filter(cell => cell.trim() !== '');
+                if (cells.length > 0) {
+                    tableHtml += '<tr>';
+                    cells.forEach(cell => {
+                        tableHtml += `<td>${cell.trim()}</td>`;
+                    });
+                    tableHtml += '</tr>';
+                }
+            }
+            tableHtml += '</tbody></table>';
+
+            return '\n' + tableHtml + '\n';
+        });
     }
 
     /**
