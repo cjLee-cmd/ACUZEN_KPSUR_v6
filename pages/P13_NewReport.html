@@ -1292,10 +1292,10 @@
 
         let selectedDrug = null;
 
-        // Wait for both DOM and globals to load
+        // Initialize page when DOM is ready
         function initializePage() {
-            // Check if globals are loaded
-            if (!window.__GLOBALS_LOADED__) {
+            // Check if utility functions are loaded
+            if (typeof navigateTo === 'undefined' || typeof loadSessionData === 'undefined') {
                 setTimeout(initializePage, 50);
                 return;
             }
