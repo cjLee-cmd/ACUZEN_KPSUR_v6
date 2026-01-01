@@ -7,9 +7,73 @@
  * 2. 테스트용 RawData_Definition.md 로드
  * 3. 마크다운 파일 통합 (combineAllMarkdowns)
  * 4. 전체 PSUR 보고서 생성 (generateFullReport)
+ * 5. 섹션 DB 저장 (Supabase 연동)
  */
 
+import supabaseClient from './supabase-client.js';
+
 const PSURGenerator = {
+    // 보고서 ID (DB 연동용)
+    reportId: null,
+
+    /**
+     * 보고서 ID 설정 (DB 연동용)
+     * @param {string} reportId - 보고서 UUID
+     */
+    setReportId(reportId) {
+        this.reportId = reportId;
+        console.log(`[PSURGenerator] Report ID set: ${reportId}`);
+    },
+
+    /**
+     * 보고서 ID 가져오기
+     */
+    getReportId() {
+        return this.reportId;
+    },
+
+    /**
+     * 섹션들을 DB에 저장
+     * @param {Object} sections - 섹션 객체 { '00': {...}, '01': {...}, ... }
+     * @returns {Promise<Object>} - 저장 결과
+     */
+    async saveSectionsToDB(sections) {
+        if (!this.reportId) {
+            console.warn('[PSURGenerator] Report ID not set, skipping DB save');
+            return { success: false, error: 'Report ID not set' };
+        }
+
+        if (!sections || Object.keys(sections).length === 0) {
+            console.warn('[PSURGenerator] No sections to save');
+            return { success: false, error: 'No sections to save' };
+        }
+
+        try {
+            // 섹션 배열 형태로 변환
+            const sectionsArray = Object.entries(sections).map(([sectionNumber, data]) => ({
+                number: sectionNumber,
+                name: data.name || '',
+                content: data.content || ''
+            }));
+
+            console.log(`[PSURGenerator] Saving ${sectionsArray.length} sections to DB...`);
+
+            const result = await supabaseClient.bulkUpsertSections(this.reportId, sectionsArray);
+
+            if (result.success) {
+                console.log(`[PSURGenerator] ✅ ${result.sections.length} sections saved to DB`);
+            } else {
+                console.error('[PSURGenerator] ❌ DB save failed:', result.error);
+            }
+
+            return result;
+
+        } catch (error) {
+            console.error('[PSURGenerator] DB save error:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
     // API 설정
     apiKey: null,
     model: 'gemini-2.5-flash',
@@ -941,9 +1005,58 @@ ${examplesText.substring(0, 35000)}
             console.warn('[PSURGenerator] 섹션 저장 실패:', e);
         }
 
+        // DB에도 저장 (비동기, fire-and-forget)
+        this.saveSectionsToDB(sections).catch(err => {
+            console.warn('[PSURGenerator] DB 저장 중 오류 (무시됨):', err);
+        });
+
         return sections;
+    },
+
+    /**
+     * DB에서 섹션들 로드
+     * @returns {Promise<Object>} - 섹션 객체 { '00': {...}, '01': {...}, ... }
+     */
+    async loadSectionsFromDB() {
+        if (!this.reportId) {
+            console.warn('[PSURGenerator] Report ID not set, cannot load from DB');
+            return null;
+        }
+
+        try {
+            const result = await supabaseClient.getSections(this.reportId);
+
+            if (!result.success || !result.sections || result.sections.length === 0) {
+                console.log('[PSURGenerator] No sections found in DB');
+                return null;
+            }
+
+            // DB 형식을 로컬 형식으로 변환
+            const sections = {};
+            for (const dbSection of result.sections) {
+                sections[dbSection.section_number] = {
+                    id: dbSection.section_number,
+                    name: dbSection.section_name,
+                    content: dbSection.content_markdown,
+                    generatedAt: dbSection.created_at,
+                    isEdited: false,
+                    dbId: dbSection.id,
+                    version: dbSection.version
+                };
+            }
+
+            console.log(`[PSURGenerator] ✅ ${Object.keys(sections).length} sections loaded from DB`);
+            return sections;
+
+        } catch (error) {
+            console.error('[PSURGenerator] DB load error:', error);
+            return null;
+        }
     }
 };
 
 // 전역으로 노출
 window.PSURGenerator = PSURGenerator;
+
+// ES6 export
+export default PSURGenerator;

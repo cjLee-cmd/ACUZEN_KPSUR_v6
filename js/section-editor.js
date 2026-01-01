@@ -3,11 +3,13 @@
  * PSUR 보고서의 15개 섹션을 개별적으로 편집 관리
  *
  * 기능:
- * - 섹션 로드/저장
+ * - 섹션 로드/저장 (DB + localStorage 캐시)
  * - 변경 이력 추적
  * - 전체 병합
  * - Word 내보내기
  */
+
+import supabaseClient from './supabase-client.js';
 
 class SectionEditor {
     constructor() {
@@ -15,6 +17,7 @@ class SectionEditor {
         this.currentSectionId = null;
         this.changeHistory = [];
         this.isModified = false;
+        this.reportId = null;  // DB 연동용 보고서 UUID
 
         // 섹션 정의 (순서대로)
         this.sectionDefinitions = [
@@ -37,24 +40,111 @@ class SectionEditor {
     }
 
     /**
-     * localStorage에서 섹션 로드
+     * 보고서 ID 설정 (DB 연동용)
+     * @param {string} reportId - 보고서 UUID
      */
-    loadSections() {
+    setReportId(reportId) {
+        this.reportId = reportId;
+        console.log(`[SectionEditor] Report ID set: ${reportId}`);
+    }
+
+    /**
+     * 보고서 ID 가져오기
+     */
+    getReportId() {
+        return this.reportId;
+    }
+
+    /**
+     * 섹션 로드 (DB 우선, localStorage 폴백)
+     * @param {string} reportId - 보고서 UUID (옵션)
+     */
+    async loadSections(reportId = null) {
+        // reportId 설정
+        if (reportId) {
+            this.reportId = reportId;
+        }
+
+        // 1. DB에서 로드 시도 (reportId가 있는 경우)
+        if (this.reportId) {
+            try {
+                const result = await supabaseClient.getSections(this.reportId);
+
+                if (result.success && result.sections.length > 0) {
+                    // DB 데이터를 로컬 포맷으로 변환
+                    this.sections = {};
+                    for (const dbSection of result.sections) {
+                        this.sections[dbSection.section_number] = {
+                            id: dbSection.section_number,
+                            dbId: dbSection.id,  // DB UUID 저장
+                            name: dbSection.section_name,
+                            content: dbSection.content_markdown || '',
+                            generatedAt: dbSection.created_at,
+                            editedAt: dbSection.updated_at,
+                            isEdited: dbSection.updated_at !== dbSection.created_at,
+                            version: dbSection.version || 1
+                        };
+                    }
+
+                    // localStorage 캐시 업데이트
+                    this.updateLocalCache();
+
+                    console.log(`[SectionEditor] ${result.sections.length}개 섹션 DB에서 로드됨`);
+                    return true;
+                }
+            } catch (e) {
+                console.warn('[SectionEditor] DB 로드 실패, localStorage 시도:', e);
+            }
+        }
+
+        // 2. localStorage 폴백
         try {
             const stored = localStorage.getItem('generatedSections');
             if (stored) {
                 const parsed = JSON.parse(stored);
                 this.sections = parsed;
-                console.log(`[SectionEditor] ${Object.keys(this.sections).length}개 섹션 로드됨`);
+                console.log(`[SectionEditor] ${Object.keys(this.sections).length}개 섹션 localStorage에서 로드됨`);
+                return true;
+            }
+        } catch (e) {
+            console.error('[SectionEditor] localStorage 로드 실패:', e);
+        }
+
+        // 3. 빈 섹션 초기화
+        this.initEmptySections();
+        return false;
+    }
+
+    /**
+     * 동기 로드 (기존 호환성용)
+     * @deprecated Use async loadSections() instead
+     */
+    loadSectionsSync() {
+        try {
+            const stored = localStorage.getItem('generatedSections');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                this.sections = parsed;
+                console.log(`[SectionEditor] ${Object.keys(this.sections).length}개 섹션 로드됨 (sync)`);
                 return true;
             }
         } catch (e) {
             console.error('[SectionEditor] 섹션 로드 실패:', e);
         }
 
-        // 빈 섹션 초기화
         this.initEmptySections();
         return false;
+    }
+
+    /**
+     * localStorage 캐시 업데이트
+     */
+    updateLocalCache() {
+        try {
+            localStorage.setItem('generatedSections', JSON.stringify(this.sections));
+        } catch (e) {
+            console.warn('[SectionEditor] 캐시 업데이트 실패:', e);
+        }
     }
 
     /**
@@ -147,9 +237,60 @@ class SectionEditor {
     }
 
     /**
-     * 섹션 저장 (localStorage)
+     * 섹션 저장 (DB + localStorage)
+     * @param {string} sectionId - 섹션 번호 (예: "00", "01")
      */
-    saveSection(sectionId) {
+    async saveSection(sectionId) {
+        const section = this.sections[sectionId];
+        if (!section) {
+            return false;
+        }
+
+        try {
+            // 1. DB에 저장 (reportId가 있는 경우)
+            if (this.reportId) {
+                const result = await supabaseClient.upsertSection(this.reportId, sectionId, {
+                    name: section.name,
+                    content: section.content,
+                    version: (section.version || 0) + 1
+                });
+
+                if (result.success) {
+                    // DB UUID 업데이트
+                    section.dbId = result.section.id;
+                    section.version = result.section.version;
+                    console.log(`[SectionEditor] 섹션 ${sectionId} DB 저장 완료`);
+                } else {
+                    console.warn(`[SectionEditor] DB 저장 실패, localStorage만 저장:`, result.error);
+                }
+            }
+
+            // 2. localStorage에도 저장
+            localStorage.setItem('generatedSections', JSON.stringify(this.sections));
+            localStorage.setItem('sectionEditHistory', JSON.stringify(this.changeHistory));
+            console.log(`[SectionEditor] 섹션 ${sectionId} 저장 완료`);
+            return true;
+
+        } catch (e) {
+            console.error('[SectionEditor] 섹션 저장 실패:', e);
+
+            // 오프라인 저장
+            try {
+                localStorage.setItem('generatedSections', JSON.stringify(this.sections));
+                console.warn('[SectionEditor] 오프라인 저장 완료');
+            } catch (localError) {
+                console.error('[SectionEditor] localStorage 저장도 실패:', localError);
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * 동기 저장 (기존 호환성용)
+     * @deprecated Use async saveSection() instead
+     */
+    saveSectionSync(sectionId) {
         if (!this.sections[sectionId]) {
             return false;
         }
@@ -157,7 +298,7 @@ class SectionEditor {
         try {
             localStorage.setItem('generatedSections', JSON.stringify(this.sections));
             localStorage.setItem('sectionEditHistory', JSON.stringify(this.changeHistory));
-            console.log(`[SectionEditor] 섹션 ${sectionId} 저장 완료`);
+            console.log(`[SectionEditor] 섹션 ${sectionId} 저장 완료 (sync)`);
             return true;
         } catch (e) {
             console.error('[SectionEditor] 섹션 저장 실패:', e);
@@ -166,14 +307,67 @@ class SectionEditor {
     }
 
     /**
-     * 모든 섹션 저장
+     * 모든 섹션 저장 (DB + localStorage)
      */
-    saveAllSections() {
+    async saveAllSections() {
         try {
+            // 1. DB에 일괄 저장 (reportId가 있는 경우)
+            if (this.reportId) {
+                const sectionsToSave = Object.values(this.sections).map(sec => ({
+                    number: sec.id,
+                    name: sec.name,
+                    content: sec.content,
+                    version: (sec.version || 0) + 1
+                }));
+
+                const result = await supabaseClient.bulkUpsertSections(this.reportId, sectionsToSave);
+
+                if (result.success) {
+                    // DB UUID 업데이트
+                    for (const dbSection of result.sections) {
+                        if (this.sections[dbSection.section_number]) {
+                            this.sections[dbSection.section_number].dbId = dbSection.id;
+                            this.sections[dbSection.section_number].version = dbSection.version;
+                        }
+                    }
+                    console.log(`[SectionEditor] ${result.sections.length}개 섹션 DB 저장 완료`);
+                } else {
+                    console.warn('[SectionEditor] DB 일괄 저장 실패:', result.error);
+                }
+            }
+
+            // 2. localStorage에도 저장
             localStorage.setItem('generatedSections', JSON.stringify(this.sections));
             localStorage.setItem('sectionEditHistory', JSON.stringify(this.changeHistory));
             this.isModified = false;
             console.log('[SectionEditor] 모든 섹션 저장 완료');
+            return true;
+
+        } catch (e) {
+            console.error('[SectionEditor] 전체 저장 실패:', e);
+
+            // 오프라인 저장
+            try {
+                localStorage.setItem('generatedSections', JSON.stringify(this.sections));
+                console.warn('[SectionEditor] 오프라인 저장 완료');
+            } catch (localError) {
+                console.error('[SectionEditor] localStorage 저장도 실패:', localError);
+            }
+
+            return false;
+        }
+    }
+
+    /**
+     * 동기 전체 저장 (기존 호환성용)
+     * @deprecated Use async saveAllSections() instead
+     */
+    saveAllSectionsSync() {
+        try {
+            localStorage.setItem('generatedSections', JSON.stringify(this.sections));
+            localStorage.setItem('sectionEditHistory', JSON.stringify(this.changeHistory));
+            this.isModified = false;
+            console.log('[SectionEditor] 모든 섹션 저장 완료 (sync)');
             return true;
         } catch (e) {
             console.error('[SectionEditor] 전체 저장 실패:', e);
@@ -420,6 +614,15 @@ class SectionEditor {
     }
 }
 
-// 전역으로 노출
-window.SectionEditor = SectionEditor;
-window.sectionEditor = new SectionEditor();
+// Singleton instance
+const sectionEditor = new SectionEditor();
+
+// 전역으로 노출 (기존 호환성)
+if (typeof window !== 'undefined') {
+    window.SectionEditor = SectionEditor;
+    window.sectionEditor = sectionEditor;
+}
+
+// ES6 Module export
+export default sectionEditor;
+export { SectionEditor };

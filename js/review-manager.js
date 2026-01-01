@@ -31,15 +31,21 @@ class ReviewManager {
 
     /**
      * 섹션 수정 기록
+     * @param {string} sectionName - 섹션 이름 (표시용)
+     * @param {string} beforeContent - 수정 전 내용
+     * @param {string} afterContent - 수정 후 내용
+     * @param {string} comment - 수정 사유
+     * @param {string|null} sectionId - 섹션 ID (report_sections.id FK)
      */
-    recordChange(sectionName, beforeContent, afterContent, comment = '') {
+    recordChange(sectionName, beforeContent, afterContent, comment = '', sectionId = null) {
         if (!this.currentReviewSession) {
             console.error('❌ No active review session');
             return false;
         }
 
         const change = {
-            sectionName: sectionName,
+            sectionName: sectionName,      // 표시용 (로컬)
+            sectionId: sectionId,          // DB FK
             beforeContent: beforeContent,
             afterContent: afterContent,
             comment: comment,
@@ -66,16 +72,16 @@ class ReviewManager {
             const changes = this.currentReviewSession.changes;
 
             for (const change of changes) {
+                // DB 스키마에 맞게 컬럼명 매핑
                 const changeData = {
                     report_id: this.currentReviewSession.reportId,
-                    report_name: this.currentReviewSession.reportName,
-                    section_name: change.sectionName,
-                    before_content: change.beforeContent,
-                    after_content: change.afterContent,
-                    comment: change.comment,
-                    reviewer_id: change.reviewer.id,
-                    reviewer_name: change.reviewer.name,
-                    changed_at: change.changedAt
+                    section_id: change.sectionId || null,  // FK: report_sections.id
+                    changed_by: change.reviewer?.id || null,  // FK: users.id
+                    content_before: change.beforeContent,
+                    content_after: change.afterContent,
+                    change_type: this.determineChangeType(change.beforeContent, change.afterContent),
+                    comment: change.comment || null
+                    // created_at: 자동 생성됨
                 };
 
                 const result = await supabaseClient.query('review_changes')
@@ -143,7 +149,7 @@ class ReviewManager {
             const result = await supabaseClient.query('review_changes')
                 .select('*')
                 .eq('report_id', reportId)
-                .order('changed_at', { ascending: false });
+                .order('created_at', { ascending: false });
 
             if (result.error) {
                 throw new Error(result.error.message);
@@ -174,7 +180,7 @@ class ReviewManager {
                 .select('*')
                 .eq('report_id', reportId)
                 .eq('section_name', sectionName)
-                .order('changed_at', { ascending: false });
+                .order('created_at', { ascending: false });
 
             if (result.error) {
                 throw new Error(result.error.message);
@@ -194,6 +200,19 @@ class ReviewManager {
                 error: error.message
             };
         }
+    }
+
+    /**
+     * 변경 유형 결정 (DB 스키마: 'Edit', 'Add', 'Delete')
+     */
+    determineChangeType(beforeContent, afterContent) {
+        if (!beforeContent || beforeContent.trim() === '') {
+            return 'Add';
+        }
+        if (!afterContent || afterContent.trim() === '') {
+            return 'Delete';
+        }
+        return 'Edit';
     }
 
     /**

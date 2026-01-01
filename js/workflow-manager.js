@@ -4,6 +4,9 @@
  * 모든 Stage 간 데이터 흐름 제어
  */
 
+import supabaseClient from './supabase-client.js';
+import authManager from './auth.js';
+
 // 워크플로우 상태 정의
 const WORKFLOW_STAGES = {
     1: { name: 'login', page: 'P01_Login.html', title: '로그인' },
@@ -74,37 +77,234 @@ class WorkflowManager {
 
     /**
      * 보고서 기본 정보 저장
+     * @param {Object} data - 보고서 데이터
+     * @param {boolean} saveToDBOnly - true면 DB만 저장 (기존 보고서 업데이트 시)
+     * @returns {Promise<Object>} 저장된 보고서 정보
      */
-    saveReportInfo(data) {
-        const reportInfo = {
-            id: data.id || `REPORT_${Date.now()}`,
-            name: data.reportName || '',
-            ingredient: data.ingredient || '',      // CS0 성분명
-            brandName: data.brandName || '',        // CS1 브랜드명
-            company: data.company || '',            // CS2 회사명
-            reportStartDate: data.reportStartDate || '',  // CS3 보고시작날짜
-            reportEndDate: data.reportEndDate || '',      // CS4 보고종료날짜
-            approvalDate: data.approvalDate || '',        // CS5 국내허가일자
-            submissionDate: data.submissionDate || '',    // CS6 보고서제출일
-            version: data.version || '1.0',               // CS7 버전넘버
-            expiryDate: data.expiryDate || '',            // CS13 유효기간
-            medDRAVersion: data.medDRAVersion || '27.0',  // CS24 MedDRA버전
-            rawDataRequestDate: data.rawDataRequestDate || '', // CS31 원시자료신청일
-            literatureDB: data.literatureDB || [],        // CS53 문헌DB
-            createdAt: new Date().toISOString(),
-            status: 'draft'
-        };
+    async saveReportInfo(data, saveToDBOnly = false) {
+        try {
+            // 현재 로그인 사용자 가져오기
+            const currentUser = authManager.getCurrentUser();
+            const userId = currentUser?.id || null;
 
-        this.reportData = { ...this.reportData, reportInfo };
-        localStorage.setItem(STORAGE_KEYS.REPORT, JSON.stringify(reportInfo));
-        this.saveState();
-        return reportInfo;
+            // user_inputs에 저장할 CS 데이터 구조
+            const userInputs = {
+                CS0_성분명: data.ingredient || '',
+                CS1_브랜드명: data.brandName || '',
+                CS2_회사명: data.company || '',
+                CS3_보고시작날짜: data.reportStartDate || '',
+                CS4_보고종료날짜: data.reportEndDate || '',
+                CS5_국내허가일자: data.approvalDate || '',
+                CS6_보고서제출일: data.submissionDate || '',
+                CS7_버전넘버: data.version || '1.0',
+                CS13_유효기간: data.expiryDate || '',
+                CS24_MedDRA버전: data.medDRAVersion || '27.0',
+                CS31_원시자료신청일: data.rawDataRequestDate || '',
+                CS53_문헌DB: data.literatureDB || []
+            };
+
+            let reportId = data.id;
+            let dbReport = null;
+
+            // 1. DB에 저장 (새 보고서 생성 또는 기존 보고서 업데이트)
+            if (!reportId || reportId.startsWith('REPORT_')) {
+                // 새 보고서 생성 - DB에서 UUID 받기
+                const dbResult = await supabaseClient.createReport({
+                    report_name: data.reportName || '새 보고서',
+                    created_by: userId,
+                    status: 'Draft',
+                    current_stage: 2,
+                    product_id: data.productId || null,
+                    user_inputs: userInputs
+                });
+
+                if (!dbResult.success) {
+                    throw new Error(dbResult.error || 'DB 저장 실패');
+                }
+
+                dbReport = dbResult.report;
+                reportId = dbReport.id;  // DB에서 받은 UUID 사용
+                console.log('✅ Report created in DB:', reportId);
+            } else {
+                // 기존 보고서 업데이트
+                const updateResult = await supabaseClient.updateReport(reportId, {
+                    report_name: data.reportName,
+                    user_inputs: userInputs,
+                    current_stage: this.currentStage
+                });
+
+                if (!updateResult.success) {
+                    throw new Error(updateResult.error || 'DB 업데이트 실패');
+                }
+
+                dbReport = updateResult.report;
+                console.log('✅ Report updated in DB:', reportId);
+            }
+
+            // 2. 로컬 캐시용 데이터 구조 (기존 호환성 유지)
+            const reportInfo = {
+                id: reportId,                              // DB UUID 사용
+                name: data.reportName || '',
+                ingredient: data.ingredient || '',          // CS0 성분명
+                brandName: data.brandName || '',            // CS1 브랜드명
+                company: data.company || '',                // CS2 회사명
+                reportStartDate: data.reportStartDate || '', // CS3 보고시작날짜
+                reportEndDate: data.reportEndDate || '',     // CS4 보고종료날짜
+                approvalDate: data.approvalDate || '',       // CS5 국내허가일자
+                submissionDate: data.submissionDate || '',   // CS6 보고서제출일
+                version: data.version || '1.0',              // CS7 버전넘버
+                expiryDate: data.expiryDate || '',           // CS13 유효기간
+                medDRAVersion: data.medDRAVersion || '27.0', // CS24 MedDRA버전
+                rawDataRequestDate: data.rawDataRequestDate || '', // CS31 원시자료신청일
+                literatureDB: data.literatureDB || [],       // CS53 문헌DB
+                createdAt: dbReport?.created_at || new Date().toISOString(),
+                updatedAt: dbReport?.updated_at || new Date().toISOString(),
+                status: dbReport?.status || 'Draft',
+                createdBy: userId
+            };
+
+            // 3. localStorage에도 캐시 (다른 PC에서 접근 시 빠른 로드용)
+            if (!saveToDBOnly) {
+                this.reportData = { ...this.reportData, reportInfo };
+                localStorage.setItem(STORAGE_KEYS.REPORT, JSON.stringify(reportInfo));
+                this.saveState();
+            }
+
+            return reportInfo;
+
+        } catch (error) {
+            console.error('❌ saveReportInfo failed:', error.message);
+
+            // DB 저장 실패 시 localStorage에만 저장 (오프라인 지원)
+            const fallbackInfo = {
+                id: data.id || `REPORT_${Date.now()}`,
+                name: data.reportName || '',
+                ingredient: data.ingredient || '',
+                brandName: data.brandName || '',
+                company: data.company || '',
+                reportStartDate: data.reportStartDate || '',
+                reportEndDate: data.reportEndDate || '',
+                approvalDate: data.approvalDate || '',
+                submissionDate: data.submissionDate || '',
+                version: data.version || '1.0',
+                expiryDate: data.expiryDate || '',
+                medDRAVersion: data.medDRAVersion || '27.0',
+                rawDataRequestDate: data.rawDataRequestDate || '',
+                literatureDB: data.literatureDB || [],
+                createdAt: new Date().toISOString(),
+                status: 'draft',
+                _syncPending: true  // DB 동기화 필요 표시
+            };
+
+            this.reportData = { ...this.reportData, reportInfo: fallbackInfo };
+            localStorage.setItem(STORAGE_KEYS.REPORT, JSON.stringify(fallbackInfo));
+            this.saveState();
+
+            console.warn('⚠️ Saved to localStorage only (DB sync pending)');
+            return fallbackInfo;
+        }
     }
 
     /**
      * 보고서 정보 로드
+     * URL의 reportId 파라미터 또는 localStorage에서 로드
+     * 다른 PC에서 접근 시 DB에서 조회
+     * @param {string|null} reportId - 특정 보고서 ID (없으면 URL 또는 localStorage에서)
+     * @returns {Promise<Object|null>} 보고서 정보
      */
-    getReportInfo() {
+    async getReportInfo(reportId = null) {
+        try {
+            // 1. URL에서 reportId 확인
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetId = reportId || urlParams.get('reportId');
+
+            // 2. localStorage 캐시 확인
+            const cached = localStorage.getItem(STORAGE_KEYS.REPORT);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                // targetId가 없거나 캐시된 ID와 일치하면 캐시 반환
+                if (!targetId || parsed.id === targetId) {
+                    // DB 동기화 필요한 경우 체크
+                    if (parsed._syncPending) {
+                        console.warn('⚠️ Report has pending DB sync');
+                    }
+                    return parsed;
+                }
+            }
+
+            // 3. DB에서 조회 (다른 PC에서 접근 시 또는 ID 불일치 시)
+            if (targetId) {
+                console.log('🔍 Fetching report from DB:', targetId);
+                const result = await supabaseClient.getReportById(targetId);
+
+                if (result.success && result.report) {
+                    // DB 데이터를 로컬 포맷으로 변환
+                    const dbReport = result.report;
+                    const userInputs = dbReport.user_inputs || {};
+
+                    const reportInfo = {
+                        id: dbReport.id,
+                        name: dbReport.report_name || '',
+                        ingredient: userInputs.CS0_성분명 || '',
+                        brandName: userInputs.CS1_브랜드명 || '',
+                        company: userInputs.CS2_회사명 || '',
+                        reportStartDate: userInputs.CS3_보고시작날짜 || '',
+                        reportEndDate: userInputs.CS4_보고종료날짜 || '',
+                        approvalDate: userInputs.CS5_국내허가일자 || '',
+                        submissionDate: userInputs.CS6_보고서제출일 || '',
+                        version: userInputs.CS7_버전넘버 || '1.0',
+                        expiryDate: userInputs.CS13_유효기간 || '',
+                        medDRAVersion: userInputs.CS24_MedDRA버전 || '27.0',
+                        rawDataRequestDate: userInputs.CS31_원시자료신청일 || '',
+                        literatureDB: userInputs.CS53_문헌DB || [],
+                        createdAt: dbReport.created_at,
+                        updatedAt: dbReport.updated_at,
+                        status: dbReport.status,
+                        createdBy: dbReport.created_by,
+                        currentStage: dbReport.current_stage
+                    };
+
+                    // localStorage 캐시 업데이트
+                    localStorage.setItem(STORAGE_KEYS.REPORT, JSON.stringify(reportInfo));
+                    this.reportData = { ...this.reportData, reportInfo };
+
+                    // 현재 Stage도 동기화
+                    if (dbReport.current_stage) {
+                        this.currentStage = dbReport.current_stage;
+                        this.saveState();
+                    }
+
+                    console.log('✅ Report loaded from DB:', reportInfo.id);
+                    return reportInfo;
+                } else {
+                    console.warn('⚠️ Report not found in DB:', targetId);
+                }
+            }
+
+            // 4. 캐시 반환 (targetId 없는 경우)
+            if (cached) {
+                return JSON.parse(cached);
+            }
+
+            return null;
+
+        } catch (e) {
+            console.error('❌ getReportInfo failed:', e);
+            // 오류 시 localStorage 캐시 반환 시도
+            try {
+                const cached = localStorage.getItem(STORAGE_KEYS.REPORT);
+                return cached ? JSON.parse(cached) : null;
+            } catch {
+                return null;
+            }
+        }
+    }
+
+    /**
+     * 보고서 정보 로드 (동기 버전 - 기존 호환성용)
+     * @deprecated Use async getReportInfo() instead
+     */
+    getReportInfoSync() {
         try {
             const saved = localStorage.getItem(STORAGE_KEYS.REPORT);
             return saved ? JSON.parse(saved) : null;
@@ -473,11 +673,11 @@ class WorkflowManager {
     }
 
     /**
-     * Stage 완료 여부 확인
+     * Stage 완료 여부 확인 (동기)
      */
     isStageComplete(stageNum) {
         switch (stageNum) {
-            case 2: return !!this.getReportInfo();
+            case 2: return !!this.getReportInfoSync();
             case 3: return this.getUploadedFiles().length > 0;
             case 4: return Object.keys(this.getMarkdownData()).length > 0;
             case 5: return !!this.getExtractedData();
@@ -538,10 +738,14 @@ class WorkflowManager {
 // Singleton instance
 const workflowManager = new WorkflowManager();
 
-// 전역 내보내기
+// 전역 내보내기 (기존 호환성)
 if (typeof window !== 'undefined') {
     window.workflowManager = workflowManager;
     window.WorkflowManager = WorkflowManager;
     window.WORKFLOW_STAGES = WORKFLOW_STAGES;
     window.STORAGE_KEYS = STORAGE_KEYS;
 }
+
+// ES6 Module export
+export default workflowManager;
+export { WorkflowManager, WORKFLOW_STAGES, STORAGE_KEYS };

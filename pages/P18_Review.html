@@ -815,6 +815,9 @@
         </header>
     </div>
 
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
     <!-- 공통 스크립트 로드 -->
     <script src="../js/config.js"></script>
     <script src="../utils/ui-helpers.js"></script>
@@ -822,6 +825,7 @@
     <script src="../utils/navigation.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/workflow-manager.js"></script>
+    <script src="../js/supabase-client.js" type="module"></script>
 
     <!-- Dark Mode Script -->
     <script>
@@ -964,9 +968,89 @@
             };
         }
 
-        // Load draft report from P17
+        // URL에서 reportId 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const reportId = urlParams.get('reportId');
+        console.log('[P18] Report ID from URL:', reportId);
+
+        // Load draft report from P17 (localStorage fallback)
         const draftReport = Storage.get('draftReport') || {};
-        const generatedSections = draftReport.sections || {};
+        let generatedSections = draftReport.sections || {};
+
+        // DB에서 섹션 로드 함수
+        async function loadSectionsFromDB() {
+            if (!reportId) {
+                console.log('[P18] No reportId, using localStorage');
+                return;
+            }
+
+            try {
+                // supabaseClient 대기
+                if (typeof window.supabaseClient === 'undefined') {
+                    // 동적 import 시도
+                    const module = await import('../js/supabase-client.js');
+                    window.supabaseClient = module.default;
+                }
+
+                if (!window.supabaseClient) {
+                    console.warn('[P18] supabaseClient not available');
+                    return;
+                }
+
+                const result = await window.supabaseClient.getSections(reportId);
+
+                if (result.success && result.sections && result.sections.length > 0) {
+                    console.log(`[P18] ✅ Loaded ${result.sections.length} sections from DB`);
+
+                    // DB 데이터를 로컬 형식으로 변환
+                    result.sections.forEach(dbSection => {
+                        const sectionId = `S${dbSection.section_number}`;
+                        generatedSections[sectionId] = {
+                            content: dbSection.content_markdown,
+                            name: dbSection.section_name,
+                            dbId: dbSection.id,
+                            version: dbSection.version
+                        };
+                    });
+
+                    // sectionContents 업데이트
+                    sections.forEach(section => {
+                        const content = generatedSections[section.id]?.content || '';
+                        sectionContents[section.id] = {
+                            markdown: content,
+                            html: convertMarkdownToHTML(content)
+                        };
+                    });
+
+                    // UI 갱신
+                    loadSectionContent();
+                    renderSectionNav();
+                }
+            } catch (error) {
+                console.error('[P18] DB load error:', error);
+            }
+        }
+
+        // 섹션 DB 저장 함수
+        async function saveSectionToDB(sectionNumber, content, name) {
+            if (!reportId || !window.supabaseClient) {
+                console.log('[P18] No reportId or supabaseClient, skipping DB save');
+                return;
+            }
+
+            try {
+                const result = await window.supabaseClient.upsertSection(reportId, sectionNumber, {
+                    name: name,
+                    content: content
+                });
+
+                if (result.success) {
+                    console.log(`[P18] ✅ Section ${sectionNumber} saved to DB`);
+                }
+            } catch (error) {
+                console.error('[P18] DB save error:', error);
+            }
+        }
 
         // Load markdown files from stage2_result
         const stage2Result = Storage.get('stage2_result') || {};
@@ -1160,6 +1244,11 @@
             renderMarkdownFilesList();
             selectSection(sections[0]);
             updateStats();
+
+            // DB에서 섹션 로드 (비동기)
+            if (reportId) {
+                loadSectionsFromDB();
+            }
         }
 
         // Render section navigation
@@ -1343,7 +1432,8 @@
             updateStats();
             showToast('섹션이 저장되었습니다', 'success');
 
-            // In real implementation, this would save to Supabase Review Changes Table
+            // DB에 섹션 저장
+            saveSectionToDB(currentSection.number, editedContent, currentSection.name);
             console.log('Saving change to database:', change);
         }
 

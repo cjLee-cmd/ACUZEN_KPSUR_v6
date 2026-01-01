@@ -2,6 +2,7 @@
  * Output Generator
  * 최종 Word 문서 출력
  * docx.js 라이브러리를 사용한 실제 Word 문서 생성
+ * DB 연동: Supabase report_sections 테이블에서 섹션 조회
  */
 
 // IIFE로 감싸서 const 선언이 전역 스코프와 충돌하지 않도록 함
@@ -20,6 +21,7 @@ const DateHelper = window.DateHelper || {
 class OutputGenerator {
     constructor() {
         this.outputHistory = this.loadHistory();
+        this.reportId = null; // DB 연동용 보고서 ID
         // docx 라이브러리는 비동기로 로드 (생성자에서 에러 방지)
         this.docxLoaded = false;
         this.loadDocxLibrary().then(() => {
@@ -27,6 +29,125 @@ class OutputGenerator {
         }).catch(() => {
             console.warn('docx library not available, using HTML fallback');
         });
+    }
+
+    /**
+     * 보고서 ID 설정 (DB 연동용)
+     * @param {string} reportId - 보고서 UUID
+     */
+    setReportId(reportId) {
+        this.reportId = reportId;
+        console.log(`[OutputGenerator] Report ID set: ${reportId}`);
+    }
+
+    /**
+     * 보고서 ID 가져오기
+     */
+    getReportId() {
+        return this.reportId;
+    }
+
+    /**
+     * DB에서 섹션들 로드
+     * @returns {Promise<Object>} - 섹션 객체 또는 null
+     */
+    async loadSectionsFromDB() {
+        if (!this.reportId) {
+            console.warn('[OutputGenerator] Report ID not set, cannot load from DB');
+            return null;
+        }
+
+        try {
+            // supabaseClient 동적 참조 (전역 또는 window에서)
+            const supabaseClient = window.supabaseClient ||
+                (typeof require !== 'undefined' ? require('./supabase-client.js').default : null);
+
+            if (!supabaseClient) {
+                console.warn('[OutputGenerator] supabaseClient not available');
+                return null;
+            }
+
+            const result = await supabaseClient.getSections(this.reportId);
+
+            if (!result.success || !result.sections || result.sections.length === 0) {
+                console.log('[OutputGenerator] No sections found in DB');
+                return null;
+            }
+
+            // DB 형식을 로컬 형식으로 변환
+            const sections = {};
+            for (const dbSection of result.sections) {
+                sections[dbSection.section_number] = {
+                    id: dbSection.section_number,
+                    name: dbSection.section_name,
+                    content: dbSection.content_markdown,
+                    generatedAt: dbSection.created_at,
+                    dbId: dbSection.id,
+                    version: dbSection.version
+                };
+            }
+
+            console.log(`[OutputGenerator] ✅ ${Object.keys(sections).length} sections loaded from DB`);
+            return sections;
+
+        } catch (error) {
+            console.error('[OutputGenerator] DB load error:', error);
+            return null;
+        }
+    }
+
+    /**
+     * 섹션 데이터 가져오기 (DB 우선, localStorage 폴백)
+     * @returns {Promise<Object>} - 섹션 객체
+     */
+    async getSectionsForOutput() {
+        // 1. DB에서 로드 시도
+        if (this.reportId) {
+            const dbSections = await this.loadSectionsFromDB();
+            if (dbSections && Object.keys(dbSections).length > 0) {
+                return dbSections;
+            }
+        }
+
+        // 2. localStorage 폴백
+        try {
+            const stored = localStorage.getItem('generatedSections');
+            if (stored) {
+                const sections = JSON.parse(stored);
+                console.log(`[OutputGenerator] Loaded ${Object.keys(sections).length} sections from localStorage`);
+                return sections;
+            }
+        } catch (e) {
+            console.warn('[OutputGenerator] Failed to load from localStorage:', e);
+        }
+
+        return {};
+    }
+
+    /**
+     * 섹션들을 마크다운으로 결합
+     * @param {Object} sections - 섹션 객체
+     * @returns {string} - 결합된 마크다운
+     */
+    combineSectionsToMarkdown(sections) {
+        if (!sections || Object.keys(sections).length === 0) {
+            return '';
+        }
+
+        // 섹션 번호순 정렬
+        const sortedIds = Object.keys(sections).sort((a, b) => {
+            return parseInt(a) - parseInt(b);
+        });
+
+        let combined = '';
+        for (const id of sortedIds) {
+            const section = sections[id];
+            if (section && section.content) {
+                combined += section.content + '\n\n---\n\n';
+            }
+        }
+
+        return combined.trim();
     }
 
     /**

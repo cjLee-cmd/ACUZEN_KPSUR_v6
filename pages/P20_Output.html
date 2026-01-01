@@ -680,6 +680,9 @@
         </header>
     </div>
 
+    <!-- Supabase SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
     <!-- 공통 스크립트 로드 -->
     <script src="../js/config.js"></script>
     <script src="../utils/ui-helpers.js"></script>
@@ -689,6 +692,7 @@
     <script src="../js/workflow-manager.js"></script>
     <script src="../js/output-generator.js"></script>
     <script src="../js/hybrid-generator.js"></script>
+    <script src="../js/supabase-client.js" type="module"></script>
 
     <!-- Dark Mode Script -->
     <script>
@@ -780,11 +784,63 @@
         }
         // window.authManager 직접 사용
 
+        // URL에서 reportId 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const reportId = urlParams.get('reportId');
+        console.log('[P20] Report ID from URL:', reportId);
+
         // Load draft report and QC results
         const draftReport = window.Storage.get('draftReport') || {};
         const qcResults = window.Storage.get('qcResults') || {};
-        const generatedSections = window.Storage.get('generatedSections') || [];
+        let generatedSections = window.Storage.get('generatedSections') || [];
         const reportContent = draftReport.content || '';
+
+        // DB에서 섹션 로드 함수
+        async function loadSectionsFromDB() {
+            if (!reportId) {
+                console.log('[P20] No reportId, using localStorage');
+                return;
+            }
+
+            try {
+                // supabaseClient 대기
+                if (typeof window.supabaseClient === 'undefined') {
+                    const module = await import('../js/supabase-client.js');
+                    window.supabaseClient = module.default;
+                }
+
+                if (!window.supabaseClient) {
+                    console.warn('[P20] supabaseClient not available');
+                    return;
+                }
+
+                const result = await window.supabaseClient.getSections(reportId);
+
+                if (result.success && result.sections && result.sections.length > 0) {
+                    console.log(`[P20] ✅ Loaded ${result.sections.length} sections from DB`);
+
+                    // DB 데이터를 generatedSections 형식으로 변환
+                    generatedSections = {};
+                    result.sections.forEach(dbSection => {
+                        generatedSections[dbSection.section_number] = {
+                            id: dbSection.section_number,
+                            name: dbSection.section_name,
+                            content: dbSection.content_markdown,
+                            dbId: dbSection.id,
+                            version: dbSection.version
+                        };
+                    });
+
+                    // 미리보기 갱신
+                    const preview = document.getElementById('documentPreview');
+                    if (preview) {
+                        preview.innerHTML = generatePreviewHTML();
+                    }
+                }
+            } catch (error) {
+                console.error('[P20] DB load error:', error);
+            }
+        }
 
         let zoomLevel = 100;
 
@@ -1084,6 +1140,11 @@
 
             setupEventListeners();
             renderExportHistory();
+
+            // DB에서 섹션 로드 (비동기)
+            if (reportId) {
+                loadSectionsFromDB();
+            }
         }
 
         // Setup event listeners

@@ -837,45 +837,41 @@
         }
     </script>
 
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <!-- JavaScript -->
     <script src="../components/AppLayout.js"></script>
     <script src="../utils/layout-helper.js"></script>
-    <script>
-        // 샘플 데이터
-        const sampleReports = [
-            { id: 1, name: '코로나19백신_PSUR_2024Q4', ingredient: '토지나메란', stage: 7, status: 'review', author: '김철수', date: '2025-12-28', urgent: true },
-            { id: 2, name: '고혈압약_PSUR_2024Q4', ingredient: '암로디핀', stage: 8, status: 'qc', author: '이영희', date: '2025-12-27', urgent: true },
-            { id: 3, name: '당뇨병약_PSUR_2024Q4', ingredient: '메트포르민', stage: 5, status: 'in-progress', author: '박민수', date: '2025-12-26', urgent: false },
-            { id: 4, name: '항생제_PSUR_2024Q3', ingredient: '아목시실린', stage: 9, status: 'completed', author: '최지영', date: '2025-12-20', urgent: false },
-            { id: 5, name: '진통제_PSUR_2024Q4', ingredient: '이부프로펜', stage: 2, status: 'draft', author: '정수빈', date: '2025-12-25', urgent: false },
-            { id: 6, name: '항알레르기약_PSUR_2024Q4', ingredient: '세티리진', stage: 6, status: 'in-progress', author: '김철수', date: '2025-12-24', urgent: false },
-            { id: 7, name: '소화제_PSUR_2024Q4', ingredient: '판크레아틴', stage: 4, status: 'in-progress', author: '이영희', date: '2025-12-23', urgent: false },
-            { id: 8, name: '심혈관약_PSUR_2024Q3', ingredient: '아토르바스타틴', stage: 9, status: 'completed', author: '박민수', date: '2025-12-15', urgent: false },
-            { id: 9, name: '호흡기약_PSUR_2024Q4', ingredient: '살부타몰', stage: 7, status: 'review', author: '최지영', date: '2025-12-22', urgent: false },
-            { id: 10, name: '피부약_PSUR_2024Q4', ingredient: '하이드로코르티손', stage: 3, status: 'in-progress', author: '정수빈', date: '2025-12-21', urgent: false }
-        ];
+    <script type="module">
+        import supabaseClient from '../js/supabase-client.js';
+        import authManager from '../js/auth.js';
 
-        let currentReports = [...sampleReports];
+        // 보고서 데이터 (DB에서 로드)
+        let allReports = [];
+        let currentReports = [];
+        let isLoading = false;
 
         // 페이지 로드 시 초기화
-        // Wait for both DOM and globals to load
-        function initializePage() {
+        async function initializePage() {
             // Check if globals are loaded
             if (!window.__GLOBALS_LOADED__) {
                 setTimeout(initializePage, 50);
                 return;
             }
 
-            const session = loadSessionData();
+            const session = window.loadSessionData ? loadSessionData() : null;
             if (session) {
                 document.querySelector('.user-name').textContent = session.userName;
                 document.querySelector('.user-role').textContent = session.userRole;
                 document.querySelector('.user-avatar').textContent = session.userName.charAt(0);
             }
 
-            setupUserMenu();
+            if (window.setupUserMenu) setupUserMenu();
             setupFilterChips();
-            renderReports();
+
+            // DB에서 보고서 목록 로드
+            await loadReportsFromDB();
 
             // URL 파라미터에서 필터 확인
             const urlParams = new URLSearchParams(window.location.search);
@@ -888,6 +884,100 @@
                     applyFilters();
                 }
             }
+        }
+
+        // DB에서 보고서 목록 로드
+        async function loadReportsFromDB() {
+            try {
+                isLoading = true;
+                showLoadingState();
+
+                // 현재 사용자 정보 가져오기
+                const currentUser = authManager.getCurrentUser();
+                const userId = currentUser?.id;
+
+                if (!userId) {
+                    console.warn('⚠️ No user logged in, showing empty list');
+                    allReports = [];
+                    currentReports = [];
+                    renderReports();
+                    return;
+                }
+
+                // DB에서 보고서 조회
+                const result = await supabaseClient.getReports(userId);
+
+                if (result.success) {
+                    // DB 데이터를 UI 포맷으로 변환
+                    allReports = result.reports.map(dbReport => {
+                        const userInputs = dbReport.user_inputs || {};
+                        return {
+                            id: dbReport.id,
+                            name: dbReport.report_name || '제목 없음',
+                            ingredient: userInputs.CS0_성분명 || '-',
+                            stage: dbReport.current_stage || 2,
+                            status: mapStatusToUI(dbReport.status),
+                            author: dbReport.created_by_name || '알 수 없음',
+                            date: formatDate(dbReport.updated_at || dbReport.created_at),
+                            urgent: isUrgent(dbReport)
+                        };
+                    });
+
+                    currentReports = [...allReports];
+                    console.log(`✅ Loaded ${allReports.length} reports from DB`);
+                } else {
+                    console.error('❌ Failed to load reports:', result.error);
+                    if (window.showToast) showToast('보고서 목록 로드 실패', 'error');
+                }
+
+            } catch (error) {
+                console.error('❌ loadReportsFromDB error:', error);
+                if (window.showToast) showToast('DB 연결 오류', 'error');
+            } finally {
+                isLoading = false;
+                renderReports();
+            }
+        }
+
+        // DB status를 UI status로 매핑
+        function mapStatusToUI(dbStatus) {
+            const statusMap = {
+                'Draft': 'draft',
+                'InProgress': 'in-progress',
+                'Review': 'review',
+                'QC': 'qc',
+                'Completed': 'completed'
+            };
+            return statusMap[dbStatus] || 'draft';
+        }
+
+        // 날짜 포맷팅
+        function formatDate(isoDate) {
+            if (!isoDate) return '-';
+            const date = new Date(isoDate);
+            return date.toISOString().split('T')[0];
+        }
+
+        // 긴급 여부 판단 (Stage 7-8이고 최근 업데이트된 경우)
+        function isUrgent(report) {
+            const stage = report.current_stage || 0;
+            if (stage < 7 || stage > 8) return false;
+
+            const updatedAt = new Date(report.updated_at || report.created_at);
+            const daysSinceUpdate = (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24);
+            return daysSinceUpdate <= 3;
+        }
+
+        // 로딩 상태 표시
+        function showLoadingState() {
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <div>🔄 보고서 목록을 불러오는 중...</div>
+                    </td>
+                </tr>
+            `;
         }
 
         // Start initialization when DOM is ready
@@ -912,11 +1002,26 @@
             const tbody = document.getElementById('reportsTableBody');
             tbody.innerHTML = '';
 
+            if (currentReports.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            <div style="margin-bottom: 12px;">📭 보고서가 없습니다.</div>
+                            <button class="btn-primary" onclick="window.navigateTo('P13_NewReport.html')">
+                                ➕ 새 보고서 생성
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                updateTableCount();
+                return;
+            }
+
             currentReports.forEach(report => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>
-                        <div class="report-name" onclick="navigateTo('P12_ReportDetail.html?id=${report.id}')">
+                        <div class="report-name" onclick="window.navigateTo('P12_ReportDetail.html?reportId=${report.id}')">
                             ${report.urgent ? '<span class="urgent-badge"></span>' : ''}
                             ${report.name}
                         </div>
@@ -928,9 +1033,9 @@
                     <td>${report.date}</td>
                     <td>
                         <div class="action-buttons">
-                            <button class="action-btn" onclick="viewReport(${report.id})" title="보기">👁️</button>
-                            <button class="action-btn" onclick="editReport(${report.id})" title="편집">✏️</button>
-                            <button class="action-btn" onclick="deleteReport(${report.id})" title="삭제">🗑️</button>
+                            <button class="action-btn" onclick="window.viewReport('${report.id}')" title="보기">👁️</button>
+                            <button class="action-btn" onclick="window.editReport('${report.id}')" title="편집">✏️</button>
+                            <button class="action-btn" onclick="window.deleteReport('${report.id}')" title="삭제">🗑️</button>
                         </div>
                     </td>
                 `;
@@ -976,7 +1081,7 @@
             const stage = document.getElementById('stageFilter').value;
             const status = document.querySelector('.filter-chip.active').dataset.status;
 
-            currentReports = sampleReports.filter(report => {
+            currentReports = allReports.filter(report => {
                 const matchesSearch = !searchTerm ||
                     report.name.toLowerCase().includes(searchTerm) ||
                     report.ingredient.toLowerCase().includes(searchTerm);
@@ -988,7 +1093,7 @@
             });
 
             renderReports();
-            showToast('필터가 적용되었습니다.', 'info');
+            if (window.showToast) showToast('필터가 적용되었습니다.', 'info');
         }
 
         function resetFilters() {
@@ -1000,31 +1105,39 @@
             document.querySelector('.filter-chip.active').classList.remove('active');
             document.querySelector('.filter-chip[data-status=""]').classList.add('active');
 
-            currentReports = [...sampleReports];
+            currentReports = [...allReports];
             renderReports();
-            showToast('필터가 초기화되었습니다.', 'info');
+            if (window.showToast) showToast('필터가 초기화되었습니다.', 'info');
         }
 
         function sortTable(column) {
-            // 정렬 구현
-            showToast('정렬 기능은 곧 추가됩니다.', 'info');
+            if (window.showToast) showToast('정렬 기능은 곧 추가됩니다.', 'info');
         }
 
-        function viewReport(id) {
-            navigateTo(`P12_ReportDetail.html?id=${id}`);
-        }
+        // 전역 함수 노출 (onclick에서 사용)
+        window.viewReport = function(id) {
+            if (window.navigateTo) navigateTo(`P12_ReportDetail.html?reportId=${id}`);
+            else window.location.href = `P12_ReportDetail.html?reportId=${id}`;
+        };
 
-        function editReport(id) {
-            navigateTo(`P12_ReportDetail.html?id=${id}&mode=edit`);
-        }
+        window.editReport = function(id) {
+            if (window.navigateTo) navigateTo(`P12_ReportDetail.html?reportId=${id}&mode=edit`);
+            else window.location.href = `P12_ReportDetail.html?reportId=${id}&mode=edit`;
+        };
 
-        function deleteReport(id) {
+        window.deleteReport = async function(id) {
             if (confirm('이 보고서를 삭제하시겠습니까?')) {
-                showToast('보고서가 삭제되었습니다.', 'success');
-                currentReports = currentReports.filter(r => r.id !== id);
-                renderReports();
+                // TODO: DB에서 삭제 구현
+                if (window.showToast) showToast('삭제 기능은 곧 추가됩니다.', 'info');
+                // currentReports = currentReports.filter(r => r.id !== id);
+                // renderReports();
             }
-        }
+        };
+
+        window.applyFilters = applyFilters;
+        window.resetFilters = resetFilters;
+        window.sortTable = sortTable;
+        window.loadReportsFromDB = loadReportsFromDB;
     </script>
     <script src="../utils/globals.js"></script>
     <script src="../js/config.js"></script>

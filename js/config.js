@@ -160,9 +160,12 @@ const DateHelper = {
     }
 };
 
-// 전역으로 내보내기 (window 객체)
+// 전역으로 내보내기 (window 객체 - 기존 호환성)
 if (typeof window !== 'undefined') {
     window.CONFIG = CONFIG;
     window.Storage = Storage;
     window.DateHelper = DateHelper;
 }
+
+// ES6 Module export
+export { CONFIG, Storage, DateHelper };
