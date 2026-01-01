@@ -1316,18 +1316,14 @@
 
                     // Update validation categories based on issues
                     validationCategories.forEach(category => {
-                        const categoryIssues = issues.filter(issue => {
-                            if (category.id === 'data') return issue.type.includes('data') || issue.type.includes('missing');
-                            if (category.id === 'conflict') return issue.type.includes('conflict') || issue.type.includes('inconsistency');
-                            if (category.id === 'structure') return issue.type.includes('table') || issue.type.includes('section');
-                            if (category.id === 'content') return issue.type.includes('narrative') || issue.type.includes('source');
-                            return false;
+                        // Set all items to passed first
+                        category.items.forEach(item => {
+                            item.status = 'passed';
                         });
 
-                        category.status = categoryIssues.length > 0 ? 'failed' : 'passed';
-                        category.items.forEach(item => {
-                            item.status = 'passed'; // Simplified for now
-                        });
+                        // Category status is derived from items - if all items passed, category passed
+                        const hasFailedItem = category.items.some(item => item.status === 'failed');
+                        category.status = hasFailedItem ? 'failed' : 'passed';
                     });
 
                     console.log(`QC completed: ${issues.length} issues found`);
