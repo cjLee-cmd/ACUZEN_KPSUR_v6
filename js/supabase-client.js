@@ -3,7 +3,11 @@
  * Supabase 데이터베이스 연결 및 쿼리 헬퍼
  */
 
-import { CONFIG } from './config.js';
+// CONFIG는 window.CONFIG에서 가져옴 (config.js가 먼저 로드되어야 함)
+const CONFIG = window.CONFIG || {
+    SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
+    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8'
+};
 
 class SupabaseClient {
     constructor() {

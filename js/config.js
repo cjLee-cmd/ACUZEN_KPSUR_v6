@@ -167,5 +167,6 @@ if (typeof window !== 'undefined') {
     window.DateHelper = DateHelper;
 }
 
-// ES6 Module export
-export { CONFIG, Storage, DateHelper };
+// ES6 Module export (조건부 - 모듈로 로드될 때만)
+// 일반 스크립트로 로드될 때는 export 사용 불가
+// export { CONFIG, Storage, DateHelper };

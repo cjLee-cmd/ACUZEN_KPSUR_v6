@@ -9,7 +9,10 @@
  * - Word 내보내기
  */
 
-import supabaseClient from './supabase-client.js';
+// ES6 import 대신 window 객체에서 가져오기 (브라우저 스크립트 호환성)
+const supabaseClient = (typeof window !== 'undefined' && window.supabaseClient)
+    ? window.supabaseClient
+    : null;
 
 class SectionEditor {
     constructor() {
@@ -623,6 +626,6 @@ if (typeof window !== 'undefined') {
     window.sectionEditor = sectionEditor;
 }
 
-// ES6 Module export
-export default sectionEditor;
-export { SectionEditor };
+// ES6 Module export (조건부 - 모듈로 로드될 때만 사용)
+// export default sectionEditor;
+// export { SectionEditor };

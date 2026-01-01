@@ -10,7 +10,10 @@
  * 5. 섹션 DB 저장 (Supabase 연동)
  */
 
-import supabaseClient from './supabase-client.js';
+// ES6 import 대신 window 객체에서 가져오기 (브라우저 스크립트 호환성)
+const supabaseClient = (typeof window !== 'undefined' && window.supabaseClient)
+    ? window.supabaseClient
+    : null;
 
 const PSURGenerator = {
     // 보고서 ID (DB 연동용)
@@ -1056,7 +1059,9 @@ ${examplesText.substring(0, 35000)}
 };
 
 // 전역으로 노출
-window.PSURGenerator = PSURGenerator;
+if (typeof window !== 'undefined') {
+    window.PSURGenerator = PSURGenerator;
+}
 
-// ES6 export
-export default PSURGenerator;
+// ES6 export (조건부 - 모듈로 로드될 때만 사용)
+// export default PSURGenerator;
