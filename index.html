@@ -57,28 +57,27 @@
         <div class="message">시스템을 시작하는 중...</div>
     </div>
 
-    <script type="module">
-        import { CONFIG, Storage } from './js/config.js';
-        import authManager from './js/auth.js';
-
+    <script src="./js/config.js"></script>
+    <script src="./js/auth.js"></script>
+    <script>
         // 세션 확인 및 자동 리다이렉트
         async function init() {
             try {
-                const session = authManager.checkSession();
+                const session = window.authManager.checkSession();
 
                 if (session.authenticated) {
                     // 로그인된 상태 → 대시보드로 이동
                     console.log('✅ Session valid, redirecting to dashboard');
-                    window.location.href = `pages/${CONFIG.PAGES.DASHBOARD}`;
+                    window.location.href = `pages/${window.CONFIG.PAGES.DASHBOARD}`;
                 } else {
                     // 로그인 안 됨 → 로그인 페이지로 이동
                     console.log('⚠️ No session, redirecting to login');
-                    window.location.href = `pages/${CONFIG.PAGES.LOGIN}`;
+                    window.location.href = `pages/${window.CONFIG.PAGES.LOGIN}`;
                 }
             } catch (error) {
                 console.error('❌ Initialization error:', error);
                 // 에러 발생 시 로그인 페이지로
-                window.location.href = `pages/${CONFIG.PAGES.LOGIN}`;
+                window.location.href = 'pages/P01_Login.html';
             }
         }
 

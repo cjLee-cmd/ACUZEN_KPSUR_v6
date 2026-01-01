@@ -259,7 +259,3 @@ if (typeof window !== 'undefined') {
     window.authManager = authManager;
     window.AuthManager = AuthManager;
 }
-
-// ES6 모듈 export
-export default authManager;
-export { AuthManager };

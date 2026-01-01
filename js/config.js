@@ -166,6 +166,3 @@ if (typeof window !== 'undefined') {
     window.Storage = Storage;
     window.DateHelper = DateHelper;
 }
-
-// ES6 모듈 export
-export { CONFIG, Storage, DateHelper };
