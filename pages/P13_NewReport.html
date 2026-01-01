@@ -890,93 +890,28 @@
                                     <div class="section-title">LLM 설정</div>
                                 </div>
 
-                                <div class="form-row full">
+                                <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">
-                                            생성 모드 <span class="required">*</span>
+                                            LLM 모델 선택 <span class="required">*</span>
                                         </label>
-                                        <div class="llm-mode-selector">
-                                            <label class="llm-mode-option">
-                                                <input type="radio" name="llm_mode" value="hybrid" checked onchange="toggleLLMMode()">
-                                                <div class="llm-mode-card">
-                                                    <div class="llm-mode-icon">🚀</div>
-                                                    <div class="llm-mode-info">
-                                                        <div class="llm-mode-name">Hybrid Mode (권장)</div>
-                                                        <div class="llm-mode-desc">Sonnet 초안 → Opus 핵심섹션</div>
-                                                        <div class="llm-mode-cost">~$1.20 (61% 절감)</div>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                            <label class="llm-mode-option">
-                                                <input type="radio" name="llm_mode" value="single" onchange="toggleLLMMode()">
-                                                <div class="llm-mode-card">
-                                                    <div class="llm-mode-icon">⚡</div>
-                                                    <div class="llm-mode-info">
-                                                        <div class="llm-mode-name">Single Model</div>
-                                                        <div class="llm-mode-desc">단일 모델로 전체 생성</div>
-                                                        <div class="llm-mode-cost">모델별 상이</div>
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Hybrid Mode 설정 -->
-                                <div id="hybridModeSettings" class="llm-settings-panel">
-                                    <div class="hybrid-flow">
-                                        <div class="hybrid-phase">
-                                            <div class="phase-header">Phase 1: 초안</div>
-                                            <select class="form-select" id="hybrid_phase1_model">
-                                                <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview (기본)</option>
-                                                <option value="claude-sonnet-3-5">Claude Sonnet 3.5</option>
-                                                <option value="claude-haiku-3-5">Claude Haiku 3.5 (경제적)</option>
-                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (초경제적)</option>
-                                            </select>
-                                            <div class="phase-desc">전체 15개 섹션 초안 생성</div>
-                                        </div>
-                                        <div class="hybrid-arrow">→</div>
-                                        <div class="hybrid-phase">
-                                            <div class="phase-header">Phase 2: 개선</div>
-                                            <select class="form-select" id="hybrid_phase2_model">
-                                                <option value="claude-opus-4-5" selected>Claude Opus 4.5 (최고품질)</option>
-                                                <option value="claude-sonnet-3-5">Claude Sonnet 3.5</option>
-                                            </select>
-                                            <div class="phase-desc">섹션 9, 10 핵심 개선</div>
-                                        </div>
-                                    </div>
-                                    <div class="hybrid-cost-estimate">
-                                        <span class="cost-icon">💰</span>
-                                        <span>예상 비용: <strong id="hybridCostEstimate">~$1.20</strong> (Opus 단독 대비 61% 절감)</span>
-                                    </div>
-                                </div>
-
-                                <!-- Single Mode 설정 -->
-                                <div id="singleModeSettings" class="llm-settings-panel" style="display: none;">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label class="form-label">모델 선택</label>
-                                            <select class="form-select" id="single_model" onchange="updateCostEstimate()">
-                                                <optgroup label="Claude (Anthropic)">
-                                                    <option value="claude-opus-4-5">Claude Opus 4.5 - 최고 품질 (~$3.00)</option>
-                                                    <option value="claude-sonnet-3-5" selected>Claude Sonnet 3.5 - 균형 (~$0.60)</option>
-                                                    <option value="claude-haiku-3-5">Claude Haiku 3.5 - 빠른 처리 (~$0.20)</option>
-                                                </optgroup>
-                                                <optgroup label="OpenAI">
-                                                    <option value="gpt-4o">GPT-4o - 고품질 (~$0.80)</option>
-                                                    <option value="gpt-4o-mini">GPT-4o Mini - 경제적 (~$0.10)</option>
-                                                </optgroup>
-                                                <optgroup label="Google">
-                                                    <option value="gemini-3-flash-preview">Gemini 3 Flash Preview - 기본 (무료)</option>
-                                                    <option value="gemini-2.0-pro">Gemini 2.0 Pro - 균형 (~$0.25)</option>
-                                                    <option value="gemini-2.5-flash">Gemini 2.5 Flash - 최저 비용 (~$0.05)</option>
-                                                </optgroup>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="single-cost-estimate">
-                                        <span class="cost-icon">💰</span>
-                                        <span>예상 비용: <strong id="singleCostEstimate">~$0.60</strong></span>
+                                        <select class="form-select" id="llm_model" onchange="updateSelectedModelInfo()">
+                                            <optgroup label="Google (권장)">
+                                                <option value="gemini-3-flash-preview" selected>Gemini 3 Flash Preview (기본, 무료)</option>
+                                                <option value="gemini-2.0-pro">Gemini 2.0 Pro (~$0.25)</option>
+                                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (~$0.05)</option>
+                                            </optgroup>
+                                            <optgroup label="Claude (Anthropic)">
+                                                <option value="claude-opus-4-5">Claude Opus 4.5 - 최고 품질 (~$3.00)</option>
+                                                <option value="claude-sonnet-3-5">Claude Sonnet 3.5 (~$0.60)</option>
+                                                <option value="claude-haiku-3-5">Claude Haiku 3.5 (~$0.20)</option>
+                                            </optgroup>
+                                            <optgroup label="OpenAI">
+                                                <option value="gpt-4o">GPT-4o (~$0.80)</option>
+                                                <option value="gpt-4o-mini">GPT-4o Mini (~$0.10)</option>
+                                            </optgroup>
+                                        </select>
+                                        <div class="form-hint" id="modelInfoHint">빠르고 효율적인 최신 모델</div>
                                     </div>
                                 </div>
                             </div>
@@ -1484,56 +1419,32 @@
             }
         }
 
-        // LLM 모드 전환 함수
-        function toggleLLMMode() {
-            const mode = document.querySelector('input[name="llm_mode"]:checked').value;
-            const hybridSettings = document.getElementById('hybridModeSettings');
-            const singleSettings = document.getElementById('singleModeSettings');
+        // 선택된 모델 정보 업데이트
+        function updateSelectedModelInfo() {
+            const modelSelect = document.getElementById('llm_model');
+            const hintDisplay = document.getElementById('modelInfoHint');
 
-            if (mode === 'hybrid') {
-                hybridSettings.style.display = 'block';
-                singleSettings.style.display = 'none';
-            } else {
-                hybridSettings.style.display = 'none';
-                singleSettings.style.display = 'block';
-            }
-        }
-
-        // 비용 예상치 업데이트
-        function updateCostEstimate() {
-            const modelSelect = document.getElementById('single_model');
-            const costDisplay = document.getElementById('singleCostEstimate');
-
-            const costMap = {
-                'claude-opus-4-5': '~$3.00',
-                'claude-sonnet-3-5': '~$0.60',
-                'claude-haiku-3-5': '~$0.20',
-                'gpt-4o': '~$0.80',
-                'gpt-4o-mini': '~$0.10',
-                'gemini-3-flash-preview': '무료',
-                'gemini-2.0-pro': '~$0.25',
-                'gemini-2.5-flash': '~$0.05'
+            const modelInfo = {
+                'gemini-3-flash-preview': '빠르고 효율적인 최신 모델',
+                'gemini-2.0-pro': '균형 잡힌 고품질 모델',
+                'gemini-2.5-flash': '최저 비용의 경제적 모델',
+                'claude-opus-4-5': '최고 품질의 심층 분석 모델',
+                'claude-sonnet-3-5': '품질과 비용의 균형',
+                'claude-haiku-3-5': '빠른 처리 속도',
+                'gpt-4o': '고품질 범용 모델',
+                'gpt-4o-mini': '경제적인 경량 모델'
             };
 
-            costDisplay.textContent = costMap[modelSelect.value] || '~$0.50';
+            hintDisplay.textContent = modelInfo[modelSelect.value] || '';
         }
 
         // LLM 설정 데이터 가져오기
         function getLLMSettings() {
-            const mode = document.querySelector('input[name="llm_mode"]:checked').value;
-
-            if (mode === 'hybrid') {
-                return {
-                    mode: 'hybrid',
-                    phase1Model: document.getElementById('hybrid_phase1_model').value,
-                    phase2Model: document.getElementById('hybrid_phase2_model').value
-                };
-            } else {
-                return {
-                    mode: 'single',
-                    model: document.getElementById('single_model').value
-                };
-            }
+            const model = document.getElementById('llm_model').value;
+            return {
+                mode: 'single',
+                model: model
+            };
         }
 
         // CS3 = CS4 - CS24 계산 함수
