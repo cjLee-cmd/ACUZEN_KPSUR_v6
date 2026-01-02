@@ -93,6 +93,18 @@ class AuthManager {
             this.currentSession = sessionData;
             Storage.set(CONFIG.STORAGE_KEYS.SESSION, sessionData);
 
+            // Supabase 인증도 시도 (RLS 정책 통과를 위해)
+            try {
+                const supabaseResult = await supabaseClient.signInWithPassword(email, password);
+                if (supabaseResult.success) {
+                    console.log('✅ Supabase auth also successful for test account');
+                    sessionData.type = 'test+supabase';
+                    Storage.set(CONFIG.STORAGE_KEYS.SESSION, sessionData);
+                }
+            } catch (e) {
+                console.log('ℹ️ Supabase auth skipped for test account (account may not exist in Supabase)');
+            }
+
             console.log('✅ Login successful (test account):', email);
 
             return {

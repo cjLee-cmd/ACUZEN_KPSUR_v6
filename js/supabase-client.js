@@ -917,4 +917,7 @@ class SupabaseClient {
 // Singleton instance
 const supabaseClient = new SupabaseClient();
 
+// 브라우저 환경에서 전역 접근 가능하도록 설정
+window.supabaseClient = supabaseClient;
+
 export default supabaseClient;
