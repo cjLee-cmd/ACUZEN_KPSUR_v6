@@ -1,0 +1,870 @@
+/**
+ * KPSUR Mobile Responsive Styles
+ * 모바일 최적화 스타일 (PC 유지, 모바일 동적 대응)
+ *
+ * Breakpoints:
+ * - Desktop: > 1024px (기존 유지)
+ * - Tablet: 768px ~ 1024px
+ * - Mobile: < 768px
+ * - Small Mobile: < 480px
+ */
+
+/* ========================================
+   Base Mobile Optimizations
+   ======================================== */
+
+/* Touch-friendly interactions */
+@media (max-width: 1024px) {
+    /* 터치 영역 확대 */
+    button,
+    .btn-primary,
+    .btn-secondary,
+    .dropdown-item,
+    .nav-link,
+    .workflow-stage {
+        min-height: 44px;
+    }
+
+    /* 스크롤 최적화 */
+    .main-content,
+    .workflow-sidebar,
+    .file-list-section,
+    .preview-section {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* 폰트 크기 조정 */
+    html {
+        font-size: 15px;
+    }
+}
+
+/* ========================================
+   Tablet Styles (768px ~ 1024px)
+   ======================================== */
+
+@media (max-width: 1024px) {
+    /* Layout adjustments */
+    .page-container {
+        max-width: 100%;
+        padding: 0 var(--spacing-md);
+    }
+
+    /* Stats grid - 2 columns */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    /* Form rows - single column for some */
+    .form-row {
+        gap: var(--spacing-md);
+    }
+
+    /* Header adjustments */
+    .app-header {
+        padding: 0 var(--spacing-md);
+    }
+
+    .header-center {
+        display: none;
+    }
+
+    /* Workflow sidebar - narrower */
+    .workflow-sidebar {
+        width: 220px;
+    }
+
+    /* Table responsive */
+    .reports-table {
+        font-size: 13px;
+    }
+
+    .reports-table th,
+    .reports-table td {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    /* Card adjustments */
+    .stat-card,
+    .content-card,
+    .form-card {
+        padding: var(--spacing-md);
+    }
+
+    /* 콘텐츠 그리드 */
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+}
+
+/* ========================================
+   Mobile Styles (< 768px)
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Base layout */
+    html {
+        font-size: 14px;
+    }
+
+    body {
+        padding: 0;
+    }
+
+    .app-layout {
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+    }
+
+    .app-content {
+        flex-direction: column;
+    }
+
+    /* Header - mobile optimized */
+    .app-header {
+        height: 56px;
+        padding: 0 var(--spacing-sm);
+        position: sticky;
+        top: 0;
+    }
+
+    .header-left {
+        gap: var(--spacing-sm);
+    }
+
+    .logo-text {
+        font-size: 16px;
+    }
+
+    .logo-subtitle {
+        display: none;
+    }
+
+    .deployment-badge {
+        display: none;
+    }
+
+    .header-center {
+        display: none;
+    }
+
+    .header-right {
+        gap: var(--spacing-xs);
+    }
+
+    .user-info {
+        display: none;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .dark-mode-toggle {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* Main content - full width */
+    .main-content {
+        padding: var(--spacing-sm);
+        width: 100%;
+    }
+
+    .page-container {
+        padding: 0;
+    }
+
+    /* Workflow sidebar - hidden by default, show as bottom sheet */
+    .workflow-sidebar {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+        max-height: 60vh;
+        border-radius: 16px 16px 0 0;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+    }
+
+    .workflow-sidebar.mobile-open {
+        display: flex;
+    }
+
+    .workflow-stages {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+        padding: var(--spacing-sm);
+    }
+
+    .workflow-stage {
+        flex: 1 1 45%;
+        min-width: 140px;
+        padding: var(--spacing-sm);
+    }
+
+    /* Footer */
+    .app-footer {
+        height: 36px;
+        font-size: 10px;
+    }
+
+    /* Page header */
+    .page-header {
+        margin-bottom: var(--spacing-md);
+    }
+
+    .page-title {
+        font-size: 20px;
+    }
+
+    .page-description {
+        font-size: 13px;
+    }
+
+    /* Dashboard */
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+
+    .welcome-title {
+        font-size: 20px;
+    }
+
+    .welcome-subtitle {
+        font-size: 12px;
+    }
+
+    .action-buttons {
+        width: 100%;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .action-buttons .btn-primary,
+    .action-buttons .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Stats grid - single column */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    .stat-card {
+        padding: var(--spacing-sm);
+    }
+
+    .stat-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    .stat-value {
+        font-size: 22px;
+    }
+
+    .stat-label {
+        font-size: 11px;
+    }
+
+    /* Form layout */
+    .form-card {
+        padding: var(--spacing-md);
+        border-radius: 8px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .form-section {
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .section-header {
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+    }
+
+    .section-number {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+
+    .section-title {
+        font-size: 14px;
+    }
+
+    .form-label {
+        font-size: 12px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 16px; /* Prevents iOS zoom on focus */
+    }
+
+    .form-help {
+        font-size: 11px;
+    }
+
+    /* Content cards */
+    .content-card {
+        padding: var(--spacing-md);
+        border-radius: 8px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    /* Tables - horizontal scroll */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 calc(-1 * var(--spacing-md));
+        padding: 0 var(--spacing-md);
+    }
+
+    .reports-table {
+        min-width: 600px;
+        font-size: 12px;
+    }
+
+    .reports-table th,
+    .reports-table td {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        white-space: nowrap;
+    }
+
+    /* File upload area */
+    .upload-area {
+        padding: var(--spacing-lg);
+    }
+
+    .upload-icon {
+        font-size: 40px;
+    }
+
+    .upload-text {
+        font-size: 14px;
+    }
+
+    .upload-hint {
+        font-size: 11px;
+    }
+
+    /* File list */
+    .file-list-panel {
+        max-height: 200px;
+    }
+
+    .file-item {
+        padding: var(--spacing-sm);
+    }
+
+    .file-name {
+        font-size: 13px;
+    }
+
+    .file-meta {
+        font-size: 10px;
+    }
+
+    /* Preview section */
+    .preview-section {
+        min-height: 200px;
+    }
+
+    .preview-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .preview-tab {
+        white-space: nowrap;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 12px;
+    }
+
+    /* Buttons */
+    .btn-primary,
+    .btn-secondary {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 13px;
+        min-height: 44px;
+    }
+
+    /* Modal / Dialog */
+    .modal-content,
+    .dialog-content {
+        width: 95%;
+        max-width: 95%;
+        margin: var(--spacing-md);
+        max-height: 90vh;
+        border-radius: 12px;
+    }
+
+    /* Toast notifications */
+    .toast-container {
+        top: auto;
+        bottom: var(--spacing-lg);
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+    }
+
+    .toast {
+        min-width: auto;
+        width: 100%;
+    }
+
+    /* Dropdown menus */
+    .user-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        border-radius: 16px 16px 0 0;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    /* Loading overlay */
+    .loading-content {
+        width: 90%;
+        max-width: 300px;
+        padding: var(--spacing-lg);
+    }
+
+    .loading-spinner-large {
+        width: 48px;
+        height: 48px;
+    }
+
+    /* LLM mode selector */
+    .mode-selector {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .mode-card {
+        width: 100%;
+    }
+
+    /* Auto-filled section */
+    .auto-filled-section {
+        padding: var(--spacing-md);
+    }
+
+    .auto-filled-item {
+        padding: var(--spacing-sm);
+    }
+
+    /* Report list specific */
+    .filter-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: var(--spacing-xs);
+    }
+
+    .filter-tab {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Settings page */
+    .settings-section {
+        padding: var(--spacing-md);
+    }
+
+    .settings-row {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .settings-label {
+        width: 100%;
+    }
+
+    .settings-input {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   Small Mobile Styles (< 480px)
+   ======================================== */
+
+@media (max-width: 480px) {
+    html {
+        font-size: 13px;
+    }
+
+    /* Header */
+    .app-header {
+        height: 50px;
+    }
+
+    .logo-text {
+        font-size: 14px;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+
+    .dark-mode-toggle {
+        width: 32px;
+        height: 32px;
+    }
+
+    .dark-mode-toggle .icon-sun,
+    .dark-mode-toggle .icon-moon {
+        font-size: 14px;
+    }
+
+    /* Main content */
+    .main-content {
+        padding: var(--spacing-xs);
+    }
+
+    /* Page header */
+    .page-title {
+        font-size: 18px;
+    }
+
+    .page-description {
+        font-size: 12px;
+    }
+
+    /* Dashboard */
+    .welcome-title {
+        font-size: 18px;
+    }
+
+    /* Stats - 2 column grid */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-xs);
+    }
+
+    .stat-card {
+        padding: var(--spacing-xs);
+    }
+
+    .stat-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        border-radius: 6px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .stat-label {
+        font-size: 10px;
+    }
+
+    .stat-trend {
+        font-size: 9px;
+    }
+
+    /* Forms */
+    .form-card {
+        padding: var(--spacing-sm);
+    }
+
+    .section-number {
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+    }
+
+    .section-title {
+        font-size: 13px;
+    }
+
+    .form-label {
+        font-size: 11px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        padding: var(--spacing-sm);
+        font-size: 16px;
+    }
+
+    /* Buttons */
+    .btn-primary,
+    .btn-secondary {
+        padding: var(--spacing-sm);
+        font-size: 12px;
+    }
+
+    /* Cards */
+    .content-card {
+        padding: var(--spacing-sm);
+    }
+
+    /* Login page specific */
+    .login-card {
+        padding: 20px 16px;
+        border-radius: 12px;
+    }
+
+    .logo-title {
+        font-size: 22px;
+    }
+
+    .logo-subtitle {
+        font-size: 11px;
+    }
+
+    .medical-badge {
+        font-size: 10px;
+        padding: 3px 10px;
+    }
+
+    /* Theme toggle on login */
+    .theme-toggle {
+        width: 40px;
+        height: 40px;
+        top: 12px;
+        right: 12px;
+    }
+
+    .theme-toggle svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+/* ========================================
+   Mobile Bottom Navigation (Optional)
+   ======================================== */
+
+.mobile-nav {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: var(--card-bg, white);
+        border-top: 1px solid var(--border-color, #E5E7EB);
+        justify-content: space-around;
+        align-items: center;
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .mobile-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: var(--spacing-xs);
+        color: var(--text-secondary, #6B7280);
+        text-decoration: none;
+        font-size: 10px;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .mobile-nav-item.active {
+        color: var(--color-primary, #25739B);
+    }
+
+    .mobile-nav-icon {
+        font-size: 20px;
+    }
+
+    /* Add padding to main content for bottom nav */
+    .app-layout.has-mobile-nav .main-content {
+        padding-bottom: 70px;
+    }
+
+    /* Dark mode */
+    [data-theme="dark"] .mobile-nav {
+        background: #1e293b;
+        border-top-color: #334155;
+    }
+}
+
+/* ========================================
+   Mobile Workflow Progress Indicator
+   ======================================== */
+
+@media (max-width: 768px) {
+    .mobile-progress {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm) var(--spacing-md);
+        background: var(--card-bg, white);
+        border-bottom: 1px solid var(--border-color, #E5E7EB);
+    }
+
+    .mobile-progress-bar {
+        flex: 1;
+        height: 4px;
+        background: var(--border-color, #E5E7EB);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .mobile-progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+        border-radius: 2px;
+        transition: width 0.3s ease;
+    }
+
+    .mobile-progress-text {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--color-primary, #25739B);
+        white-space: nowrap;
+    }
+
+    [data-theme="dark"] .mobile-progress {
+        background: #1e293b;
+        border-bottom-color: #334155;
+    }
+
+    [data-theme="dark"] .mobile-progress-bar {
+        background: #334155;
+    }
+}
+
+/* ========================================
+   Touch Feedback Styles
+   ======================================== */
+
+@media (max-width: 1024px) {
+    .btn-primary:active,
+    .btn-secondary:active {
+        transform: scale(0.98);
+    }
+
+    .stat-card:active,
+    .content-card:active,
+    .file-item:active,
+    .workflow-stage:active {
+        opacity: 0.8;
+    }
+
+    /* Disable hover effects on touch devices */
+    @media (hover: none) {
+        .btn-primary:hover,
+        .btn-secondary:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .stat-card:hover,
+        .content-card:hover {
+            transform: none;
+        }
+    }
+}
+
+/* ========================================
+   Safe Area Insets (for notched devices)
+   ======================================== */
+
+@supports (padding: env(safe-area-inset-bottom)) {
+    @media (max-width: 768px) {
+        .app-footer {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .mobile-nav {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .workflow-sidebar {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
+}
+
+/* ========================================
+   Landscape Mode Adjustments
+   ======================================== */
+
+@media (max-width: 896px) and (orientation: landscape) {
+    .app-header {
+        height: 48px;
+    }
+
+    .main-content {
+        padding: var(--spacing-xs);
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .form-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .workflow-sidebar {
+        max-height: 50vh;
+    }
+}
+
+/* ========================================
+   Print Styles (maintain desktop layout)
+   ======================================== */
+
+@media print {
+    .app-header,
+    .app-footer,
+    .workflow-sidebar,
+    .mobile-nav {
+        display: none !important;
+    }
+
+    .main-content {
+        padding: 0 !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
