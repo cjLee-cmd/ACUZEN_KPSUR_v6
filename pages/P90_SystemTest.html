@@ -801,11 +801,11 @@
                 const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
                 const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8';
 
-                const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                this.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
                 // Health check via simple query
                 const startTime = Date.now();
-                const { data, error } = await client.from('reports').select('id').limit(1);
+                const { data, error } = await this.supabaseClient.from('reports').select('id').limit(1);
                 const duration = Date.now() - startTime;
 
                 if (error) {
@@ -816,41 +816,87 @@
             }
 
             async testReportsTable() {
-                const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
-                const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY;
+                if (!this.supabaseClient) {
+                    const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
+                    const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY;
+                    this.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
 
-                const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                const { data, error, count } = await client.from('reports').select('*', { count: 'exact', head: true });
+                const { data, error, count } = await this.supabaseClient
+                    .from('reports')
+                    .select('id, report_name, drug_name, status, created_at, updated_at', { count: 'exact' })
+                    .order('updated_at', { ascending: false })
+                    .limit(10);
 
                 if (error) throw new Error(`테이블 접근 실패: ${error.message}`);
-                return `reports 테이블 접근 가능 (${count || 0}개 레코드)`;
+
+                // 상세 데이터 반환
+                return {
+                    summary: `reports 테이블: ${count || 0}개 레코드`,
+                    reports: data || [],
+                    count: count || 0
+                };
             }
 
             async testReportSectionsTable() {
-                const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
-                const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY;
+                if (!this.supabaseClient) {
+                    const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
+                    const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY;
+                    this.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
 
-                const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                const { data, error, count } = await client.from('report_sections').select('*', { count: 'exact', head: true });
+                const { data, error, count } = await this.supabaseClient
+                    .from('report_sections')
+                    .select('id, report_id, section_number, section_name, version, updated_at', { count: 'exact' })
+                    .order('updated_at', { ascending: false })
+                    .limit(10);
 
                 if (error) throw new Error(`테이블 접근 실패: ${error.message}`);
-                return `report_sections 테이블 접근 가능 (${count || 0}개 레코드)`;
+
+                return {
+                    summary: `report_sections 테이블: ${count || 0}개 레코드`,
+                    sections: data || [],
+                    count: count || 0
+                };
             }
 
             async testSourceDocumentsTable() {
-                const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
-                const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY;
+                if (!this.supabaseClient) {
+                    const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
+                    const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY;
+                    this.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                }
 
-                const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                const { data, error, count } = await client.from('source_documents').select('*', { count: 'exact', head: true });
+                const { data, error, count } = await this.supabaseClient
+                    .from('source_documents')
+                    .select('id, report_id, file_name, raw_id, status, created_at', { count: 'exact' })
+                    .order('created_at', { ascending: false })
+                    .limit(10);
 
                 if (error) throw new Error(`테이블 접근 실패: ${error.message}`);
-                return `source_documents 테이블 접근 가능 (${count || 0}개 레코드)`;
+
+                return {
+                    summary: `source_documents 테이블: ${count || 0}개 레코드`,
+                    documents: data || [],
+                    count: count || 0
+                };
             }
 
             async testAuthStatus() {
                 const session = localStorage.getItem('kpsur_session');
                 return session ? '세션 활성화됨' : '세션 없음';
+            }
+
+            formatDate(dateStr) {
+                if (!dateStr) return '-';
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('ko-KR', {
+                    year: '2-digit',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
             }
 
             createResultCard(name, status) {
@@ -877,13 +923,111 @@
                 statusEl.style.color = status === 'success' ? '#059669' : '#DC2626';
 
                 if (status === 'success') {
-                    bodyEl.innerHTML = `
-                        <div style="font-size:13px;color:#374151;">
+                    let contentHtml = '';
+
+                    // 객체 형태의 상세 데이터인 경우
+                    if (typeof data.response === 'object' && data.response !== null) {
+                        const resp = data.response;
+                        contentHtml = `<div><strong>${resp.summary}</strong></div>`;
+
+                        // Reports 테이블 결과
+                        if (resp.reports && resp.reports.length > 0) {
+                            contentHtml += `
+                                <div style="margin-top:10px;overflow-x:auto;">
+                                    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                                        <thead>
+                                            <tr style="background:#f3f4f6;">
+                                                <th style="padding:6px;border:1px solid #e5e7eb;text-align:left;">보고서명</th>
+                                                <th style="padding:6px;border:1px solid #e5e7eb;text-align:left;">약품명</th>
+                                                <th style="padding:6px;border:1px solid #e5e7eb;text-align:center;">상태</th>
+                                                <th style="padding:6px;border:1px solid #e5e7eb;text-align:center;">수정일</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${resp.reports.map(r => `
+                                                <tr>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;">${r.report_name || '-'}</td>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;">${r.drug_name || '-'}</td>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;text-align:center;">
+                                                        <span style="padding:2px 6px;border-radius:4px;font-size:10px;background:${r.status === 'completed' ? '#dcfce7' : '#fef3c7'};color:${r.status === 'completed' ? '#166534' : '#92400e'};">
+                                                            ${r.status || 'draft'}
+                                                        </span>
+                                                    </td>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;text-align:center;">${this.formatDate(r.updated_at)}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>`;
+                        }
+
+                        // Sections 테이블 결과
+                        if (resp.sections && resp.sections.length > 0) {
+                            contentHtml += `
+                                <div style="margin-top:10px;overflow-x:auto;">
+                                    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                                        <thead>
+                                            <tr style="background:#f3f4f6;">
+                                                <th style="padding:6px;border:1px solid #e5e7eb;">섹션번호</th>
+                                                <th style="padding:6px;border:1px solid #e5e7eb;text-align:left;">섹션명</th>
+                                                <th style="padding:6px;border:1px solid #e5e7eb;">버전</th>
+                                                <th style="padding:6px;border:1px solid #e5e7eb;">수정일</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${resp.sections.map(s => `
+                                                <tr>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;text-align:center;">${s.section_number}</td>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;">${s.section_name || '-'}</td>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;text-align:center;">v${s.version || 1}</td>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;text-align:center;">${this.formatDate(s.updated_at)}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>`;
+                        }
+
+                        // Documents 테이블 결과
+                        if (resp.documents && resp.documents.length > 0) {
+                            contentHtml += `
+                                <div style="margin-top:10px;overflow-x:auto;">
+                                    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                                        <thead>
+                                            <tr style="background:#f3f4f6;">
+                                                <th style="padding:6px;border:1px solid #e5e7eb;text-align:left;">파일명</th>
+                                                <th style="padding:6px;border:1px solid #e5e7eb;">RAW ID</th>
+                                                <th style="padding:6px;border:1px solid #e5e7eb;">상태</th>
+                                                <th style="padding:6px;border:1px solid #e5e7eb;">생성일</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${resp.documents.map(d => `
+                                                <tr>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;">${d.file_name || '-'}</td>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;text-align:center;">${d.raw_id || '-'}</td>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;text-align:center;">${d.status || '-'}</td>
+                                                    <td style="padding:6px;border:1px solid #e5e7eb;text-align:center;">${this.formatDate(d.created_at)}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>`;
+                        }
+
+                        if (resp.count === 0) {
+                            contentHtml += `<div style="color:#6b7280;margin-top:8px;">데이터 없음</div>`;
+                        }
+                    } else {
+                        // 단순 문자열 응답
+                        contentHtml = `
                             ${data.response ? `<div><strong>응답:</strong> ${data.response}</div>` : ''}
                             ${data.duration ? `<div><strong>시간:</strong> ${data.duration}</div>` : ''}
                             ${data.tokens ? `<div><strong>토큰:</strong> ${data.tokens}</div>` : ''}
-                        </div>
-                    `;
+                        `;
+                    }
+
+                    bodyEl.innerHTML = `<div style="font-size:13px;color:#374151;">${contentHtml}</div>`;
                 } else {
                     bodyEl.innerHTML = `<div style="color:#DC2626;font-size:13px;">${data.error}</div>`;
                 }
