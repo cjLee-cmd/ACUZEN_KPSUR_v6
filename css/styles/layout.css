@@ -4,26 +4,37 @@
  */
 
 /* ========================================
-   App Layout - 전체 레이아웃
+   App Layout - 전체 레이아웃 (Fixed Header/Footer)
    ======================================== */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
 
 .app-layout {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
     background: #F5F7FA;
+    overflow: hidden;
 }
 
 .app-content {
     display: flex;
     flex: 1;
     overflow: hidden;
+    min-height: 0; /* Important for flex children to scroll */
 }
 
 .main-content {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--spacing-lg);
+    min-height: 0; /* Important for flex children to scroll */
 }
 
 .main-content.full-width {
@@ -39,13 +50,14 @@
     align-items: center;
     justify-content: space-between;
     height: 60px;
+    min-height: 60px;
     background: white;
     border-bottom: 1px solid #E5E7EB;
     padding: 0 var(--spacing-lg);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 100;
+    flex-shrink: 0;
 }
 
 .header-left {
@@ -350,11 +362,13 @@
 
 .app-footer {
     height: 40px;
+    min-height: 40px;
     background: white;
     border-top: 1px solid #E5E7EB;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .footer-content {
