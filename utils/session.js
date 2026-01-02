@@ -157,9 +157,9 @@ function setDeploymentMode(mode) {
 }
 
 /**
- * 네비게이션 보안 체크 (리프레시 감지)
- * 페이지 리프레시 시 로그인 페이지로 리다이렉트
- * @returns {boolean} true: 정상 네비게이션, false: 리프레시로 인한 리다이렉트
+ * 네비게이션 보안 체크 (세션 기반)
+ * 유효한 세션이 있으면 통과, 없으면 로그인 페이지로 리다이렉트
+ * @returns {boolean} true: 정상 네비게이션, false: 세션 없음으로 인한 리다이렉트
  */
 function checkNavigationSecurity() {
     try {
@@ -170,22 +170,22 @@ function checkNavigationSecurity() {
             return true;
         }
 
-        // 네비게이션 플래그 확인
+        // 네비게이션 플래그 확인 (정상 페이지 이동)
         const validNavigation = sessionStorage.getItem('kpsur_valid_navigation');
-
         if (validNavigation === 'true') {
-            // 정상 네비게이션 - 플래그 제거 (다음 리프레시 감지용)
             sessionStorage.removeItem('kpsur_valid_navigation');
             return true;
         }
 
-        // 플래그 없음 = 리프레시 또는 직접 URL 접근
-        console.warn('Security: Page refresh detected. Redirecting to login.');
+        // 세션 데이터 확인 (리프레시 또는 직접 URL 접근 시)
+        const session = loadSessionData();
+        if (session && session.userName) {
+            // 유효한 세션 존재 - 통과 (cellular-test: 리프레시 허용)
+            return true;
+        }
 
-        // 세션 클리어
-        clearSessionData();
-
-        // 로그인 페이지로 리다이렉트
+        // 세션 없음 - 로그인 페이지로 리다이렉트
+        console.warn('Security: No valid session. Redirecting to login.');
         const basePath = window.location.pathname.split('/pages/')[0];
         window.location.href = `${basePath}/pages/P01_Login.html`;
         return false;

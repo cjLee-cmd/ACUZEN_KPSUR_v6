@@ -61,7 +61,7 @@ class Environment {
             mode: this.mode,
             isProduction: this.isProduction,
             features: {
-                testAccounts: this.isDevelopment(), // 개발 모드에서만 테스트 계정 활성화
+                testAccounts: true, // 테스트 계정 항상 활성화 (cellular-test)
                 debugLogs: this.isDevelopment(),    // 개발 모드에서만 디버그 로그
                 analytics: this.isProductionMode()  // 프로덕션에서만 분석 활성화
             }
