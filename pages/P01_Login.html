@@ -385,9 +385,9 @@
         <div class="login-card">
             <div class="logo-section">
                 <div class="logo-title">KPSUR AGENT</div>
-                <div class="logo-subtitle">ACUZEN AI | v.0.1.2.</div>
+                <div class="logo-subtitle">ACUZEN AI | <span id="headerVersion"></span></div>
                 <span class="medical-badge">의료용 AI 소프트웨어</span>
-                <span class="version-badge">v.0.1.1.</span>
+                <span class="version-badge" id="badgeVersion"></span>
             </div>
 
             <div id="alertBox" class="alert"></div>
@@ -459,6 +459,13 @@
     <script src="../utils/navigation.js"></script>
 
     <script>
+        // 앱 버전 (머지할 때마다 최하위 버전 증가)
+        const APP_VERSION = 'v.0.1.2.';
+
+        // 버전 표시 초기화
+        document.getElementById('headerVersion').textContent = APP_VERSION;
+        document.getElementById('badgeVersion').textContent = APP_VERSION;
+
         // 전역 변수 참조 (config.js에서 이미 선언된 경우 재선언하지 않음)
         if (!window.CONFIG) {
             window.CONFIG = { PAGES: { SYSTEM_CHECK: 'P05_SystemCheck.html' } };
