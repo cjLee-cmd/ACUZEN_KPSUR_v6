@@ -775,6 +775,9 @@
 
                 const tests = [
                     { name: 'Supabase 연결', test: () => this.testSupabaseConnection() },
+                    { name: 'reports 테이블', test: () => this.testReportsTable() },
+                    { name: 'report_sections 테이블', test: () => this.testReportSectionsTable() },
+                    { name: 'source_documents 테이블', test: () => this.testSourceDocumentsTable() },
                     { name: 'Auth 상태 확인', test: () => this.testAuthStatus() }
                 ];
 
@@ -794,8 +797,55 @@
             }
 
             async testSupabaseConnection() {
-                // 간단한 연결 테스트
-                return 'Supabase 클라이언트 로드됨';
+                // 실제 Supabase 연결 테스트
+                const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
+                const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8';
+
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+                // Health check via simple query
+                const startTime = Date.now();
+                const { data, error } = await client.from('reports').select('id').limit(1);
+                const duration = Date.now() - startTime;
+
+                if (error) {
+                    throw new Error(`연결 실패: ${error.message}`);
+                }
+
+                return `연결 성공 (${duration}ms) - Project: toelnxgizxwbdikskmxa`;
+            }
+
+            async testReportsTable() {
+                const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
+                const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY;
+
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const { data, error, count } = await client.from('reports').select('*', { count: 'exact', head: true });
+
+                if (error) throw new Error(`테이블 접근 실패: ${error.message}`);
+                return `reports 테이블 접근 가능 (${count || 0}개 레코드)`;
+            }
+
+            async testReportSectionsTable() {
+                const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
+                const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY;
+
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const { data, error, count } = await client.from('report_sections').select('*', { count: 'exact', head: true });
+
+                if (error) throw new Error(`테이블 접근 실패: ${error.message}`);
+                return `report_sections 테이블 접근 가능 (${count || 0}개 레코드)`;
+            }
+
+            async testSourceDocumentsTable() {
+                const SUPABASE_URL = window.CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
+                const SUPABASE_KEY = window.CONFIG?.SUPABASE_ANON_KEY;
+
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const { data, error, count } = await client.from('source_documents').select('*', { count: 'exact', head: true });
+
+                if (error) throw new Error(`테이블 접근 실패: ${error.message}`);
+                return `source_documents 테이블 접근 가능 (${count || 0}개 레코드)`;
             }
 
             async testAuthStatus() {
