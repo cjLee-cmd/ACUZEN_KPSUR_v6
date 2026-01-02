@@ -62,6 +62,14 @@ class AuthManager {
                     id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
                     name: 'Master Admin',
                     role: 'Master'
+                },
+                // Supabase Auth에 등록된 테스트 계정 (DB 저장 가능)
+                'master@kpsur.test': {
+                    password: 'master123',
+                    id: '3d4afddc-14b5-491b-8aca-0e80dbafea2e',
+                    name: 'Master Admin',
+                    role: 'Master',
+                    supabaseAuth: true  // Supabase Auth 계정 표시
                 }
             };
 
@@ -95,14 +103,18 @@ class AuthManager {
 
             // Supabase 인증도 시도 (RLS 정책 통과를 위해)
             try {
-                const supabaseResult = await supabaseClient.signInWithPassword(email, password);
-                if (supabaseResult.success) {
-                    console.log('✅ Supabase auth also successful for test account');
-                    sessionData.type = 'test+supabase';
-                    Storage.set(CONFIG.STORAGE_KEYS.SESSION, sessionData);
+                if (window.supabaseClient) {
+                    const supabaseResult = await window.supabaseClient.signInWithPassword(email, password);
+                    if (supabaseResult.success) {
+                        console.log('✅ Supabase auth also successful for test account');
+                        sessionData.type = 'test+supabase';
+                        Storage.set(CONFIG.STORAGE_KEYS.SESSION, sessionData);
+                    } else {
+                        console.log('ℹ️ Supabase auth failed:', supabaseResult.error);
+                    }
                 }
             } catch (e) {
-                console.log('ℹ️ Supabase auth skipped for test account (account may not exist in Supabase)');
+                console.log('ℹ️ Supabase auth skipped for test account:', e.message);
             }
 
             console.log('✅ Login successful (test account):', email);
@@ -116,7 +128,10 @@ class AuthManager {
         }
 
         // Supabase Auth 시도
-        const result = await supabaseClient.signInWithPassword(email, password);
+        if (!window.supabaseClient) {
+            return { success: false, error: 'Supabase client not initialized' };
+        }
+        const result = await window.supabaseClient.signInWithPassword(email, password);
 
         if (result.success) {
             // session.js 형식에 맞춤 (email, userName, userRole, userId, timestamp)
@@ -164,8 +179,10 @@ class AuthManager {
      */
     async logout() {
         // Supabase 로그아웃
-        if (this.currentSession?.type === 'supabase') {
-            await supabaseClient.signOut();
+        if (this.currentSession?.type === 'supabase' || this.currentSession?.type === 'test+supabase') {
+            if (window.supabaseClient) {
+                await window.supabaseClient.signOut();
+            }
         }
 
         // 세션 정보 제거
@@ -203,12 +220,20 @@ class AuthManager {
             }
         }
 
-        this.currentUser = session.user;
+        // Reconstruct user object from session data
+        // (session stores userId, userName, userRole at root level, not as session.user)
+        const user = {
+            id: session.userId,
+            email: session.email,
+            name: session.userName,
+            role: session.userRole
+        };
+        this.currentUser = user;
         this.currentSession = session;
 
         return {
             authenticated: true,
-            user: session.user,
+            user: user,
             session: session
         };
     }
