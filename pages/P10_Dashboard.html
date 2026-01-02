@@ -487,36 +487,36 @@
                             <div class="stat-header">
                                 <div class="stat-icon primary">📊</div>
                             </div>
-                            <div class="stat-value" id="totalReports">12</div>
+                            <div class="stat-value" id="totalReports">-</div>
                             <div class="stat-label">총 보고서</div>
-                            <div class="stat-trend">↑ 지난달 대비 +3</div>
+                            <div class="stat-trend" id="totalTrend">로딩 중...</div>
                         </div>
 
                         <div class="stat-card">
                             <div class="stat-header">
                                 <div class="stat-icon info">🔄</div>
                             </div>
-                            <div class="stat-value" id="inProgressReports">5</div>
+                            <div class="stat-value" id="inProgressReports">-</div>
                             <div class="stat-label">진행 중</div>
-                            <div class="stat-trend">3개 리뷰 대기</div>
+                            <div class="stat-trend" id="inProgressTrend">로딩 중...</div>
                         </div>
 
                         <div class="stat-card">
                             <div class="stat-header">
                                 <div class="stat-icon warning">⏰</div>
                             </div>
-                            <div class="stat-value" id="qcReports">2</div>
+                            <div class="stat-value" id="qcReports">-</div>
                             <div class="stat-label">QC 검증 대기</div>
-                            <div class="stat-trend">긴급 처리 필요</div>
+                            <div class="stat-trend" id="qcTrend">로딩 중...</div>
                         </div>
 
                         <div class="stat-card">
                             <div class="stat-header">
                                 <div class="stat-icon success">✅</div>
                             </div>
-                            <div class="stat-value" id="completedReports">5</div>
+                            <div class="stat-value" id="completedReports">-</div>
                             <div class="stat-label">완료</div>
-                            <div class="stat-trend">이번 달 완료</div>
+                            <div class="stat-trend" id="completedTrend">로딩 중...</div>
                         </div>
                     </div>
 
@@ -557,44 +557,12 @@
                                 <h2 class="card-title">최근 활동</h2>
                             </div>
 
-                            <div class="activity-list">
-                                <div class="activity-item">
-                                    <div class="activity-icon create">➕</div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">새 보고서 생성됨</div>
-                                        <div class="activity-time">진통제_PSUR_2024Q4 · 2시간 전</div>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon review">✏️</div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">리뷰 완료</div>
-                                        <div class="activity-time">코로나19백신_PSUR_2024Q4 · 5시간 전</div>
-                                    </div>
-                                </div>
-
+                            <div class="activity-list" id="activityList">
                                 <div class="activity-item">
                                     <div class="activity-icon update">🔄</div>
                                     <div class="activity-content">
-                                        <div class="activity-title">데이터 추출 진행중</div>
-                                        <div class="activity-time">당뇨병약_PSUR_2024Q4 · 1일 전</div>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon complete">✅</div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">보고서 완료</div>
-                                        <div class="activity-time">항생제_PSUR_2024Q3 · 3일 전</div>
-                                    </div>
-                                </div>
-
-                                <div class="activity-item">
-                                    <div class="activity-icon update">📤</div>
-                                    <div class="activity-content">
-                                        <div class="activity-title">파일 업로드 완료</div>
-                                        <div class="activity-time">고혈압약_PSUR_2024Q4 · 5일 전</div>
+                                        <div class="activity-title">데이터 로딩 중...</div>
+                                        <div class="activity-time">잠시만 기다려 주세요</div>
                                     </div>
                                 </div>
                             </div>
@@ -859,7 +827,124 @@
 
         async function loadDashboardStats() {
             // Supabase에서 보고서 데이터 로드
-            await loadReportsFromDB();
+            const reports = await loadReportsFromDB();
+
+            // 통계 계산 및 표시
+            if (reports && reports.length > 0) {
+                updateStatsFromReports(reports);
+                updateActivityFromReports(reports);
+            }
+        }
+
+        function updateStatsFromReports(reports) {
+            const total = reports.length;
+            const inProgress = reports.filter(r => r.status === 'Draft' || r.status === 'InReview').length;
+            const qcPending = reports.filter(r => r.status === 'QC').length;
+            const completed = reports.filter(r => r.status === 'Completed').length;
+
+            // 이번 달 완료 건수 계산
+            const now = new Date();
+            const thisMonth = reports.filter(r => {
+                if (r.status !== 'Completed') return false;
+                const updated = new Date(r.updated_at);
+                return updated.getMonth() === now.getMonth() && updated.getFullYear() === now.getFullYear();
+            }).length;
+
+            // 리뷰 대기 건수
+            const reviewPending = reports.filter(r => r.status === 'InReview').length;
+
+            // UI 업데이트
+            document.getElementById('totalReports').textContent = total;
+            document.getElementById('inProgressReports').textContent = inProgress;
+            document.getElementById('qcReports').textContent = qcPending;
+            document.getElementById('completedReports').textContent = completed;
+
+            document.getElementById('totalTrend').textContent = `전체 ${total}건 등록`;
+            document.getElementById('inProgressTrend').textContent = reviewPending > 0 ? `${reviewPending}개 리뷰 대기` : '진행 중';
+            document.getElementById('qcTrend').textContent = qcPending > 0 ? '처리 필요' : '대기 없음';
+            document.getElementById('completedTrend').textContent = `이번 달 ${thisMonth}건 완료`;
+        }
+
+        function updateActivityFromReports(reports) {
+            const activityList = document.getElementById('activityList');
+
+            // 최근 5개 보고서의 활동을 표시
+            const recentReports = reports.slice(0, 5);
+
+            if (recentReports.length === 0) {
+                activityList.innerHTML = `
+                    <div class="activity-item">
+                        <div class="activity-icon update">📋</div>
+                        <div class="activity-content">
+                            <div class="activity-title">활동 내역이 없습니다</div>
+                            <div class="activity-time">새 보고서를 생성해 주세요</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            const stageActions = {
+                1: { icon: '🔐', iconClass: 'create', title: '로그인' },
+                2: { icon: '📋', iconClass: 'create', title: '보고서 생성됨' },
+                3: { icon: '📤', iconClass: 'update', title: '파일 업로드' },
+                4: { icon: '🔄', iconClass: 'update', title: 'MD 변환 진행' },
+                5: { icon: '⚙️', iconClass: 'update', title: '데이터 추출' },
+                6: { icon: '📄', iconClass: 'update', title: '템플릿 작성' },
+                7: { icon: '✏️', iconClass: 'review', title: '리뷰 진행' },
+                8: { icon: '✅', iconClass: 'complete', title: 'QC 검증' },
+                9: { icon: '📤', iconClass: 'complete', title: '최종 출력' }
+            };
+
+            const statusActions = {
+                'Draft': { icon: '➕', iconClass: 'create', title: '임시 저장됨' },
+                'InReview': { icon: '✏️', iconClass: 'review', title: '리뷰 중' },
+                'QC': { icon: '✅', iconClass: 'complete', title: 'QC 대기' },
+                'Completed': { icon: '🎉', iconClass: 'complete', title: '보고서 완료' }
+            };
+
+            activityList.innerHTML = recentReports.map(report => {
+                const stage = report.current_stage || 2;
+                const status = report.status || 'Draft';
+
+                // 상태 기반 아이콘 선택 (완료된 경우 상태 우선, 아니면 단계 기반)
+                let action;
+                if (status === 'Completed') {
+                    action = statusActions['Completed'];
+                } else {
+                    action = stageActions[stage] || statusActions[status] || { icon: '📋', iconClass: 'update', title: '업데이트' };
+                }
+
+                const timeAgo = getTimeAgo(report.updated_at);
+                const reportName = report.report_name || '이름 없음';
+
+                return `
+                    <div class="activity-item" onclick="navigateTo('P12_ReportDetail.html?id=${report.id}')" style="cursor:pointer;">
+                        <div class="activity-icon ${action.iconClass}">${action.icon}</div>
+                        <div class="activity-content">
+                            <div class="activity-title">${action.title}</div>
+                            <div class="activity-time">${reportName} · ${timeAgo}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getTimeAgo(dateString) {
+            if (!dateString) return '알 수 없음';
+
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            if (diffMins < 1) return '방금 전';
+            if (diffMins < 60) return `${diffMins}분 전`;
+            if (diffHours < 24) return `${diffHours}시간 전`;
+            if (diffDays < 7) return `${diffDays}일 전`;
+            return date.toLocaleDateString('ko-KR');
         }
 
         async function loadReportsFromDB() {
@@ -869,7 +954,7 @@
             try {
                 // reports와 products, users를 조인하여 가져오기
                 const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/reports?select=id,report_name,status,current_stage,user_inputs,updated_at,products(product_name,ingredient_name),users(name)&order=updated_at.desc&limit=10`,
+                    `${SUPABASE_URL}/rest/v1/reports?select=id,report_name,status,current_stage,user_inputs,updated_at,created_at,products(product_name,ingredient_name),users(name)&order=updated_at.desc&limit=50`,
                     {
                         headers: {
                             'apikey': SUPABASE_KEY,
@@ -883,11 +968,34 @@
                 }
 
                 const reports = await response.json();
-                renderReportsTable(reports);
+                renderReportsTable(reports.slice(0, 10)); // 테이블에는 10개만 표시
+                return reports;
 
             } catch (error) {
                 console.error('보고서 로드 실패:', error);
                 renderReportsTable([]);
+
+                // 에러 시 통계 초기화
+                document.getElementById('totalReports').textContent = '0';
+                document.getElementById('inProgressReports').textContent = '0';
+                document.getElementById('qcReports').textContent = '0';
+                document.getElementById('completedReports').textContent = '0';
+                document.getElementById('totalTrend').textContent = 'DB 연결 실패';
+                document.getElementById('inProgressTrend').textContent = '-';
+                document.getElementById('qcTrend').textContent = '-';
+                document.getElementById('completedTrend').textContent = '-';
+
+                document.getElementById('activityList').innerHTML = `
+                    <div class="activity-item">
+                        <div class="activity-icon update">⚠️</div>
+                        <div class="activity-content">
+                            <div class="activity-title">데이터 로드 실패</div>
+                            <div class="activity-time">DB 연결을 확인해 주세요</div>
+                        </div>
+                    </div>
+                `;
+
+                return [];
             }
         }
 
