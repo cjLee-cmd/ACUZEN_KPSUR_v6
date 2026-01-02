@@ -373,19 +373,19 @@ const PSURGenerator = {
     },
 
     /**
-     * UserPrompt 템플릿 로드 (UserPrompt-1.md)
+     * UserPrompt 템플릿 로드 (UserPrompt-2.md)
      */
     async loadUserPromptTemplate() {
         if (this.userPromptTemplateLoaded && this.userPromptTemplate) {
             return this.userPromptTemplate;
         }
 
-        console.log('[PSURGenerator] Loading UserPrompt-1.md...');
+        console.log('[PSURGenerator] Loading UserPrompt-2.md...');
 
         const paths = [
-            '../UserPrompt-1.md',
-            './UserPrompt-1.md',
-            '/UserPrompt-1.md'
+            '../UserPrompt-2.md',
+            './UserPrompt-2.md',
+            '/UserPrompt-2.md'
         ];
 
         for (const path of paths) {
@@ -402,7 +402,7 @@ const PSURGenerator = {
             }
         }
 
-        console.warn('[PSURGenerator] UserPrompt-1.md not found');
+        console.warn('[PSURGenerator] UserPrompt-2.md not found');
         return null;
     },
 
@@ -486,14 +486,14 @@ const PSURGenerator = {
 
         // UserPrompt 로드 성공 시: 불필요한 로드 스킵
         if (this.userPromptTemplate) {
-            console.log('[PSURGenerator] UserPrompt-1.md 사용 - 추가 로드 스킵');
+            console.log('[PSURGenerator] UserPrompt-2.md 사용 - 추가 로드 스킵');
             if (onProgress) onProgress({ step: 'prompt', message: '프롬프트 생성 중 (UserPrompt 모드)...' });
 
-            // UserPrompt-1.md에 모든 정보가 포함되어 있으므로 추가 로드 불필요
+            // UserPrompt-2.md에 모든 정보가 포함되어 있으므로 추가 로드 불필요
             prompt = this.buildFullReportPrompt(combinedMarkdown, '', '', '');
         } else {
             // Fallback: 모든 리소스 로드
-            console.warn('[PSURGenerator] UserPrompt-1.md 로드 실패 - Fallback 모드');
+            console.warn('[PSURGenerator] UserPrompt-2.md 로드 실패 - Fallback 모드');
 
             // 템플릿 로드
             if (!this.templatesLoaded || Object.keys(this.templates).length === 0) {
@@ -569,12 +569,12 @@ const PSURGenerator = {
 
     /**
      * 전체 보고서 생성용 프롬프트
-     * UserPrompt-1.md 템플릿을 사용하고 {{RAW_DATA_PLACEHOLDER}}를 교체
+     * UserPrompt-2.md 템플릿을 사용하고 {{RAW_DATA_PLACEHOLDER}}를 교체
      */
     buildFullReportPrompt(combinedMarkdown, userInputData, templatesText, examplesText = '') {
-        // UserPrompt-1.md 템플릿이 로드되어 있으면 사용
+        // UserPrompt-2.md 템플릿이 로드되어 있으면 사용
         if (this.userPromptTemplate) {
-            console.log('[PSURGenerator] Using UserPrompt-1.md template with placeholder replacement');
+            console.log('[PSURGenerator] Using UserPrompt-2.md template with placeholder replacement');
 
             // 플레이스홀더를 실제 원시자료로 교체
             const prompt = this.userPromptTemplate.replace(
