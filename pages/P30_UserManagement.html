@@ -537,6 +537,13 @@
         }
     </style>
 </head>
+<!-- Required Scripts for Permissions -->
+<script src="../js/config.js"></script>
+<script src="../js/supabase-client.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/permissions.js"></script>
+<script src="../js/page-guard.js"></script>
+
 <body>
     <div class="app-layout" id="app">
         <!-- Header -->
@@ -563,12 +570,12 @@
                     <span class="icon-moon">🌙</span>
                 </button>
                 <div class="user-menu">
-                    <div class="user-avatar">사</div>
+                    <div class="user-avatar" id="headerUserAvatar">M</div>
                     <div class="user-info">
-                        <div class="user-name">사용자</div>
-                        <div class="user-role">Admin</div>
+                        <div class="user-name" id="headerUserName">관리자</div>
+                        <div class="user-role" id="headerUserRole">Master</div>
                     </div>
-                    <button class="user-menu-toggle">▼</button>
+                    <button class="user-menu-toggle" onclick="handleLogout()">로그아웃</button>
                 </div>
             </div>
         </header>
@@ -653,21 +660,122 @@
             }
         }
 
-        // Sample user data
-        let users = [
-            { id: 1, name: '홍길동', email: 'hong@kpsur.test', department: '약물안전관리부', role: 'master', status: 'active', lastLogin: '2025-01-15 09:23', reports: 15 },
-            { id: 2, name: '김영희', email: 'kim@kpsur.test', department: '약물안전관리부', role: 'author', status: 'active', lastLogin: '2025-01-14 14:55', reports: 8 },
-            { id: 3, name: '이철수', email: 'lee@kpsur.test', department: '품질관리부', role: 'reviewer', status: 'active', lastLogin: '2025-01-13 16:30', reports: 0 },
-            { id: 4, name: '박민수', email: 'park@kpsur.test', department: '연구개발부', role: 'viewer', status: 'active', lastLogin: '2025-01-12 11:20', reports: 0 },
-            { id: 5, name: '정지은', email: 'jung@kpsur.test', department: '약물안전관리부', role: 'author', status: 'inactive', lastLogin: '2024-12-20 15:40', reports: 3 }
-        ];
+        // User data (will be loaded from Supabase or localStorage)
+        let users = [];
+
+        // Toast notification
+        function showToast(message, type = 'info') {
+            // Remove existing toast
+            const existingToast = document.querySelector('.toast-notification');
+            if (existingToast) existingToast.remove();
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast-notification toast-${type}`;
+            toast.innerHTML = `
+                <span class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                <span class="toast-message">${message}</span>
+            `;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+            `;
+
+            document.body.appendChild(toast);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
 
         let currentEditUser = null;
         let filterRole = 'all';
         let filterStatus = 'all';
 
+        // Load header user info from session
+        function loadHeaderUserInfo() {
+            const session = window.Storage?.get(window.CONFIG?.STORAGE_KEYS?.SESSION || 'kpsur_session');
+            if (session) {
+                const avatarEl = document.getElementById('headerUserAvatar');
+                const nameEl = document.getElementById('headerUserName');
+                const roleEl = document.getElementById('headerUserRole');
+
+                if (avatarEl) avatarEl.textContent = (session.userName || 'U').charAt(0);
+                if (nameEl) nameEl.textContent = session.userName || '사용자';
+                if (roleEl) roleEl.textContent = session.userRole || 'User';
+            }
+        }
+
+        // Logout handler
+        async function handleLogout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                if (window.authManager) {
+                    await window.authManager.logout();
+                } else {
+                    window.Storage?.remove(window.CONFIG?.STORAGE_KEYS?.SESSION || 'kpsur_session');
+                }
+                window.location.href = 'P01_Login.html';
+            }
+        }
+
+        // Load users from Supabase (or fallback to sample data)
+        async function loadUsersFromSupabase() {
+            try {
+                if (window.supabaseClient) {
+                    await window.supabaseClient.init();
+                    const result = await window.supabaseClient.client
+                        .from('users')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (result.data && result.data.length > 0) {
+                        users = result.data.map(u => ({
+                            id: u.id,
+                            name: u.name || u.email,
+                            email: u.email,
+                            department: u.department || '-',
+                            role: u.role?.toLowerCase() || 'viewer',
+                            status: u.status || 'active',
+                            lastLogin: u.last_login ? new Date(u.last_login).toLocaleString('ko-KR') : '-',
+                            reports: u.report_count || 0
+                        }));
+                        console.log('✅ Users loaded from Supabase:', users.length);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Failed to load users from Supabase:', error);
+            }
+
+            // Fallback to sample data
+            users = [
+                { id: 1, name: '홍길동', email: 'hong@kpsur.test', department: '약물안전관리부', role: 'master', status: 'active', lastLogin: '2025-01-15 09:23', reports: 15 },
+                { id: 2, name: '김영희', email: 'kim@kpsur.test', department: '약물안전관리부', role: 'author', status: 'active', lastLogin: '2025-01-14 14:55', reports: 8 },
+                { id: 3, name: '이철수', email: 'lee@kpsur.test', department: '품질관리부', role: 'reviewer', status: 'active', lastLogin: '2025-01-13 16:30', reports: 0 },
+                { id: 4, name: '박민수', email: 'park@kpsur.test', department: '연구개발부', role: 'viewer', status: 'active', lastLogin: '2025-01-12 11:20', reports: 0 },
+                { id: 5, name: '정지은', email: 'jung@kpsur.test', department: '약물안전관리부', role: 'author', status: 'inactive', lastLogin: '2024-12-20 15:40', reports: 3 }
+            ];
+            console.log('ℹ️ Using sample user data');
+        }
+
         // Initialize the page
-        function init() {
+        async function init() {
+            // Load header user info
+            loadHeaderUserInfo();
             const layout = new AppLayout({
                 currentStage: null, // Management page, no stage
                 reportName: null,
@@ -765,7 +873,10 @@
                 appElement.innerHTML = layout.render(content);
             }
 
+            // Load users from Supabase and render
+            await loadUsersFromSupabase();
             renderUsers();
+            updateStats();
         }
 
         // Render users
