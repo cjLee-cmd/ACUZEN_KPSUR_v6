@@ -107,15 +107,185 @@ class SectionEditor {
                 const parsed = JSON.parse(stored);
                 this.sections = parsed;
                 console.log(`[SectionEditor] ${Object.keys(this.sections).length}개 섹션 localStorage에서 로드됨`);
+
+                // 2.1 placeholder 확인 및 generatedPSURReport에서 재파싱
+                const hasOnlyPlaceholders = this._checkPlaceholderContent();
+                if (hasOnlyPlaceholders) {
+                    console.log('[SectionEditor] Placeholder 콘텐츠 감지 - generatedPSURReport에서 재파싱 시도');
+                    const reparsed = this._reparseFromGeneratedReport();
+                    if (reparsed) {
+                        this.updateLocalCache();
+                        console.log('[SectionEditor] generatedPSURReport에서 재파싱 성공');
+                    }
+                }
                 return true;
             }
         } catch (e) {
             console.error('[SectionEditor] localStorage 로드 실패:', e);
         }
 
+        // 2.2 generatedSections가 없지만 generatedPSURReport가 있는 경우 재파싱 시도
+        const reportData = localStorage.getItem('generatedPSURReport');
+        if (reportData) {
+            console.log('[SectionEditor] generatedSections 없음 - generatedPSURReport에서 파싱 시도');
+            this.initEmptySections(); // 먼저 빈 섹션 초기화
+            const reparsed = this._reparseFromGeneratedReport();
+            if (reparsed) {
+                this.updateLocalCache();
+                console.log('[SectionEditor] generatedPSURReport에서 파싱 성공');
+                return true;
+            }
+        }
+
         // 3. 빈 섹션 초기화
         this.initEmptySections();
         return false;
+    }
+
+    /**
+     * placeholder 콘텐츠 확인
+     * @returns {boolean} 모든 섹션이 placeholder인 경우 true
+     */
+    _checkPlaceholderContent() {
+        const placeholderPattern = /\[이 섹션은 생성되지 않았습니다\]/;
+        let placeholderCount = 0;
+        let totalCount = 0;
+
+        for (const section of Object.values(this.sections)) {
+            totalCount++;
+            if (section.content && placeholderPattern.test(section.content)) {
+                placeholderCount++;
+            }
+        }
+
+        // 80% 이상이 placeholder면 true
+        return totalCount > 0 && (placeholderCount / totalCount) >= 0.8;
+    }
+
+    /**
+     * generatedPSURReport에서 섹션 재파싱
+     * @returns {boolean} 성공 여부
+     */
+    _reparseFromGeneratedReport() {
+        try {
+            const reportData = localStorage.getItem('generatedPSURReport');
+            if (!reportData) return false;
+
+            // localStorage에서 올바른 CS 데이터 가져오기 (사용자 입력 우선)
+            const correctCSData = this._getCorrectCSData();
+
+            const parsed = JSON.parse(reportData);
+            let content = parsed.content || reportData;
+
+            // markdown code block 제거
+            if (typeof content === 'string') {
+                content = content.trim();
+                if (content.startsWith('```json')) {
+                    content = content.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+                } else if (content.startsWith('```')) {
+                    content = content.replace(/^```\n?/, '').replace(/\n?```$/, '');
+                }
+
+                if (content.startsWith('{')) {
+                    const jsonData = JSON.parse(content);
+
+                    // LLM 응답의 잘못된 CS 데이터 추출 (대체용)
+                    const wrongCSData = jsonData.extractedData?.CS || {};
+
+                    if (jsonData.sections && typeof jsonData.sections === 'object') {
+                        const sectionNames = {
+                            '00': '표지', '01': '목차', '02': '약어설명', '03': '서론',
+                            '04': '전세계판매허가현황', '05': '안전성조치', '06': '안전성정보참고정보변경',
+                            '07': '환자노출', '08': '개별증례병력', '09': '시험',
+                            '10': '기타정보', '11': '종합적인안전성평가', '12': '결론',
+                            '13': '참고문헌', '14': '별첨'
+                        };
+
+                        for (const [key, value] of Object.entries(jsonData.sections)) {
+                            const sectionId = key.substring(0, 2);
+                            const sectionName = value.sectionName || sectionNames[sectionId] || `섹션 ${sectionId}`;
+                            let sectionContent = value.content || `## ${sectionId}. ${sectionName}\n\n[내용 없음]`;
+
+                            // LLM hallucination 수정: 잘못된 값을 올바른 값으로 대체
+                            sectionContent = this._correctHallucination(sectionContent, wrongCSData, correctCSData);
+
+                            this.sections[sectionId] = {
+                                ...this.sections[sectionId],
+                                id: sectionId,
+                                name: sectionName,
+                                content: sectionContent,
+                                generatedAt: new Date().toISOString(),
+                                isEdited: false
+                            };
+                        }
+
+                        console.log(`[SectionEditor] ${Object.keys(jsonData.sections).length}개 섹션 재파싱 완료 (hallucination 수정됨)`);
+                        return true;
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('[SectionEditor] generatedPSURReport 재파싱 실패:', e);
+        }
+        return false;
+    }
+
+    /**
+     * localStorage에서 올바른 CS 데이터 가져오기
+     * @returns {Object} CS 데이터
+     */
+    _getCorrectCSData() {
+        try {
+            const extractedData = localStorage.getItem('extractedData');
+            if (extractedData) {
+                const parsed = JSON.parse(extractedData);
+                return parsed.CS || parsed;
+            }
+        } catch (e) {
+            console.warn('[SectionEditor] extractedData 로드 실패:', e);
+        }
+        return {};
+    }
+
+    /**
+     * LLM hallucination 수정 - 잘못된 값을 올바른 값으로 대체
+     * @param {string} content - 섹션 콘텐츠
+     * @param {Object} wrongData - LLM이 생성한 잘못된 데이터
+     * @param {Object} correctData - localStorage의 올바른 데이터
+     * @returns {string} 수정된 콘텐츠
+     */
+    _correctHallucination(content, wrongData, correctData) {
+        if (!content || !correctData) return content;
+
+        // 주요 CS 필드 매핑
+        const fieldMappings = [
+            { key: 'CS0_성분명', label: '성분명' },
+            { key: 'CS1_브랜드명', label: '브랜드명' },
+            { key: 'CS2_회사명', label: '회사명' },
+            { key: 'CS3_보고시작날짜', label: '보고시작날짜' },
+            { key: 'CS4_보고종료날짜', label: '보고종료날짜' },
+            { key: 'CS5_국내허가일자', label: '국내허가일자' },
+            { key: 'CS6_보고서제출일', label: '보고서제출일' },
+            { key: 'CS15_효능효과', label: '효능효과' },
+            { key: 'CS16_용법용량', label: '용법용량' }
+        ];
+
+        let correctedContent = content;
+
+        for (const field of fieldMappings) {
+            const wrongValue = wrongData[field.key];
+            const correctValue = correctData[field.key];
+
+            if (wrongValue && correctValue && wrongValue !== correctValue) {
+                // 잘못된 값을 올바른 값으로 전역 대체
+                const escapedWrong = wrongValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regex = new RegExp(escapedWrong, 'g');
+                correctedContent = correctedContent.replace(regex, correctValue);
+                console.log(`[SectionEditor] Hallucination 수정: "${wrongValue}" → "${correctValue}"`);
+            }
+        }
+
+        return correctedContent;
     }
 
     /**

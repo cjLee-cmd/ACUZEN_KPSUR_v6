@@ -185,6 +185,12 @@ html, body {
     color: #6B7280;
 }
 
+.user-position {
+    font-size: 10px;
+    color: #9CA3AF;
+    margin-top: 1px;
+}
+
 .user-menu-toggle {
     background: none;
     border: none;
@@ -644,6 +650,10 @@ html, body {
 
 [data-theme="dark"] .user-role {
     color: #94a3b8;
+}
+
+[data-theme="dark"] .user-position {
+    color: #64748b;
 }
 
 [data-theme="dark"] .user-menu-toggle {

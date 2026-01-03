@@ -451,6 +451,7 @@
                     <div class="user-info">
                         <div class="user-name">사용자</div>
                         <div class="user-role">Author</div>
+                        <div class="user-position"></div>
                     </div>
                     <button class="user-menu-toggle">▼</button>
                 </div>
@@ -785,11 +786,13 @@
                 document.getElementById('userName').textContent = testSession.userName;
                 document.querySelector('.user-name').textContent = testSession.userName;
                 document.querySelector('.user-role').textContent = testSession.userRole;
+                document.querySelector('.user-position').textContent = testSession.userPosition || '';
                 document.querySelector('.user-avatar').textContent = testSession.userName.charAt(0);
             } else {
                 document.getElementById('userName').textContent = session.userName;
                 document.querySelector('.user-name').textContent = session.userName;
                 document.querySelector('.user-role').textContent = session.userRole;
+                document.querySelector('.user-position').textContent = session.userPosition || '';
                 document.querySelector('.user-avatar').textContent = session.userName.charAt(0);
             }
 
@@ -951,20 +954,8 @@
             const SUPABASE_URL = CONFIG?.SUPABASE_URL || 'https://toelnxgizxwbdikskmxa.supabase.co';
             const SUPABASE_KEY = CONFIG?.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8';
 
-            // 로컬 보고서 로드 (DB 미동기화된 보고서)
-            const localReports = JSON.parse(localStorage.getItem('local_reports') || '[]').map(lr => ({
-                id: lr.reportId,
-                report_name: lr.reportName,
-                status: lr.status || 'Draft',
-                current_stage: lr.current_stage || 2,
-                user_inputs: lr,
-                updated_at: lr.createdAt,
-                created_at: lr.createdAt,
-                isLocalOnly: true
-            }));
-
             try {
-                // reports와 products, users를 조인하여 가져오기
+                // reports와 products, users를 조인하여 가져오기 (DB만 사용)
                 const response = await fetch(
                     `${SUPABASE_URL}/rest/v1/reports?select=id,report_name,status,current_stage,user_inputs,updated_at,created_at,products(product_name,ingredient_name),users(name)&order=updated_at.desc&limit=50`,
                     {
@@ -979,24 +970,13 @@
                     throw new Error(`HTTP ${response.status}`);
                 }
 
-                const dbReports = await response.json();
-                // DB 보고서 + 로컬 보고서 합치기 (최신순 정렬)
-                const reports = [...localReports, ...dbReports].sort((a, b) =>
-                    new Date(b.updated_at) - new Date(a.updated_at)
-                );
+                const reports = await response.json();
+                console.log('✅ Dashboard loaded', reports.length, 'reports from DB');
                 renderReportsTable(reports.slice(0, 10)); // 테이블에는 10개만 표시
                 return reports;
 
             } catch (error) {
                 console.error('DB 보고서 로드 실패:', error);
-
-                // DB 실패해도 로컬 보고서는 표시
-                if (localReports.length > 0) {
-                    console.log('로컬 보고서 표시:', localReports.length, '개');
-                    renderReportsTable(localReports.slice(0, 10));
-                    return localReports;
-                }
-
                 renderReportsTable([]);
 
                 // 에러 시 통계 초기화

@@ -699,6 +699,7 @@
                     <div class="user-info">
                         <div class="user-name">사용자</div>
                         <div class="user-role">Author</div>
+                        <div class="user-position"></div>
                     </div>
                     <button class="user-menu-toggle">▼</button>
                 </div>
@@ -1113,6 +1114,7 @@
     <script src="../utils/session.js"></script>
     <script src="../utils/ui-helpers.js"></script>
     <script src="../js/config.js"></script>
+    <script src="../js/supabase-client.js"></script>
     <script src="../js/auth.js"></script>
     <script>
         // 약품 데이터베이스 (샘플)
@@ -1226,6 +1228,17 @@
                 approval_date: '2015-04-28',
                 efficacy: '제2형 당뇨병 치료',
                 dosage: '1일 1회 10-25mg 경구투여'
+            },
+            {
+                id: 11,
+                ingredient: '메만틴염산염',
+                brand: '글리빅사정',
+                company: '대웅바이오(주)',
+                report_start_date: '2020-01-16',
+                report_end_date: '2025-01-15',
+                approval_date: '2016-08-26',
+                efficacy: '중등도에서 중증의 알츠하이머병 치료',
+                dosage: '1일 20mg (10mg씩 1일 2회)'
             }
         ];
 
@@ -1243,6 +1256,7 @@
             if (session) {
                 document.querySelector('.user-name').textContent = session.userName;
                 document.querySelector('.user-role').textContent = session.userRole;
+                document.querySelector('.user-position').textContent = session.userPosition || '';
                 document.querySelector('.user-avatar').textContent = session.userName.charAt(0);
 
                 // 작성자 자동 입력
@@ -1316,8 +1330,9 @@
                 const currentUser = window.authManager?.getCurrentUser();
                 const userId = currentUser?.id || null;
 
-                // 보고서명 생성
-                const reportName = `${selectedDrug.brand}_PSUR_${new Date().toISOString().slice(0,7).replace('-','Q')}`;
+                // 보고서명 생성 (고유성 보장을 위해 타임스탬프 추가)
+                const timestamp = Date.now().toString(36).toUpperCase();  // Base36 for shorter unique ID
+                const reportName = `${selectedDrug.brand}_PSUR_${new Date().toISOString().slice(0,7).replace('-','Q')}_${timestamp}`;
 
                 // user_inputs에 저장할 데이터 구조 (DB 스키마에 맞춤)
                 const userInputs = {
@@ -1341,12 +1356,15 @@
                 };
 
                 try {
-                    // supabase-client 모듈 동적 로드
-                    const { default: supabaseClient } = await import('../js/supabase-client.js');
+                    // supabase-client 초기화 확인
+                    if (!window.supabaseClient) {
+                        throw new Error('Supabase client not loaded');
+                    }
+                    await window.supabaseClient.init();
 
                     // DB에 보고서 저장
                     // product_id는 UUID만 허용하므로, 로컬 drugDatabase의 숫자 ID는 null 처리
-                    const dbResult = await supabaseClient.createReport({
+                    const dbResult = await window.supabaseClient.createReport({
                         report_name: reportName,
                         created_by: userId,
                         status: 'Draft',

@@ -561,16 +561,46 @@
                     >
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="role">
-                        역할 요청<span class="required">*</span>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="role">
+                            역할 요청<span class="required">*</span>
+                        </label>
+                        <select id="role" name="role" class="form-select" required>
+                            <option value="">선택하세요</option>
+                            <option value="author">작성자 (Author)</option>
+                            <option value="reviewer">검토자 (Reviewer)</option>
+                            <option value="viewer">조회자 (Viewer)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="position">
+                            직책<span class="required">*</span>
+                        </label>
+                        <select id="position" name="position" class="form-select" required>
+                            <option value="">선택하세요</option>
+                            <option value="약물감시 팀장">약물감시 팀장</option>
+                            <option value="약물감시 담당자">약물감시 담당자</option>
+                            <option value="리뷰어">리뷰어</option>
+                            <option value="임상연구 코디네이터">임상연구 코디네이터</option>
+                            <option value="QC 담당자">QC 담당자</option>
+                            <option value="기타">기타 (직접입력)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" id="customPositionGroup" style="display: none;">
+                    <label class="form-label" for="customPosition">
+                        직책 직접입력<span class="required">*</span>
                     </label>
-                    <select id="role" name="role" class="form-select" required>
-                        <option value="">선택하세요</option>
-                        <option value="author">작성자 (Author)</option>
-                        <option value="reviewer">검토자 (Reviewer)</option>
-                        <option value="viewer">조회자 (Viewer)</option>
-                    </select>
+                    <input
+                        type="text"
+                        id="customPosition"
+                        name="customPosition"
+                        class="form-input"
+                        placeholder="직책을 입력하세요"
+                    >
                 </div>
 
                 <div class="terms-section">
@@ -703,12 +733,37 @@
             cb.addEventListener('change', checkSubmitButton);
         });
 
+        // 직책 선택 - '기타' 선택 시 직접입력 필드 표시
+        const positionSelect = document.getElementById('position');
+        const customPositionGroup = document.getElementById('customPositionGroup');
+        const customPositionInput = document.getElementById('customPosition');
+
+        positionSelect.addEventListener('change', (e) => {
+            if (e.target.value === '기타') {
+                customPositionGroup.style.display = 'block';
+                customPositionInput.required = true;
+            } else {
+                customPositionGroup.style.display = 'none';
+                customPositionInput.required = false;
+                customPositionInput.value = '';
+            }
+        });
+
         // 폼 제출
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const formData = new FormData(signupForm);
             const data = Object.fromEntries(formData);
+
+            // 직책 처리 - '기타' 선택 시 직접입력 값 사용
+            const finalPosition = data.position === '기타' ? data.customPosition : data.position;
+
+            // 직책 검증
+            if (!finalPosition || finalPosition.trim() === '') {
+                showAlert('직책을 선택하거나 입력해주세요.', 'error');
+                return;
+            }
 
             // 비밀번호 확인
             if (data.password !== data.passwordConfirm) {
@@ -725,6 +780,21 @@
             signupBtn.classList.add('loading');
 
             try {
+                // 회원가입 데이터 준비
+                const signupData = {
+                    lastName: data.lastName,
+                    firstName: data.firstName,
+                    name: data.lastName + data.firstName,
+                    email: data.email,
+                    password: data.password,
+                    organization: data.organization,
+                    role: data.role,
+                    position: finalPosition
+                };
+
+                console.log('📝 회원가입 데이터:', signupData);
+
+                // TODO: Supabase Auth 회원가입 구현
                 await new Promise(resolve => setTimeout(resolve, 2000));
 
                 showAlert('회원가입이 완료되었습니다! 관리자 승인 후 이용 가능합니다.', 'success');

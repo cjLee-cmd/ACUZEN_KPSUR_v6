@@ -55,13 +55,15 @@ class AuthManager {
                     password: 'test1234',
                     id: '6f19f4a9-48ec-4a43-a032-b8f79e71d2d3',
                     name: 'Test Author',
-                    role: 'Author'
+                    role: 'Author',
+                    position: '리뷰어'
                 },
                 'main@main.com': {
                     password: '1111',
                     id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
                     name: 'Master Admin',
-                    role: 'Master'
+                    role: 'Master',
+                    position: '약물감시 팀장'
                 },
                 // Supabase Auth에 등록된 테스트 계정 (DB 저장 가능)
                 'master@kpsur.test': {
@@ -69,6 +71,7 @@ class AuthManager {
                     id: '3d4afddc-14b5-491b-8aca-0e80dbafea2e',
                     name: 'Master Admin',
                     role: 'Master',
+                    position: '약물감시 팀장',
                     supabaseAuth: true  // Supabase Auth 계정 표시
                 }
             };
@@ -78,12 +81,13 @@ class AuthManager {
 
             if (testAccount && testAccount.password === password) {
             // 테스트 계정 로그인 성공
-            // session.js 형식에 맞춤 (email, userName, userRole, userId, timestamp)
+            // session.js 형식에 맞춤 (email, userName, userRole, userPosition, userId, timestamp)
             const sessionData = {
                 userId: testAccount.id,
                 email: email,
                 userName: testAccount.name,
                 userRole: testAccount.role,
+                userPosition: testAccount.position,
                 loginTime: new Date().toISOString(),
                 rememberMe: rememberMe,
                 type: 'test',
@@ -94,7 +98,8 @@ class AuthManager {
                 id: testAccount.id,
                 email: email,
                 name: testAccount.name,
-                role: testAccount.role
+                role: testAccount.role,
+                position: testAccount.position
             };
 
             this.currentUser = userObj;
@@ -134,12 +139,13 @@ class AuthManager {
         const result = await window.supabaseClient.signInWithPassword(email, password);
 
         if (result.success) {
-            // session.js 형식에 맞춤 (email, userName, userRole, userId, timestamp)
+            // session.js 형식에 맞춤 (email, userName, userRole, userPosition, userId, timestamp)
             const sessionData = {
                 userId: result.user.id,
                 email: result.user.email,
                 userName: result.user.user_metadata?.name || email,
                 userRole: result.user.user_metadata?.role || 'Author',
+                userPosition: result.user.user_metadata?.position || '',
                 loginTime: new Date().toISOString(),
                 rememberMe: rememberMe,
                 type: 'supabase',
@@ -150,7 +156,8 @@ class AuthManager {
                 id: result.user.id,
                 email: result.user.email,
                 name: result.user.user_metadata?.name || email,
-                role: result.user.user_metadata?.role || 'Author'
+                role: result.user.user_metadata?.role || 'Author',
+                position: result.user.user_metadata?.position || ''
             };
 
             this.currentUser = userObj;
@@ -221,12 +228,13 @@ class AuthManager {
         }
 
         // Reconstruct user object from session data
-        // (session stores userId, userName, userRole at root level, not as session.user)
+        // (session stores userId, userName, userRole, userPosition at root level, not as session.user)
         const user = {
             id: session.userId,
             email: session.email,
             name: session.userName,
-            role: session.userRole
+            role: session.userRole,
+            position: session.userPosition || ''
         };
         this.currentUser = user;
         this.currentSession = session;
@@ -310,3 +318,4 @@ if (typeof window !== 'undefined') {
     window.authManager = authManager;
     window.AuthManager = AuthManager;
 }
+

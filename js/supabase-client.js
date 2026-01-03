@@ -3,11 +3,13 @@
  * Supabase 데이터베이스 연결 및 쿼리 헬퍼
  */
 
-// CONFIG는 window.CONFIG에서 가져옴 (config.js가 먼저 로드되어야 함)
-const CONFIG = window.CONFIG || {
-    SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
-    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8'
-};
+// CONFIG fallback (config.js가 먼저 로드되지 않은 경우)
+if (!window.CONFIG) {
+    window.CONFIG = {
+        SUPABASE_URL: 'https://toelnxgizxwbdikskmxa.supabase.co',
+        SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZWxueGdpenh3YmRpa3NrbXhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIwMDAyMzUsImV4cCI6MjA3NzU3NjIzNX0.mpBAWTufodmfPUp6nmg7Qez6uygrplK9S91xl8c4mR8'
+    };
+}
 
 class SupabaseClient {
     constructor() {
@@ -31,8 +33,8 @@ class SupabaseClient {
 
             const { createClient } = supabase;
             this.client = createClient(
-                CONFIG.SUPABASE_URL,
-                CONFIG.SUPABASE_ANON_KEY
+                window.CONFIG.SUPABASE_URL,
+                window.CONFIG.SUPABASE_ANON_KEY
             );
 
             this.initialized = true;
@@ -919,5 +921,4 @@ const supabaseClient = new SupabaseClient();
 
 // 브라우저 환경에서 전역 접근 가능하도록 설정
 window.supabaseClient = supabaseClient;
-
-export default supabaseClient;
+window.SupabaseClient = SupabaseClient;

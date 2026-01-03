@@ -3,13 +3,14 @@
  * 레이아웃 관련 헬퍼 함수
  */
 
-import { navigateTo } from './navigation.js';
-import { loadSessionData, clearSessionData, getDeploymentMode, setDeploymentMode } from './session.js';
+// Use window globals instead of ES6 imports (for browser compatibility)
+// navigateTo, loadSessionData, clearSessionData, getDeploymentMode, setDeploymentMode
+// are expected to be available on window object from session.js and navigation.js
 
 /**
  * 사용자 메뉴 초기화
  */
-export function setupUserMenu() {
+function setupUserMenu() {
     try {
         const userMenuToggle = document.querySelector('.user-menu-toggle');
         const userMenu = document.querySelector('.user-menu');
@@ -125,7 +126,7 @@ function handleLogout() {
  * 배포 모드 뱃지 업데이트
  * @param {string} mode - 'test' 또는 'production'
  */
-export function updateDeploymentMode(mode) {
+function updateDeploymentMode(mode) {
     try {
         const badge = document.querySelector('.deployment-badge');
         if (!badge) {
@@ -147,7 +148,7 @@ export function updateDeploymentMode(mode) {
  * 브레드크럼 업데이트
  * @param {Array<{label: string, page?: string}>} items - 브레드크럼 항목
  */
-export function updateBreadcrumb(items) {
+function updateBreadcrumb(items) {
     try {
         const breadcrumb = document.querySelector('.breadcrumb');
         if (!breadcrumb) {
@@ -196,7 +197,7 @@ export function updateBreadcrumb(items) {
  * 워크플로우 진행률 업데이트
  * @param {number} progress - 진행률 (0-100)
  */
-export function updateWorkflowProgress(progress) {
+function updateWorkflowProgress(progress) {
     try {
         const progressFill = document.querySelector('.progress-fill');
         if (progressFill) {
@@ -211,7 +212,7 @@ export function updateWorkflowProgress(progress) {
  * 워크플로우 단계 활성화
  * @param {number} stageNumber - 단계 번호 (1-9)
  */
-export function activateWorkflowStage(stageNumber) {
+function activateWorkflowStage(stageNumber) {
     try {
         const stages = document.querySelectorAll('.workflow-stage');
         stages.forEach((stage, index) => {
@@ -228,4 +229,15 @@ export function activateWorkflowStage(stageNumber) {
     } catch (error) {
         console.error('activateWorkflowStage error:', error);
     }
+}
+
+// 전역으로 내보내기 (window 객체)
+if (typeof window !== 'undefined') {
+    window.setupUserMenu = setupUserMenu;
+    window.createUserMenuDropdown = createUserMenuDropdown;
+    window.handleLogout = handleLogout;
+    window.updateDeploymentMode = updateDeploymentMode;
+    window.updateBreadcrumb = updateBreadcrumb;
+    window.updateWorkflowProgress = updateWorkflowProgress;
+    window.activateWorkflowStage = activateWorkflowStage;
 }

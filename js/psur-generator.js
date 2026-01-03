@@ -936,6 +936,114 @@ ${examplesText.substring(0, 35000)}
             '14': '별첨'
         };
 
+        // === JSON 응답 처리 (UserPrompt-2.md 형식) ===
+        try {
+            // markdown code block 제거
+            let cleanText = responseText.trim();
+            if (cleanText.startsWith('```json')) {
+                cleanText = cleanText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+            } else if (cleanText.startsWith('```')) {
+                cleanText = cleanText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+            }
+
+            // JSON 파싱 시도
+            if (cleanText.startsWith('{')) {
+                let jsonData = JSON.parse(cleanText);
+
+                // wrapper 객체 처리 (content 키 안에 실제 JSON이 있는 경우)
+                if (jsonData.content && typeof jsonData.content === 'string' && !jsonData.sections) {
+                    console.log('[PSURGenerator] Wrapper 객체 감지 - content 추출');
+                    let innerContent = jsonData.content.trim();
+                    // content 안의 markdown code block 제거
+                    if (innerContent.startsWith('```json')) {
+                        innerContent = innerContent.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+                    } else if (innerContent.startsWith('```')) {
+                        innerContent = innerContent.replace(/^```\n?/, '').replace(/\n?```$/, '');
+                    }
+                    // 다시 파싱
+                    if (innerContent.startsWith('{')) {
+                        jsonData = JSON.parse(innerContent);
+                        console.log('[PSURGenerator] Inner JSON 파싱 성공');
+                    }
+                }
+
+                // sections 객체가 있는 경우 처리
+                if (jsonData.sections && typeof jsonData.sections === 'object') {
+                    console.log('[PSURGenerator] JSON 형식 응답 감지 - sections 객체 파싱');
+
+                    for (const [key, value] of Object.entries(jsonData.sections)) {
+                        // key: "00_표지" 또는 "00" 형식
+                        const sectionId = key.substring(0, 2);
+                        const sectionName = value.sectionName || sectionNames[sectionId] || `섹션 ${sectionId}`;
+                        const content = value.content || `## ${sectionId}. ${sectionName}\n\n[내용 없음]`;
+
+                        sections[sectionId] = {
+                            id: sectionId,
+                            name: sectionName,
+                            content: content,
+                            generatedAt: new Date().toISOString(),
+                            isEdited: false
+                        };
+                    }
+
+                    // extractedData도 저장 (나중에 사용 가능)
+                    if (jsonData.extractedData) {
+                        try {
+                            localStorage.setItem('extractedData', JSON.stringify(jsonData.extractedData));
+                            console.log('[PSURGenerator] extractedData 저장 완료');
+                        } catch (e) {
+                            console.warn('[PSURGenerator] extractedData 저장 실패:', e);
+                        }
+                    }
+
+                    // fullReport도 저장
+                    if (jsonData.fullReport) {
+                        try {
+                            localStorage.setItem('fullReportContent', JSON.stringify(jsonData.fullReport));
+                            console.log('[PSURGenerator] fullReport 저장 완료');
+                        } catch (e) {
+                            console.warn('[PSURGenerator] fullReport 저장 실패:', e);
+                        }
+                    }
+
+                    const parsedCount = Object.keys(sections).length;
+                    console.log(`[PSURGenerator] JSON에서 ${parsedCount}개 섹션 파싱 완료`);
+
+                    if (parsedCount > 0) {
+                        // 누락된 섹션 빈 내용으로 채우기
+                        for (const id of Object.keys(sectionNames)) {
+                            if (!sections[id]) {
+                                sections[id] = {
+                                    id: id,
+                                    name: sectionNames[id],
+                                    content: `## ${id}. ${sectionNames[id]}\n\n[이 섹션은 생성되지 않았습니다]`,
+                                    generatedAt: null,
+                                    isEdited: false
+                                };
+                            }
+                        }
+
+                        // localStorage에 저장
+                        try {
+                            localStorage.setItem('generatedSections', JSON.stringify(sections));
+                        } catch (e) {
+                            console.warn('[PSURGenerator] 섹션 저장 실패:', e);
+                        }
+
+                        // DB에도 저장
+                        this.saveSectionsToDB(sections).catch(err => {
+                            console.warn('[PSURGenerator] DB 저장 중 오류 (무시됨):', err);
+                        });
+
+                        return sections;
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('[PSURGenerator] JSON 파싱 실패, 마크다운 파싱으로 진행:', e.message);
+        }
+
+        // === 기존 마크다운 패턴 파싱 (fallback) ===
         // 다양한 섹션 패턴 매칭
         // 패턴 1: ## 00. 표지 또는 ## 00_표지
         // 패턴 2: # 00. 표지
