@@ -132,13 +132,13 @@ const LLM_PROVIDERS = {
                 quality: 'fast',
                 description: 'Flash - 빠르고 효율적'
             },
-            'gemini-3-flash-preview': {
-                name: 'Gemini 3 Flash Preview',
-                inputPrice: 0,
-                outputPrice: 0,
-                maxTokens: 65536,
+            'gemini-flash-latest': {
+                name: 'Gemini Flash Latest',
+                inputPrice: 0.075,
+                outputPrice: 0.30,
+                maxTokens: 8192,
                 quality: 'fast',
-                description: 'Gemini 3 Flash Preview - 최신 모델'
+                description: 'Gemini Flash Latest - 최신 안정 Flash 별칭'
             }
         },
         defaultModel: 'gemini-3-flash-preview',
@@ -320,7 +320,11 @@ class MultiLLMClient {
         if (!apiKey) throw new Error('Google API 키가 설정되지 않았습니다.');
 
         const model = options.model || LLM_PROVIDERS.google.defaultModel;
-        const url = `${LLM_PROVIDERS.google.endpoint}/${model}:generateContent?key=${apiKey}`;
+        const modelInfo = LLM_PROVIDERS.google.models[model];
+        // 모델별 API 버전 지원 (gemini-1.5-flash는 v1 사용)
+        const apiVersion = modelInfo?.apiVersion || 'v1beta';
+        const baseUrl = `https://generativelanguage.googleapis.com/${apiVersion}/models`;
+        const url = `${baseUrl}/${model}:generateContent?key=${apiKey}`;
 
         const response = await fetch(url, {
             method: 'POST',

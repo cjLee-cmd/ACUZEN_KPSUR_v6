@@ -313,6 +313,193 @@
             color: var(--text-muted);
         }
 
+        /* 계속 작성 버튼 */
+        .btn-continue {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: linear-gradient(135deg, #25739B 0%, #369EE1 100%);
+            color: white;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-continue:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(37, 115, 155, 0.3);
+        }
+
+        .stage-progress {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stage-progress-bar {
+            width: 60px;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .stage-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #25739B 0%, #369EE1 100%);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .stage-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        /* 보고서 카드 그리드 - 컴팩트 버전 */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 10px;
+        }
+
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .report-card:hover {
+            border-color: #25739B;
+            box-shadow: 0 2px 8px rgba(37, 115, 155, 0.12);
+        }
+
+        [data-theme="dark"] .report-card {
+            background: transparent;
+            border-color: #475569;
+        }
+
+        [data-theme="dark"] .report-card:hover {
+            border-color: #25739B;
+        }
+
+        .report-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .report-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #25739B;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .report-card-body {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .report-card-info-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .report-card-info {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .report-card-label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .report-card-value {
+            font-size: 11px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .report-card-progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+
+        .report-card-progress-bar {
+            width: 50px;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .report-card-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #25739B 0%, #369EE1 100%);
+            border-radius: 2px;
+        }
+
+        .report-card-progress-text {
+            font-size: 10px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .report-card-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .report-card-meta {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .report-card .btn-continue {
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+
+        .reports-empty {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-muted);
+        }
+
+        .reports-empty-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .reports-empty-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
         /* 활동 내역 */
         .activity-list {
             display: flex;
@@ -530,26 +717,13 @@
                                 <a class="card-action" onclick="navigateTo('P11_ReportList.html')">전체 보기 →</a>
                             </div>
 
-                            <table class="reports-table">
-                                <thead>
-                                    <tr>
-                                        <th>보고서명</th>
-                                        <th>성분명</th>
-                                        <th>단계</th>
-                                        <th>상태</th>
-                                        <th>작성자</th>
-                                        <th>수정일</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="reportsTableBody">
-                                    <!-- DB에서 로드됨 -->
-                                    <tr>
-                                        <td colspan="6" style="text-align: center; padding: 20px; color: #6B7280;">
-                                            데이터 로딩 중...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <div class="reports-grid" id="reportsGrid">
+                                <!-- DB에서 로드됨 -->
+                                <div class="reports-empty">
+                                    <div class="reports-empty-icon">📋</div>
+                                    <div class="reports-empty-text">데이터 로딩 중...</div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- 최근 활동 -->
@@ -712,6 +886,8 @@
     <script src="../utils/navigation.js"></script>
     <script src="../js/config.js"></script>
     <script src="../js/auth.js"></script>
+    <script src="../js/permissions.js"></script>
+    <script src="../js/page-guard.js"></script>
     <script>
         // Wait for globals to load
         setTimeout(() => {
@@ -1004,50 +1180,107 @@
         }
 
         function renderReportsTable(reports) {
-            const tbody = document.getElementById('reportsTableBody');
+            const grid = document.getElementById('reportsGrid');
 
             if (!reports || reports.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 20px; color: #6B7280;">
-                            등록된 보고서가 없습니다.
-                        </td>
-                    </tr>
+                grid.innerHTML = `
+                    <div class="reports-empty" style="grid-column: 1 / -1;">
+                        <div class="reports-empty-icon">📋</div>
+                        <div class="reports-empty-text">등록된 보고서가 없습니다.</div>
+                    </div>
                 `;
                 return;
             }
 
             const stageNames = {
-                1: '로그인', 2: '보고서 상태', 3: '파일 업로드', 4: 'MD 변환',
-                5: '데이터 추출', 6: '템플릿 작성', 7: '리뷰', 8: 'QC 검증', 9: '최종 출력'
+                1: '로그인', 2: '보고서 생성', 3: '파일 업로드', 4: 'MD 변환',
+                5: '데이터 추출', 6: '섹션 편집', 7: '리뷰', 8: 'QC 검증', 9: '최종 출력'
             };
 
             const statusMap = {
-                'Draft': { class: 'draft', label: '임시저장' },
+                'Draft': { class: 'in-progress', label: '작성중' },
                 'InReview': { class: 'review', label: '리뷰중' },
                 'QC': { class: 'qc', label: 'QC대기' },
                 'Completed': { class: 'completed', label: '완료' }
             };
 
-            tbody.innerHTML = reports.map(report => {
+            // 스테이지별 이동 페이지 매핑
+            const stagePages = {
+                1: 'P12_ReportDetail.html',
+                2: 'P12_ReportDetail.html',
+                3: 'P14_UnifiedProcessing.html',
+                4: 'P14_UnifiedProcessing.html',
+                5: 'P14_UnifiedProcessing.html',
+                6: 'P15_SectionEditor.html',
+                7: 'P18_Review.html',
+                8: 'P19_QC.html',
+                9: 'P20_Output.html'
+            };
+
+            grid.innerHTML = reports.map(report => {
                 const ingredientName = report.user_inputs?.CS0_성분명 || report.products?.ingredient_name || '-';
-                const authorName = report.users?.name || '-';
-                const stage = report.current_stage || 1;
+                const stage = report.current_stage || 2;
                 const stageName = stageNames[stage] || '알 수 없음';
                 const status = statusMap[report.status] || { class: 'draft', label: report.status };
-                const updatedAt = report.updated_at ? new Date(report.updated_at).toISOString().split('T')[0] : '-';
+                const updatedAt = report.updated_at ? new Date(report.updated_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : '-';
+
+                // 진행률 계산 (총 9단계 기준)
+                const progressPercent = Math.round((stage / 9) * 100);
+
+                // 완료되지 않은 상태인지 확인
+                const isInProgress = report.status !== 'Completed';
+
+                // 버튼/상태
+                const actionBtn = isInProgress
+                    ? `<button class="btn-continue" onclick="continueReport('${report.id}', ${stage}); event.stopPropagation();">계속 작성</button>`
+                    : `<span style="color: #10B981; font-size: 11px; font-weight: 600;">완료</span>`;
 
                 return `
-                    <tr>
-                        <td><span class="report-name" onclick="navigateTo('P12_ReportDetail.html?id=${report.id}')">${report.report_name}</span></td>
-                        <td>${ingredientName}</td>
-                        <td><span class="stage-indicator">Stage ${stage} - ${stageName}</span></td>
-                        <td><span class="status-badge ${status.class}">${status.label}</span></td>
-                        <td>${authorName}</td>
-                        <td>${updatedAt}</td>
-                    </tr>
+                    <div class="report-card" onclick="navigateTo('P12_ReportDetail.html?id=${report.id}')">
+                        <div class="report-card-header">
+                            <div class="report-card-title" title="${report.report_name}">${report.report_name}</div>
+                            <span class="status-badge ${status.class}">${status.label}</span>
+                        </div>
+                        <div class="report-card-body">
+                            <div class="report-card-info-row">
+                                <div class="report-card-info">
+                                    <span class="report-card-label">성분:</span>
+                                    <span class="report-card-value">${ingredientName}</span>
+                                </div>
+                                <div class="report-card-progress">
+                                    <div class="report-card-progress-bar">
+                                        <div class="report-card-progress-fill" style="width: ${progressPercent}%"></div>
+                                    </div>
+                                    <span class="report-card-progress-text">${stage}/9 ${stageName}</span>
+                                </div>
+                            </div>
+                            <div class="report-card-actions">
+                                <span class="report-card-meta">${updatedAt}</span>
+                                ${actionBtn}
+                            </div>
+                        </div>
+                    </div>
                 `;
             }).join('');
+        }
+
+        // 보고서 계속 작성 함수
+        function continueReport(reportId, currentStage) {
+            // 스테이지별 이동 페이지 매핑
+            const stagePages = {
+                1: 'P12_ReportDetail.html',
+                2: 'P12_ReportDetail.html',
+                3: 'P14_UnifiedProcessing.html',
+                4: 'P14_UnifiedProcessing.html',
+                5: 'P14_UnifiedProcessing.html',
+                6: 'P15_SectionEditor.html',
+                7: 'P18_Review.html',
+                8: 'P19_QC.html',
+                9: 'P20_Output.html'
+            };
+
+            const targetPage = stagePages[currentStage] || 'P12_ReportDetail.html';
+            navigateTo(`${targetPage}?id=${reportId}`);
         }
     </script>
 </body>

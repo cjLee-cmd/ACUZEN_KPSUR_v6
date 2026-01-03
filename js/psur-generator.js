@@ -231,9 +231,25 @@ const PSURGenerator = {
 
         console.log(`[PSURGenerator] Combining ${convertedMarkdowns.length} markdown files...`);
 
-        let combined = `# 통합 원시자료 (Combined Raw Data)\n\n`;
-        combined += `**생성 시간**: ${new Date().toISOString()}\n`;
-        combined += `**파일 수**: ${convertedMarkdowns.length}\n\n`;
+        // RAW ID → 문서명 매핑
+        const RAW_ID_NAMES = {
+            'RAW1': '최신첨부문서',
+            'RAW2.1': '용법용량',
+            'RAW2.2': '효능효과',
+            'RAW2.3': '사용상의주의사항',
+            'RAW3': '시판후sales데이터',
+            'RAW4': '허가현황',
+            'RAW5': '안전성조치메일',
+            'RAW6': '안전성조치변경',
+            'RAW7': '안전성정보변경',
+            'RAW12': '국내신속보고LineListing',
+            'RAW14': '원시자료LineListing',
+            'RAW15': '정기보고LineListing'
+        };
+
+        let combined = `# 통합 RAW 데이터\n`;
+        combined += `생성일시: ${new Date().toISOString()}\n`;
+        combined += `총 파일 수: ${convertedMarkdowns.length}개\n\n`;
         combined += `---\n\n`;
 
         // RAW ID 순서로 정렬
@@ -246,7 +262,12 @@ const PSURGenerator = {
         for (const file of sorted) {
             const content = file.markdown || file.content || '';
             if (content) {
-                combined += `## [${file.rawId || 'UNKNOWN'}] ${file.fileName || file.name || 'Untitled'}\n\n`;
+                const rawId = file.rawId || 'UNKNOWN';
+                const docName = RAW_ID_NAMES[rawId] || rawId;
+                const fileName = file.fileName || file.name || 'Untitled';
+
+                combined += `## [${rawId}] ${docName}\n`;
+                combined += `원본 파일: ${fileName}\n\n`;
                 combined += content + '\n\n';
                 combined += `---\n\n`;
             }
@@ -373,19 +394,22 @@ const PSURGenerator = {
     },
 
     /**
-     * UserPrompt 템플릿 로드 (UserPrompt-2.md)
+     * UserPrompt 템플릿 로드 (UserPrompt-3.md)
      */
     async loadUserPromptTemplate() {
         if (this.userPromptTemplateLoaded && this.userPromptTemplate) {
             return this.userPromptTemplate;
         }
 
-        console.log('[PSURGenerator] Loading UserPrompt-2.md...');
+        console.log('[PSURGenerator] Loading UserPrompt-3.md...');
 
         const paths = [
-            '../UserPrompt-2.md',
-            './UserPrompt-2.md',
-            '/UserPrompt-2.md'
+            '../01_Context/UserPrompt-3.md',
+            './01_Context/UserPrompt-3.md',
+            '/01_Context/UserPrompt-3.md',
+            // Fallback paths
+            '../UserPrompt-3.md',
+            './UserPrompt-3.md'
         ];
 
         for (const path of paths) {
@@ -402,7 +426,7 @@ const PSURGenerator = {
             }
         }
 
-        console.warn('[PSURGenerator] UserPrompt-2.md not found');
+        console.warn('[PSURGenerator] UserPrompt-3.md not found');
         return null;
     },
 

@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="../css/styles/globals.css">
     <link rel="stylesheet" href="../css/styles/layout.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/permissions.js"></script>
+    <script src="../js/page-guard.js"></script>
     <script src="../js/multi-llm-client.js?v=2"></script>
     <style>
         .page-container {
@@ -621,6 +625,10 @@
                         <label class="model-checkbox">
                             <input type="checkbox" value="gemini-2.5-pro">
                             <span>Gemini 2.5 Pro</span>
+                        </label>
+                        <label class="model-checkbox">
+                            <input type="checkbox" value="gemini-flash-latest">
+                            <span>Gemini Flash Latest</span>
                         </label>
                     </div>
                 </div>
