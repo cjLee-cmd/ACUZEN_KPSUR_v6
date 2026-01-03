@@ -71,6 +71,93 @@ class SupabaseClient {
     }
 
     /**
+     * Google OAuth 로그인
+     */
+    async signInWithGoogle() {
+        await this.init();
+
+        try {
+            const { data, error } = await this.client.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: `${window.location.origin}/pages/P05_SystemCheck.html`,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent'
+                    }
+                }
+            });
+
+            if (error) throw error;
+
+            console.log('✅ Google OAuth initiated');
+            return { success: true, data };
+
+        } catch (error) {
+            console.error('❌ Google OAuth failed:', error.message);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * OAuth 콜백 처리 (리다이렉트 후 세션 확인)
+     */
+    async handleOAuthCallback() {
+        await this.init();
+
+        try {
+            const { data, error } = await this.client.auth.getSession();
+
+            if (error) throw error;
+
+            if (data.session) {
+                const user = data.session.user;
+                console.log('✅ OAuth callback - user authenticated:', user.email);
+
+                // 세션 데이터 생성 (기존 형식에 맞춤)
+                const sessionData = {
+                    userId: user.id,
+                    email: user.email,
+                    userName: user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0],
+                    userRole: user.user_metadata?.role || 'Author',
+                    userPosition: user.user_metadata?.position || '',
+                    loginTime: new Date().toISOString(),
+                    rememberMe: true,
+                    type: 'google',
+                    timestamp: Date.now(),
+                    avatarUrl: user.user_metadata?.avatar_url || null
+                };
+
+                // localStorage에 세션 저장
+                localStorage.setItem('kpsur_session', JSON.stringify(sessionData));
+
+                return { success: true, user, session: sessionData };
+            }
+
+            return { success: false, error: 'No session found' };
+
+        } catch (error) {
+            console.error('❌ OAuth callback failed:', error.message);
+            return { success: false, error: error.message };
+        }
+    }
+
+    /**
+     * 인증 상태 변경 리스너
+     */
+    onAuthStateChange(callback) {
+        if (!this.client) {
+            console.warn('Supabase client not initialized');
+            return null;
+        }
+
+        return this.client.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event);
+            callback(event, session);
+        });
+    }
+
+    /**
      * 사용자 로그아웃
      */
     async signOut() {

@@ -577,6 +577,52 @@
         const { createClient } = supabase;
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // === OAuth 콜백 처리 ===
+        // URL에 OAuth 파라미터가 있는지 확인 (Google 로그인 후 리다이렉트)
+        (async function handleOAuthCallback() {
+            const hash = window.location.hash;
+            const params = new URLSearchParams(window.location.search);
+
+            // OAuth 리다이렉트 감지 (access_token이 hash 또는 query에 있는 경우)
+            if (hash.includes('access_token') || params.has('code')) {
+                console.log('🔄 OAuth callback detected, processing...');
+
+                try {
+                    // Supabase가 자동으로 세션을 처리함
+                    const { data, error } = await supabaseClient.auth.getSession();
+
+                    if (error) throw error;
+
+                    if (data.session) {
+                        const user = data.session.user;
+                        console.log('✅ OAuth login successful:', user.email);
+
+                        // 세션 데이터 생성 (기존 형식에 맞춤)
+                        const sessionData = {
+                            userId: user.id,
+                            email: user.email,
+                            userName: user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0],
+                            userRole: user.user_metadata?.role || 'Author',
+                            userPosition: user.user_metadata?.position || '',
+                            loginTime: new Date().toISOString(),
+                            rememberMe: true,
+                            type: 'google',
+                            timestamp: Date.now(),
+                            avatarUrl: user.user_metadata?.avatar_url || null
+                        };
+
+                        // localStorage에 세션 저장
+                        localStorage.setItem('kpsur_session', JSON.stringify(sessionData));
+
+                        // URL에서 OAuth 파라미터 제거 (깔끔한 URL)
+                        history.replaceState(null, '', window.location.pathname);
+                    }
+                } catch (error) {
+                    console.error('❌ OAuth callback error:', error);
+                }
+            }
+        })();
+
         // === 상태 관리 ===
         let currentTest = 0;
         const totalTests = 3;
